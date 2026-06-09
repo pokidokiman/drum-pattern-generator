@@ -200,6 +200,16 @@
 
     const presets = [
       { name: 'Default', lanes: DrumEngine.DEFAULT_LANES },
+      { name: 'Hypnotic Raw', lanes: [
+        { name: "Kick", category: "foundation", midiNote: 36 },
+        { name: "Snare", category: "backbeat", midiNote: 38 },
+        { name: "HH Closed", category: "hihat", midiNote: 42 },
+        { name: "HH Open", category: "hihat", midiNote: 46 },
+        { name: "Ride", category: "hihat", midiNote: 51 },
+        { name: "Perc", category: "accent", midiNote: 56 },
+        { name: "Clap", category: "backbeat", midiNote: 39 },
+        { name: "Stab", category: "synth", midiNote: 80 },
+      ]},
       { name: 'Hardgroove', lanes: [
         { name: "Kick", category: "foundation", midiNote: 36 },
         { name: "Snare", category: "backbeat", midiNote: 38 },
@@ -340,7 +350,7 @@
       barInd.appendChild(ind);
     }
 
-    for (const lane of [...currentPattern.lanes].reverse()) {
+    for (const lane of currentPattern.lanes) {
       const row = document.createElement('div');
       row.className = 'grid-row';
       const label = document.createElement('div');
