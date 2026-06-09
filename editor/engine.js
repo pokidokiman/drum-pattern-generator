@@ -76,14 +76,15 @@ const SOUND_PRESETS = [
 // ─── DEFAULT LANE CONFIG (8 Hapax lanes) ──────────────────────
 
 const DEFAULT_LANES = [
+  // Hapax drum track order: Lane 1 = Kick (bottom of grid)
+  { name: "Kick",        category: "foundation", midiNote: 36 },
+  { name: "Snare",       category: "backbeat",   midiNote: 38 },
   { name: "HH Closed",   category: "hihat",      midiNote: 42 },
   { name: "HH Open",     category: "hihat",      midiNote: 46 },
-  { name: "Perc",        category: "accent",     midiNote: 56 },
-  { name: "Clap",        category: "backbeat",   midiNote: 39 },
-  { name: "Snare",       category: "backbeat",   midiNote: 38 },
-  { name: "Tom Hi",      category: "pitched",    midiNote: 50 },
   { name: "Tom Low",     category: "pitched",    midiNote: 41 },
-  { name: "Kick",        category: "foundation", midiNote: 36 },
+  { name: "Tom Hi",      category: "pitched",    midiNote: 50 },
+  { name: "Clap",        category: "backbeat",   midiNote: 39 },
+  { name: "Perc",        category: "accent",     midiNote: 56 },
 ];
 
 // ─── CHARACTERISTIC PRESETS ───────────────────────────────────

@@ -209,14 +209,15 @@ const SOUND_PRESETS = [
 // ─── DEFAULT LANE CONFIG (8 Hapax lanes) ──────────────────────
 
 const DEFAULT_LANES = [
+  // Hapax drum track order: Lane 1 = Kick (bottom of grid)
+  { name: "Kick",        category: "foundation", midiNote: 36 },
+  { name: "Snare",       category: "backbeat",   midiNote: 38 },
   { name: "HH Closed",   category: "hihat",      midiNote: 42 },
   { name: "HH Open",     category: "hihat",      midiNote: 46 },
-  { name: "Perc",        category: "accent",     midiNote: 56 },
-  { name: "Clap",        category: "backbeat",   midiNote: 39 },
-  { name: "Snare",       category: "backbeat",   midiNote: 38 },
-  { name: "Tom Hi",      category: "pitched",    midiNote: 50 },
   { name: "Tom Low",     category: "pitched",    midiNote: 41 },
-  { name: "Kick",        category: "foundation", midiNote: 36 },
+  { name: "Tom Hi",      category: "pitched",    midiNote: 50 },
+  { name: "Clap",        category: "backbeat",   midiNote: 39 },
+  { name: "Perc",        category: "accent",     midiNote: 56 },
 ];
 
 // ─── CHARACTERISTIC PRESETS ───────────────────────────────────
@@ -909,34 +910,34 @@ window.DrumEngine = {
     const presets = [
       { name: 'Default', lanes: DrumEngine.DEFAULT_LANES },
       { name: 'Hardgroove', lanes: [
+        { name: "Kick", category: "foundation", midiNote: 36 },
+        { name: "Snare", category: "backbeat", midiNote: 38 },
         { name: "HH Closed", category: "hihat", midiNote: 42 },
         { name: "Ride", category: "hihat", midiNote: 51 },
         { name: "Conga Hi", category: "pitched", midiNote: 63 },
         { name: "Shaker", category: "accent", midiNote: 70 },
         { name: "Perc", category: "accent", midiNote: 56 },
         { name: "Clap", category: "backbeat", midiNote: 39 },
-        { name: "Snare", category: "backbeat", midiNote: 38 },
-        { name: "Kick", category: "foundation", midiNote: 36 },
       ]},
       { name: 'Tribal', lanes: [
-        { name: "Bell", category: "accent", midiNote: 56 },
-        { name: "Conga Low", category: "pitched", midiNote: 64 },
-        { name: "Conga Hi", category: "pitched", midiNote: 63 },
+        { name: "Kick", category: "foundation", midiNote: 36 },
+        { name: "Clap", category: "backbeat", midiNote: 39 },
+        { name: "HH Closed", category: "hihat", midiNote: 42 },
         { name: "Shaker", category: "texture", midiNote: 70 },
         { name: "Tom Low", category: "pitched", midiNote: 41 },
-        { name: "HH Closed", category: "hihat", midiNote: 42 },
-        { name: "Clap", category: "backbeat", midiNote: 39 },
-        { name: "Kick", category: "foundation", midiNote: 36 },
+        { name: "Conga Hi", category: "pitched", midiNote: 63 },
+        { name: "Conga Low", category: "pitched", midiNote: 64 },
+        { name: "Bell", category: "accent", midiNote: 56 },
       ]},
       { name: 'Industrial', lanes: [
+        { name: "Kick", category: "foundation", midiNote: 36 },
+        { name: "Snare", category: "backbeat", midiNote: 38 },
         { name: "HH Closed", category: "hihat", midiNote: 42 },
         { name: "HH Open", category: "hihat", midiNote: 46 },
-        { name: "Stab", category: "synth", midiNote: 80 },
-        { name: "Metal Hit", category: "metallic", midiNote: 52 },
         { name: "Rimshot", category: "backbeat", midiNote: 37 },
+        { name: "Metal Hit", category: "metallic", midiNote: 52 },
+        { name: "Stab", category: "synth", midiNote: 80 },
         { name: "Clap", category: "backbeat", midiNote: 39 },
-        { name: "Snare", category: "backbeat", midiNote: 38 },
-        { name: "Kick", category: "foundation", midiNote: 36 },
       ]},
     ];
 
@@ -1048,7 +1049,7 @@ window.DrumEngine = {
       barInd.appendChild(ind);
     }
 
-    for (const lane of currentPattern.lanes) {
+    for (const lane of [...currentPattern.lanes].reverse()) {
       const row = document.createElement('div');
       row.className = 'grid-row';
       const label = document.createElement('div');
