@@ -1,4 +1,4 @@
-# Drum Pattern Generator v3.0
+# Drum Pattern Generator v3.0.2
 
 Research-backed drum pattern generator for **Squarp Hapax**.
 
