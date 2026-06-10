@@ -85,7 +85,7 @@
   <div class="header">
     <h1>Drum Pattern Generator</h1>
     <span class="tag">HAPAX</span>
-    <span class="tag">v3.0</span>
+    <span class="tag">v3.0.2</span>
     <span style="flex:1"></span>
     <span style="font-size:9px;color:var(--text3)">Category-based • User-configurable lanes • 12 styles</span>
   </div>
@@ -131,7 +131,7 @@
 </div>
 
 <script>
-/* Drum Pattern Generator Engine v3.0
+/* Drum Pattern Generator Engine v3.0.2
  * Research-backed generative drum pattern system for Squarp Hapax
  *
  * v3.0 KEY CHANGE: Category-based lane system
@@ -209,7 +209,7 @@ const SOUND_PRESETS = [
 // ─── DEFAULT LANE CONFIG (8 Hapax lanes) ──────────────────────
 
 const DEFAULT_LANES = [
-  // Hapax drum track order: Lane 1 = Kick (bottom of grid)
+  // Hapax drum track order: Lane 1 = Kick (top of grid)
   { name: "Kick",        category: "foundation", midiNote: 36 },
   { name: "Snare",       category: "backbeat",   midiNote: 38 },
   { name: "HH Closed",   category: "hihat",      midiNote: 42 },
@@ -582,6 +582,8 @@ function generatePattern(params) {
     const mt = new Array(totalSteps).fill(0);
     if (swingRatio > 0.5 || characteristics.includes("groove")) {
       const swing = Math.max(swingRatio, characteristics.includes("groove") ? 0.58 : 0.5);
+    // Aesthetic cap (not evidence-based). Both Madison 2011 and Frühauf 2013 found
+    // microtiming does NOT improve groove as a general claim. Kept as user-facing option.
       const maxOffset = Math.min(50, Math.floor(240 * (swing * 100 - 50) / 25));
       for (let i = 0; i < pattern.length; i++) {
         if (pattern[i] === 1 && i % 2 === 1) mt[i] = rng.randInt(3, maxOffset);
