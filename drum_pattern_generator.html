@@ -1235,18 +1235,20 @@ const GROOVE_TEMPLATES = {
 // ─── PRIMITIVES ───────────────────────────────────────────────
 
 const PRIMITIVES = {
-  four_on_floor: [1,0,0,0, 1,0,0,0, 1,0,0,0, 1,0,0,0],
-  binary:        [1,0,1,0, 1,0,1,0, 1,0,1,0, 1,0,1,0],
-  sixteenth:     [1,1,1,1, 1,1,1,1, 1,1,1,1, 1,1,1,1],
-  offbeat:       [0,1,0,0, 0,1,0,0, 0,1,0,0, 0,1,0,0],
-  sparse:        [1,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0],
-  sparse2:       [1,0,0,0, 0,0,0,0, 1,0,0,0, 0,0,0,0],
-  accent:        [1,0,0,0,0,0,0,0, 1,0,0,0,0,0,0,0],
-  // Tribal
-  tresillo:      [1,0,0,1,0,0,1,0,0,0,0,0,0,0,0,0],
-  clave_3_2:     [1,0,0,1,0,0,1,0,0,0,1,0,0,1,0,0],
-  bell_12_8:     [1,0,1,0, 1,0,1,0, 1,0,1,0, 0,0,0,0],
-  shamanic:      [1,0,0,1, 0,0,1,0, 0,1,0,0, 1,0,0,0],
+  // Source: universal music theory — verified
+  four_on_floor: [1,0,0,0, 1,0,0,0, 1,0,0,0, 1,0,0,0],  // kick on every beat (4/4)
+  binary:        [1,0,1,0, 1,0,1,0, 1,0,1,0, 1,0,1,0],  // 8th notes
+  sixteenth:     [1,1,1,1, 1,1,1,1, 1,1,1,1, 1,1,1,1],  // 16th notes
+  offbeat:       [0,1,0,0, 0,1,0,0, 0,1,0,0, 0,1,0,0],  // offbeat 8th notes ("and" of each beat)
+  sparse:        [1,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0],  // 1 hit on beat 1
+  sparse2:       [1,0,0,0, 0,0,0,0, 1,0,0,0, 0,0,0,0],  // hits on beats 1 and 3
+  accent:        [1,0,0,0,0,0,0,0, 1,0,0,0,0,0,0,0],    // accent on beats 1 and 3
+  // Tribal — Source: Hutchinson "Music Theory 21st Century" 14.6 + YouTube uvK_bIZ8igo
+  tresillo:      [1,0,0,1,0,0,1,0, 1,0,0,1,0,0,1,0],    // doubled 3+3+2 (0,3,6,8,11,14) — Hutchinson: "sixteenth-note version of 3+3+2 is tresillo", YouTube: "extend it, double it"
+  clave_3_2:     [1,0,0,1,0,0,1,0, 0,0,1,0,0,1,0,0],    // 3-2 son clave (0,3,6,10,13) — Hutchinson: "3 attacks first bar, 2 attacks second bar"
+  rumba_clave:   [1,0,0,1,0,0,0,1, 0,0,1,0,0,1,0,0],    // rumba clave (0,3,7,10,13) — YouTube: "switch the 3rd note" from son clave
+  bell_12_8:     [1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,0],     // 12/8 bell feel (0,3,6,9,12) — Wikipedia Bell pattern: "3+3+3+3 grouping, triple-pulse"
+  shamanic:      [1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,0],     // NOTE: NOT a standard pattern — creator's own variation (YouTube uvK_bIZ8igo: "rhythm I've developed")
 };
 
 // ─── SEEDED RNG ───────────────────────────────────────────────
