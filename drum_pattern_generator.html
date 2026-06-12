@@ -1681,18 +1681,12 @@ function generatePattern(params) {
         else v = Math.max(45, Math.min(127, v));
         prevVel = v;
       } else {
+        // Default velocity 100 for all categories — user sets velocity curves manually
         v = curveValues[pos];
-        if (lane.category === "hihat") v = Math.floor(v * 0.75);
-        else if (lane.category === "foundation") v = 100;
-        else if (lane.category === "accent") v = rng.randInt(60, 90);
-        else if (lane.category === "synth") v = rng.randInt(70, 100);
+        if (lane.category !== "foundation") v = Math.floor(v * arcVelMul);
+        else v = 100; // Kick always 100
       }
-      // Foundation (kick) is always velocity 100 — immune to energy arc scaling
-      if (lane.category === "foundation") {
-        vel[i] = 100;
-      } else {
-        vel[i] = Math.max(1, Math.min(127, Math.floor(v * arcVelMul)));
-      }
+      vel[i] = Math.max(1, Math.min(127, v));
       // Convert ghost marker back to active
       if (pattern[i] === 2) pattern[i] = 1;
     }
