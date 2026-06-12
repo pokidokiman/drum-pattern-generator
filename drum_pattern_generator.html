@@ -1085,6 +1085,8 @@ function getSynthForNote(note, name) {
 }
 
 function playPattern(patternData, variationData) {
+  // Kill old context and create fresh one
+  if (audioCtx) { audioCtx.close().catch(() => {}); audioCtx = null; }
   const ctx = getAudioCtx();
   if (ctx.state === 'suspended') {
     ctx.resume().then(() => doPlay(ctx, patternData, variationData));
@@ -1094,8 +1096,9 @@ function playPattern(patternData, variationData) {
 }
 
 function doPlay(ctx, patternData, variationData) {
-  // Just cancel any pending loop timeout, don't suspend the context
+  // Kill any previous playback completely
   if (playbackTimeout) { clearTimeout(playbackTimeout); playbackTimeout = null; }
+  isPlaying = false;
 
   const data = variationData || patternData;
   if (!data || !patternData) return;
@@ -1155,14 +1158,11 @@ function doPlay(ctx, patternData, variationData) {
   }, totalDuration * 1000 + 100);
 }
 
-function stopPlayback(closeCtx) {
+function stopPlayback() {
   isPlaying = false;
   if (playbackTimeout) { clearTimeout(playbackTimeout); playbackTimeout = null; }
-  // Suspend context to stop all audio immediately (reusable)
-  if (audioCtx && audioCtx.state === 'running') {
-    audioCtx.suspend();
-  }
-  if (closeCtx && audioCtx) { audioCtx.close(); audioCtx = null; }
+  // Close context entirely to kill ALL scheduled nodes
+  if (audioCtx) { audioCtx.close().catch(() => {}); audioCtx = null; }
   updatePlayUI();
 }
 
@@ -1522,6 +1522,8 @@ window.DrumEngine = {
     activeTab = 'base';
     currentBar = 0;
     renderAll();
+    // Auto-play the new pattern
+    playPattern(currentPattern, null);
   }
 
   function renderAll() { renderTabs(); renderGrid(); renderInfo(); renderDownloads(); updateBarNav(); }
