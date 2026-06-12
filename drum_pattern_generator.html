@@ -1452,6 +1452,7 @@ function selectPattern(lane, characteristics, intensity, rng) {
     // Closed hihat
     if (characteristics.includes("tribal")) return [...PRIMITIVES.bell_12_8];
     if (characteristics.includes("hardgroove")) return [...PRIMITIVES.sixteenth];
+    if (characteristics.includes("humanized")) return [...PRIMITIVES.sixteenth]; // dense base, probability thins it
     if (characteristics.includes("hypnotic") || characteristics.includes("minimal")) return [...PRIMITIVES.binary];
     if (intensity > 0.6) return [...PRIMITIVES.sixteenth];
     return [...PRIMITIVES.binary];
@@ -1460,6 +1461,7 @@ function selectPattern(lane, characteristics, intensity, rng) {
   // BACKBEAT (snare, clap, rimshot)
   if (cat === "backbeat") {
     if (characteristics.includes("groove")) return [0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0];
+    if (characteristics.includes("humanized")) return [0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0]; // fixed backbeat, probability adds ghost hits
     return [...PRIMITIVES.sparse2];
   }
 
@@ -1468,6 +1470,7 @@ function selectPattern(lane, characteristics, intensity, rng) {
     if (characteristics.includes("tribal")) return [1,0,0,1, 0,0,1,0, 0,0,0,0, 1,0,0,0];
     if (characteristics.includes("hardgroove")) return [1,0,0,1, 0,1,0,0, 1,0,0,1, 0,0,1,0];
     if (characteristics.includes("groove")) return [...PRIMITIVES.offbeat];
+    if (characteristics.includes("humanized")) return [...PRIMITIVES.offbeat]; // offbeat base, probability varies
     return [...PRIMITIVES.sparse2];
   }
 
@@ -1616,24 +1619,66 @@ function generatePattern(params) {
       }
     }
 
+    // ── Humanized: probability, velocity random walk, microtiming ──
+    const isHumanized = characteristics.includes("humanized");
+    if (isHumanized) {
+      // Probability: drop 10-20% of hits, convert some to ghost notes
+      for (let i = 0; i < pattern.length; i++) {
+        if (!pattern[i]) continue;
+        const roll = rng.next();
+        if (roll < 0.12) {
+          // 12% chance: skip entirely (human missed the hit)
+          pattern[i] = 0;
+        } else if (roll < 0.22) {
+          // 10% chance: ghost note (soft hit, human didn't fully commit)
+          // Will be handled in velocity section below
+          pattern[i] = 2; // marker for ghost note
+        }
+      }
+      // Add ghost notes near existing hits (human anticipation/lag)
+      for (let i = 0; i < pattern.length; i++) {
+        if (pattern[i] !== 0) continue;
+        const prev = i > 0 ? pattern[i-1] : 0;
+        const next = i < pattern.length - 1 ? pattern[i+1] : 0;
+        if ((prev === 1 || prev === 2 || next === 1 || next === 2) && rng.next() < 0.15) {
+          pattern[i] = 2; // ghost note
+        }
+      }
+    }
+
     // Velocity
     const vel = new Array(totalSteps).fill(0);
     const curve = VELOCITY_CURVES[lane.velocity_curve] ? lane.velocity_curve : "flat";
     const curveValues = VELOCITY_CURVES[curve]();
+    let prevVel = 100; // for random walk
     for (let i = 0; i < pattern.length; i++) {
       if (!pattern[i]) continue;
       const pos = i % 16;
       const barOfStep = Math.floor(i / 16);
       let arcVelMul = ENERGY_ARCS[energyArc] ? ENERGY_ARCS[energyArc].fn(barOfStep, bars, rng).velocityMultiplier : 1.0;
-      let v = curveValues[pos];
-      if (lane.category === "hihat") v = Math.floor(v * 0.75);
-      else if (lane.category === "foundation") v = 100;
-      else if (lane.category === "accent") v = rng.randInt(60, 90);
-      else if (lane.category === "synth") v = rng.randInt(70, 100);
+      let v;
+      if (isHumanized && pattern[i] === 2) {
+        // Ghost note: very soft
+        v = rng.randInt(20, 45);
+      } else if (isHumanized) {
+        // Random walk velocity: base ± variation, correlated with previous step
+        const base = lane.category === "foundation" ? 100 : lane.category === "hihat" ? 75 : 85;
+        const walk = rng.randInt(-15, 15);
+        v = Math.max(40, Math.min(127, Math.floor(prevVel * 0.6 + (base + walk) * 0.4)));
+        prevVel = v;
+      } else {
+        v = curveValues[pos];
+        if (lane.category === "hihat") v = Math.floor(v * 0.75);
+        else if (lane.category === "foundation") v = 100;
+        else if (lane.category === "accent") v = rng.randInt(60, 90);
+        else if (lane.category === "synth") v = rng.randInt(70, 100);
+      }
       vel[i] = Math.max(1, Math.min(127, Math.floor(v * arcVelMul)));
+      // Convert ghost marker back to active
+      if (pattern[i] === 2) pattern[i] = 1;
     }
 
-    // Ghost notes
+    // Ghost notes (textural characteristic — separate from humanized ghosts)
     if (characteristics.includes("textural") && intensity > 0.4) {
       for (let i = 0; i < pattern.length; i++) {
         if (pattern[i] === 0 && rng.next() < 0.08 * intensity) {
@@ -1666,6 +1711,18 @@ function generatePattern(params) {
       }
       if (lane.category === "foundation") {
         for (let i = 0; i < mt.length; i++) mt[i] = Math.floor(mt[i] * 0.3);
+      }
+    }
+
+    // Humanized microtiming: random ±5-15ms offset on ALL active steps
+    // This is independent of swing — it simulates human timing imperfection
+    if (isHumanized) {
+      for (let i = 0; i < pattern.length; i++) {
+        if (!pattern[i]) continue;
+        // ±5-15 ticks random offset (at 960PPQ, ~5-15ms at 130 BPM)
+        const offset = rng.randInt(-15, 15);
+        // Foundation (kick) gets less displacement — humans anchor to kick
+        mt[i] = lane.category === "foundation" ? Math.floor(offset * 0.3) : offset;
       }
     }
 
