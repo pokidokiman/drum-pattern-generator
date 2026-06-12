@@ -1094,7 +1094,8 @@ function playPattern(patternData, variationData) {
 }
 
 function doPlay(ctx, patternData, variationData) {
-  stopPlayback(false); // don't close ctx
+  // Just cancel any pending loop timeout, don't suspend the context
+  if (playbackTimeout) { clearTimeout(playbackTimeout); playbackTimeout = null; }
 
   const data = variationData || patternData;
   if (!data || !patternData) return;
