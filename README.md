@@ -1,26 +1,48 @@
-# Drum Pattern Generator v3.0.2
+# Drum Pattern Generator v4.1.0
 
-Research-backed drum pattern generator for **Squarp Hapax**.
+Drum pattern generator for **Squarp Hapax** — standalone HTML, no server, no dependencies.
 
 ## Features
 
-- **8 user-configurable lanes** — name, category, MIDI note per lane
+### Hapax Page View
+- **16-step viewport** — compact grid like the Hapax screen, one bar at a time
+- **Bar navigation** — ◀ ▶ arrows or arrow keys to page between bars
+- **Synced position** — bar position stays when switching between Base/Drop/Fill/etc.
+
+### Pattern Engine
+- **8 user-configurable lanes** — name, category, MIDI note, MIDI channel per lane
 - **8 categories** — foundation, backbeat, hihat, accent, metallic, texture, pitched, synth
 - **12 styles** — hypnotic, minimal, groove, polyrhythmic, sparse, dense, syncopated, textural, tribal, hardgroove, humanized, dynamic
 - **Variation engine** — base pattern + drop, fill, buildup, break
-- **MIDI export** — 960 PPQ, Hapax drum track ready
-- **Research-backed** — Winograd syncopation, microtiming bounds (Madison et al., 2011), polyrhythmic LCM alignment
+- **Swing types** — shuffle (timing displacement) or straight+velocity (groove via dynamics)
+
+### MIDI Export
+- **960 PPQ** — Hapax native resolution
+- **User-specified BPM** — slider 120-155 (not hardcoded)
+- **Per-lane MIDI channels** — CH 1-16 per lane, routes to different Hapax outputs
+- **Track name meta-event** — pattern name embedded in MIDI file
+- **Format 0** — single track, Hapax drum import ready
+- **Microtiming** — velocity and timing per step, respected in export
+
+### Audio Playback
+- **Web Audio drum synthesis** — preview before export, no samples needed
+- **Play / Stop / Loop** — spacebar to toggle
+- **Velocity-sensitive** — soft hits sound soft, accents are louder
+- **Real-time position indicator** — shows current bar and step
+
+### Workflow
+- **Undo / Redo** — 50 levels, Ctrl+Z / Ctrl+Y
+- **Save / Load** — localStorage, persists across sessions
+- **Keyboard shortcuts** — ← → for bar nav, Space for play/stop
 
 ## Quick Start
 
 Open `drum_pattern_generator.html` in any browser. No server needed.
 
-Or use the editor:
-1. Open `editor/index.html` in browser (needs `engine.js` in same directory)
-2. Configure lanes (name, category, MIDI note)
-3. Select style(s)
-4. Adjust intensity / syncopation / swing
-5. Generate → download MIDI files per variation
+1. Select style(s) — e.g. Hypnotic, Hardgroove, Tribal
+2. Adjust intensity / syncopation / swing / BPM
+3. Configure lanes (name, category, MIDI note, MIDI channel)
+4. **GENERATE** → preview with ▶ PLAY → download MIDI files per variation
 
 ## Lane Categories
 
@@ -37,7 +59,8 @@ Or use the editor:
 
 ## Presets
 
-- **Default** — Classic 8-lane drum kit
+- **Default** — Classic 8-lane drum kit (Kick, Snare, HH Closed/Open, Tom, Clap, Perc)
+- **Hypnotic Raw** — Ride, stab, standard kit
 - **Hardgroove** — Ride, conga, shaker, Latin percussion
 - **Tribal** — Bell, conga, toms, shaker
 - **Industrial** — Stab, metal hit, rimshot
@@ -45,15 +68,38 @@ Or use the editor:
 ## Hapax Integration
 
 - 960 PPQ (Hapax native resolution)
-- MIDI notes: configurable per lane (default: 36=kick, 38=snare, etc.)
+- MIDI notes: configurable per lane (default: 36=kick, 38=snare, 42=closed HH, 46=open HH, 41=low tom, 50=hi tom, 39=clap, 56=perc)
+- Per-lane MIDI channel (1-16) — route different lanes to different Hapax outputs
 - Import `.mid` into Hapax drum track → lowest note auto-maps to Lane 1
-- User configures OUTPUT NOTE + CHANNEL per lane on Hapax
+- User configures OUTPUT NOTE + CHANNEL per lane on Hapax side
+- BPM in file matches the slider — but Hapax is always tempo master
 
-## Research References
+## Keyboard Shortcuts
 
-1. Frühauf, Kopiez, & Platz (2013). Music on the timing grid.
-2. Madison, Gouyon, Ullén, & Hörnström (2011). Modeling temporal microvariations.
-3. Winograd (1968). Linguistics and computer analysis of tonal harmony.
-4. Honing (2012). Musical Cognition: A Science of Listening.
-5. Lattner & Grachten (2019). High-Level Control of Drum Track Generation.
-6. Tripodi (2022). Deep learning-based drum loop generation.
+| Key | Action |
+|-----|--------|
+| ← → | Navigate between bars |
+| Space | Play / Stop |
+| Ctrl+Z | Undo |
+| Ctrl+Y | Redo |
+
+## Project Structure
+
+```
+drum-pattern-generator/
+├── drum_pattern_generator.html   ← standalone, browser-ready (no deps)
+├── editor/
+│   ├── engine.js                 ← 12 stijlen, alle YouTube data
+│   └── index.html                ← dark theme UI
+├── output/                       ← gegenereerde MIDI files
+├── generate_test_midis.py        ← test MIDI generator
+└── README.md
+```
+
+## YouTube Sources
+
+1. **"5 Drum Patterns Every Hypnotic Techno Producer Should Learn"** — Tresillo, Clave, 12x8 Bell, Shamanic
+2. **"Complete Guide to Techno Drums Pattern"** — Audioreakt — Kick patterns, hihat crescendo, clap backbeat
+3. **"How to Make Hardgroove Techno Drum Pattern"** — midee + MusicRadar — Conga, shaker, Latin perc
+4. **"Hi-Hat Humanizing & Variation Techniques"** — Drum Machine 101 — Probability, microtiming
+5. **"10 Rules for Techno"** — Underdog (Oscar) — Fullness/emptiness, pulse as foundation
