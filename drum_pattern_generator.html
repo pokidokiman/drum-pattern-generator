@@ -1533,30 +1533,12 @@ window.DrumEngine = {
     tabs.innerHTML = '';
     const baseTab = document.createElement('div');
     baseTab.className = 'tab' + (activeTab === 'base' ? ' active' : '');
-    baseTab.style.display = 'flex';
-    baseTab.style.alignItems = 'center';
-    baseTab.style.gap = '6px';
-
-    const baseLabel = document.createElement('span');
-    baseLabel.textContent = 'Base';
-    baseLabel.onclick = () => {
+    baseTab.textContent = 'Base';
+    baseTab.onclick = () => {
       activeTab = 'base';
       renderAll();
       if (isPlaying) playPattern(currentPattern, null);
     };
-    baseTab.appendChild(baseLabel);
-
-    // Dice roll button for base — re-generates pattern + all variations
-    const baseDice = document.createElement('span');
-    baseDice.textContent = '🎲';
-    baseDice.style.cursor = 'pointer';
-    baseDice.style.fontSize = '10px';
-    baseDice.title = 'Re-roll base pattern';
-    baseDice.onclick = (e) => {
-      e.stopPropagation();
-      rerollBase();
-    };
-    baseTab.appendChild(baseDice);
     tabs.appendChild(baseTab);
     for (const v of currentVariations) {
       const tab = document.createElement('div');
@@ -1609,33 +1591,6 @@ window.DrumEngine = {
     renderAll();
     const v = currentVariations.find(v => v.type === type);
     if (isPlaying && v) playPattern(currentPattern, v);
-  }
-
-  function rerollBase() {
-    if (!currentPattern) return;
-    pushUndo();
-
-    // Re-generate with same params but new seed (null = random)
-    const intensity = document.getElementById('intensity').value / 100;
-    const syncopation = document.getElementById('syncopation').value / 100;
-    const swing = document.getElementById('swing').value / 100;
-    const swingType = document.getElementById('swing-type').value;
-    const bpm = parseInt(document.getElementById('bpm').value);
-    const poly = document.getElementById('polyrhythmic').checked;
-    const barsVal = parseInt(document.getElementById('bars-override').value);
-    const bars = barsVal > 0 ? barsVal : null;
-
-    currentPattern = DrumEngine.generatePattern({
-      intensity, syncopation, swingRatio: swing, swingType,
-      polyrhythmic: poly, characteristics: selectedChars,
-      lanes: userLanes, seed: null, bars
-    });
-    currentPattern._bpm = bpm;
-    currentVariations = DrumEngine.generateVariations(currentPattern);
-    activeTab = 'base';
-    currentBar = 0;
-    renderAll();
-    if (isPlaying) playPattern(currentPattern, null);
   }
 
   // ─── HAPAX PAGE VIEW GRID ──────────────────────────────────
