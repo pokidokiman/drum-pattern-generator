@@ -245,6 +245,7 @@ body {
   border: 1px solid var(--border);
   border-radius: 4px;
   margin-bottom: 8px;
+  flex-wrap: wrap;
 }
 .style-label {
   font-size: 10px;
@@ -1990,18 +1991,19 @@ window.DrumEngine = {
 
   // Per-lane colors (match mockup CSS variables)
   const laneColors = [
-    { active: '#FF3344', inactive: '#401015', glow: 'rgba(255,51,68,0.30)' },   // Lane 1 Kick
-    { active: '#44DD44', inactive: '#1A401A', glow: 'rgba(68,221,68,0.30)' },   // Lane 2 Snare
-    { active: '#FFCC00', inactive: '#403800', glow: 'rgba(255,204,0,0.30)' },   // Lane 3 CH Hat
-    { active: '#FF9933', inactive: '#402A0D', glow: 'rgba(255,153,51,0.30)' },  // Lane 4 OH Hat
-    { active: '#FF66B2', inactive: '#401A2E', glow: 'rgba(255,102,178,0.30)' }, // Lane 5 Clap
-    { active: '#B066FF', inactive: '#2A1A40', glow: 'rgba(176,102,255,0.30)' }, // Lane 6 Tom
-    { active: '#4DA6FF', inactive: '#1A2E40', glow: 'rgba(77,166,255,0.30)' },  // Lane 7 Rim
-    { active: '#00D4AA', inactive: '#003830', glow: 'rgba(0,212,170,0.30)' },   // Lane 8 Perc
+    // Reversed: array index = visual position top-to-bottom (Perc=0 top, Kick=7 bottom)
+    { active: '#44DD44', inactive: '#1A401A', glow: 'rgba(68,221,68,0.30)' },   // Lane 1 Perc (top) — green
+    { active: '#FF66B2', inactive: '#401A2E', glow: 'rgba(255,102,178,0.30)' }, // Lane 2 Clap — pink
+    { active: '#B066FF', inactive: '#2A1A40', glow: 'rgba(176,102,255,0.30)' }, // Lane 3 Tom Hi — purple
+    { active: '#9C27B0', inactive: '#2A1040', glow: 'rgba(156,39,176,0.30)' },  // Lane 4 Tom Low — deep purple
+    { active: '#FF9933', inactive: '#402A0D', glow: 'rgba(255,153,51,0.30)' },  // Lane 5 OH Hat — orange
+    { active: '#FFCC00', inactive: '#403800', glow: 'rgba(255,204,0,0.30)' },   // Lane 6 CH Hat — yellow
+    { active: '#4DA6FF', inactive: '#1A2E40', glow: 'rgba(77,166,255,0.30)' },  // Lane 7 Snare — blue
+    { active: '#FF3344', inactive: '#401015', glow: 'rgba(255,51,68,0.30)' },   // Lane 8 Kick (bottom) — red
   ];
 
-  // Dot color classes (match mockup CSS)
-  const dotClasses = ['c-kick','c-snare','c-chh','c-ohh','c-clap','c-tom','c-rim','c-perc'];
+  // Dot color classes (match visual order: Perc=0 top, Kick=7 bottom)
+  const dotClasses = ['c-perc','c-clap','c-tom','c-tom','c-ohh','c-chh','c-snare','c-kick'];
 
   // ─── UNDO / REDO ─────────────────────────────────────────
 
@@ -2500,8 +2502,10 @@ window.DrumEngine = {
     ];
     document.getElementById('info-chars').innerHTML = charRows.map(r => {
       const dots = '●'.repeat(r.value) + '○'.repeat(5 - r.value);
-      return `<div class="info-row"><span class="label">${r.label}</span><span class="value accent">${dots}</span></div>`;
+      return `<div class="info-row"><span class="label">${r.label}</span><span class="value accent" style="letter-spacing:3px">${dots}</span></div>`;
     }).join('');
+    // Ensure each row is block-level
+    document.getElementById('info-chars').style.display = 'block';
     const descEl = document.getElementById('var-desc');
     if (activeTab !== 'base' && data.description) { descEl.style.display = 'block'; descEl.innerHTML = `<strong>${data.name}:</strong> ${data.description}`; }
     else { descEl.style.display = 'none'; }
