@@ -10,6 +10,7 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
+  /* Hapax color palette */
   --bg-deepest: #0D0D0D;
   --bg-screen: #1A1A1A;
   --bg-panel: #2C2C2C;
@@ -19,6 +20,8 @@
   --text-secondary: #888;
   --accent: #D4A843;
   --accent2: #E0B84F;
+
+  /* Aliases for JS compatibility (JS uses var(--bg), var(--surface), etc.) */
   --bg: #0D0D0D;
   --surface: #1A1A1A;
   --surface2: #2C2C2C;
@@ -28,6 +31,10 @@
   --green: #4CAF50;
   --red: #E53935;
   --blue: #5C8AC4;
+
+  /* Category colors (JS catColors maps categories to these) */
+  /* foundation=Kick=Red, backbeat=Snare=Green, hihat=CH/OH Hat=Yellow,
+     accent=Perc=Cyan, metallic=Orange, texture=Pink, pitched=Tom=Purple, synth=Blue */
   --cat-foundation: #FF3344;
   --cat-backbeat: #44DD44;
   --cat-hihat: #FFCC00;
@@ -36,6 +43,8 @@
   --cat-texture: #FF66B2;
   --cat-pitched: #B066FF;
   --cat-synth: #4DA6FF;
+
+  /* Lane position colors (for per-lane grid styling) */
   --lane1-active: #FF3344; --lane1-inactive: #401015; --lane1-glow: rgba(255,51,68,0.30);
   --lane2-active: #44DD44; --lane2-inactive: #1A401A; --lane2-glow: rgba(68,221,68,0.30);
   --lane3-active: #FFCC00; --lane3-inactive: #403800; --lane3-glow: rgba(255,204,0,0.30);
@@ -44,6 +53,7 @@
   --lane6-active: #B066FF; --lane6-inactive: #2A1A40; --lane6-glow: rgba(176,102,255,0.30);
   --lane7-active: #4DA6FF; --lane7-inactive: #1A2E40; --lane7-glow: rgba(77,166,255,0.30);
   --lane8-active: #00D4AA; --lane8-inactive: #003830; --lane8-glow: rgba(0,212,170,0.30);
+
   --inactive: #1E1E1E;
   --beat-marker: #222;
 }
@@ -58,9 +68,9 @@ body {
 }
 
 .container {
-  width: 1200px;
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 12px 16px;
+  padding: 20px;
 }
 
 /* ── Header ────────────────────────────────────────────── */
@@ -68,14 +78,14 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 16px;
+  padding: 12px 16px;
   background: var(--bg-screen);
   border: 1px solid var(--border);
   border-radius: 4px;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
 }
 .header h1 {
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 600;
   letter-spacing: 2.5px;
   color: var(--text-prominent);
@@ -84,42 +94,32 @@ body {
 .tag {
   background: var(--accent);
   color: #000;
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 700;
   letter-spacing: 2px;
-  padding: 2px 8px;
+  padding: 3px 10px;
   border-radius: 2px;
   text-transform: uppercase;
 }
 .header-info {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 9px;
+  font-size: 10px;
   color: var(--text-secondary);
   border: 1px solid var(--border);
   padding: 2px 8px;
   border-radius: 2px;
 }
 
-/* ── Controls Row 1: 4 Sliders ────────────────────────── */
-.controls-row1 {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
-  padding: 10px 16px;
-  background: var(--bg-screen);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  margin-bottom: 4px;
-}
-.controls-row2 {
+/* ── Controls Bar ──────────────────────────────────────── */
+.controls {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 8px 16px;
+  gap: 16px;
+  padding: 14px 16px;
   background: var(--bg-screen);
   border: 1px solid var(--border);
   border-radius: 4px;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
   flex-wrap: wrap;
 }
 .control-group {
@@ -128,24 +128,24 @@ body {
   gap: 6px;
 }
 .control-group label {
-  font-size: 9px;
+  font-size: 10px;
   letter-spacing: 1.5px;
   text-transform: uppercase;
   color: var(--text-secondary);
   font-weight: 600;
-  white-space: nowrap;
+  min-width: 65px;
 }
 .control-group .value {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 11px;
+  font-size: 12px;
   color: var(--accent);
-  min-width: 34px;
+  min-width: 36px;
   text-align: right;
 }
 input[type="range"] {
   -webkit-appearance: none;
   appearance: none;
-  width: 100%;
+  width: 100px;
   height: 4px;
   background: #333;
   border-radius: 2px;
@@ -176,7 +176,7 @@ select {
   border-radius: 3px;
   padding: 4px 8px;
   font-family: 'Inter', sans-serif;
-  font-size: 10px;
+  font-size: 11px;
   outline: none;
   cursor: pointer;
 }
@@ -186,88 +186,80 @@ select:focus { border-color: var(--accent); }
   color: #000;
   border: none;
   border-radius: 3px;
-  padding: 7px 22px;
+  padding: 8px 24px;
   font-family: 'Inter', sans-serif;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
   letter-spacing: 2px;
   text-transform: uppercase;
   cursor: pointer;
-  white-space: nowrap;
 }
 .btn:hover { background: var(--accent2); }
 .btn-sm {
-  padding: 4px 10px;
+  padding: 5px 12px;
   font-size: 10px;
   letter-spacing: 0.5px;
 }
-.btn-ghost {
-  background: var(--bg-panel);
-  color: var(--text2);
-  border: 1px solid var(--border);
-  border-radius: 3px;
-  padding: 4px 10px;
-  font-family: 'Inter', sans-serif;
-  font-size: 10px;
-  font-weight: 600;
-  cursor: pointer;
-  white-space: nowrap;
-}
-.btn-ghost:hover { border-color: var(--accent); color: var(--text); }
 
-/* ── Lane Configuration (2-column) ─────────────────────── */
-.lane-config {
-  padding: 8px 16px;
+/* ── Characteristic / Style Selector ───────────────────── */
+.chars-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
   background: var(--bg-screen);
   border: 1px solid var(--border);
   border-radius: 4px;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+.char-btn {
+  background: var(--bg-panel);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 5px 14px;
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.1s;
+}
+.char-btn:hover { border-color: var(--accent); color: var(--text); }
+.char-btn.active {
+  background: var(--accent);
+  color: #000;
+  border-color: var(--accent);
+  font-weight: 700;
+}
+
+/* ── Lane Configuration ────────────────────────────────── */
+.lane-config {
+  padding: 10px 16px;
+  background: var(--bg-screen);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  margin-bottom: 8px;
 }
 .lane-config h3 {
-  font-size: 9px;
+  font-size: 10px;
   letter-spacing: 2px;
   text-transform: uppercase;
   color: var(--text-secondary);
   font-weight: 700;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
 }
 .lane-config-grid {
   display: grid;
-  /* 11 columns: 5 left (dot, name, cat, note, ch) + 1 gap + 5 right */
-  grid-template-columns: 20px 1fr 120px 55px 65px 12px 20px 1fr 120px 55px 65px;
-  gap: 3px 4px;
+  grid-template-columns: 30px 1fr 140px 70px 80px;
+  gap: 4px 8px;
   align-items: center;
 }
-
-/* Left column: children 1-20 (lanes 1-4) */
-/* Dot/num: children 1,6,11,16 → col 1 */
-.lane-config-grid > :nth-child(5n+1):nth-child(-n+16) { grid-column: 1; }
-/* Name: children 2,7,12,17 → col 2 */
-.lane-config-grid > :nth-child(5n+2):nth-child(-n+17) { grid-column: 2; }
-/* Category: children 3,8,13,18 → col 3 */
-.lane-config-grid > :nth-child(5n+3):nth-child(-n+18) { grid-column: 3; }
-/* Note: children 4,9,14,19 → col 4 */
-.lane-config-grid > :nth-child(5n+4):nth-child(-n+19) { grid-column: 4; }
-/* Channel: children 5,10,15,20 → col 5 */
-.lane-config-grid > :nth-child(5n+5):nth-child(-n+20) { grid-column: 5; }
-
-/* Right column: children 21-40 (lanes 5-8) */
-/* Dot/num: children 21,26,31,36 → col 7 */
-.lane-config-grid > :nth-child(5n+1):nth-child(n+21):nth-child(-n+40) { grid-column: 7; }
-/* Name: children 22,27,32,37 → col 8 */
-.lane-config-grid > :nth-child(5n+2):nth-child(n+21):nth-child(-n+40) { grid-column: 8; }
-/* Category: children 23,28,33,38 → col 9 */
-.lane-config-grid > :nth-child(5n+3):nth-child(n+21):nth-child(-n+40) { grid-column: 9; }
-/* Note: children 24,29,34,39 → col 10 */
-.lane-config-grid > :nth-child(5n+4):nth-child(n+21):nth-child(-n+40) { grid-column: 10; }
-/* Channel: children 25,30,35,40 → col 11 */
-.lane-config-grid > :nth-child(5n+5):nth-child(n+21):nth-child(-n+40) { grid-column: 11; }
-
-/* Preset row: child 41 (JS sets grid-column: 1 / -1 inline) */
-
 .lane-config-grid .lane-num {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 9px;
+  font-size: 10px;
   color: var(--text3);
   text-align: center;
   font-weight: 700;
@@ -292,11 +284,11 @@ select:focus { border-color: var(--accent); }
   padding: 3px 6px;
   font-family: 'JetBrains Mono', monospace;
   font-size: 10px;
-  width: 55px;
+  width: 60px;
   outline: none;
 }
 .lane-config-grid input[type="number"]:focus { border-color: var(--accent); }
-.lane-config-grid select { font-size: 10px; padding: 3px 4px; }
+.lane-config-grid select { font-size: 10px; padding: 3px 6px; }
 .cat-dot {
   display: inline-block;
   width: 8px;
@@ -306,77 +298,36 @@ select:focus { border-color: var(--accent); }
   vertical-align: middle;
 }
 
-/* ── Style Selector (chars-bar) ────────────────────────── */
-.chars-bar {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  padding: 8px 16px;
-  background: var(--bg-screen);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  margin-bottom: 6px;
-  flex-wrap: nowrap;
-  overflow-x: auto;
-}
-.char-btn {
-  background: var(--bg-panel);
-  color: var(--text);
-  border: 1px solid var(--border);
-  border-radius: 3px;
-  padding: 4px 12px;
-  font-family: 'Inter', sans-serif;
-  font-size: 9px;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  cursor: pointer;
-  font-weight: 600;
-  transition: all 0.1s;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-.char-btn:hover { border-color: var(--accent); color: var(--text); }
-.char-btn.active {
-  background: var(--accent);
-  color: #000;
-  border-color: var(--accent);
-  font-weight: 700;
-}
-
 /* ── Variation Tabs ────────────────────────────────────── */
-.tabs-wrap {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 6px;
-}
 .tabs {
   display: flex;
   gap: 2px;
+  margin-bottom: 8px;
 }
 .tab {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 12px;
+  padding: 7px 14px;
   background: var(--bg-screen);
   border: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
   border-radius: 4px;
   cursor: pointer;
   font-family: 'Inter', sans-serif;
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 600;
   color: var(--text-secondary);
   letter-spacing: 1px;
   text-transform: uppercase;
   transition: all 0.1s;
-  white-space: nowrap;
 }
 .tab:hover { color: var(--text); background: var(--bg-panel); }
 .tab.active {
   color: var(--accent);
   background: var(--bg-deepest);
   border-color: var(--accent);
+  border-bottom-color: var(--accent);
 }
 
 /* ── Grid Container ────────────────────────────────────── */
@@ -384,8 +335,8 @@ select:focus { border-color: var(--accent); }
   background: var(--bg-deepest);
   border: 1px solid var(--border);
   border-radius: 4px;
-  padding: 10px 16px 14px;
-  margin-bottom: 6px;
+  padding: 12px 16px 16px;
+  margin-bottom: 8px;
 }
 
 /* ── Bar Navigation ────────────────────────────────────── */
@@ -394,17 +345,17 @@ select:focus { border-color: var(--accent); }
   align-items: center;
   justify-content: center;
   gap: 16px;
-  padding: 6px;
-  margin-bottom: 4px;
+  padding: 8px;
+  margin-bottom: 6px;
 }
 .bar-nav-btn {
   background: var(--bg-panel);
   color: var(--text);
   border: 1px solid var(--border);
   border-radius: 3px;
-  width: 26px;
-  height: 26px;
-  font-size: 12px;
+  width: 28px;
+  height: 28px;
+  font-size: 14px;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -414,7 +365,7 @@ select:focus { border-color: var(--accent); }
 .bar-nav-btn:hover { border-color: var(--accent); color: var(--accent); }
 .bar-nav-btn:disabled { opacity: 0.3; cursor: default; border-color: var(--border); color: var(--text-secondary); }
 .bar-nav-label {
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 2px;
   text-transform: uppercase;
   color: var(--text);
@@ -492,44 +443,46 @@ select:focus { border-color: var(--accent); }
   text-shadow: 0 0 2px rgba(255,255,255,0.3);
 }
 
-/* ── Info Panel (3 columns) ────────────────────────────── */
+/* ── Info Panel ────────────────────────────────────────── */
 .info {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 6px;
-  margin-bottom: 6px;
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
 }
 .info-card {
+  flex: 1;
+  min-width: 180px;
   background: var(--bg-screen);
   border: 1px solid var(--border);
   border-radius: 4px;
-  padding: 10px 14px;
+  padding: 12px 16px;
 }
 .info-card h3 {
-  font-size: 9px;
+  font-size: 10px;
   letter-spacing: 2px;
   text-transform: uppercase;
   color: var(--text-secondary);
-  margin-bottom: 6px;
+  margin-bottom: 8px;
   font-weight: 700;
 }
 .info-card .stat {
   display: flex;
   justify-content: space-between;
-  padding: 2px 0;
-  font-size: 10px;
+  padding: 3px 0;
+  font-size: 11px;
 }
 .info-card .stat span:first-child { color: var(--text-secondary); }
 .info-card .stat .val {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
+  font-size: 11px;
   color: var(--text);
   font-weight: 700;
 }
 .char-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
+  gap: 3px;
 }
 .char-tag {
   font-size: 9px;
@@ -545,44 +498,36 @@ select:focus { border-color: var(--accent); }
 
 /* ── Variation Description ─────────────────────────────── */
 .var-desc {
-  padding: 8px 14px;
+  padding: 10px 16px;
   background: var(--bg-screen);
   border: 1px solid var(--border);
   border-radius: 4px;
-  font-size: 10px;
+  font-size: 11px;
   color: var(--text-secondary);
   line-height: 1.5;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
 }
 .var-desc strong { color: var(--text); }
 
-/* ── Bottom Bar (Downloads left, Playback right) ───────── */
-.bottom-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 8px 16px;
-  background: var(--bg-screen);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-}
+/* ── Download Buttons ──────────────────────────────────── */
 .downloads {
   display: flex;
-  gap: 6px;
+  gap: 8px;
   flex-wrap: wrap;
+  margin-bottom: 8px;
 }
 .download-btn {
   display: flex;
   align-items: center;
   gap: 5px;
-  padding: 5px 12px;
+  padding: 6px 14px;
   background: var(--bg-panel);
   color: var(--text);
   border: 1px solid var(--border);
   border-radius: 3px;
   cursor: pointer;
   font-family: 'Inter', sans-serif;
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 600;
   letter-spacing: 1.5px;
   text-transform: uppercase;
@@ -590,18 +535,23 @@ select:focus { border-color: var(--accent); }
 }
 .download-btn:hover { border-color: var(--accent); color: var(--accent); }
 
+/* ── Playback ──────────────────────────────────────────── */
 .playback {
   display: flex;
   gap: 8px;
   align-items: center;
+  padding: 10px 16px;
+  background: var(--bg-screen);
+  border: 1px solid var(--border);
+  border-radius: 4px;
 }
 .play-btn {
-  padding: 6px 16px;
+  padding: 8px 20px;
   border: none;
   border-radius: 3px;
   cursor: pointer;
   font-family: 'Inter', sans-serif;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
   letter-spacing: 2px;
   text-transform: uppercase;
@@ -629,43 +579,31 @@ select:focus { border-color: var(--accent); }
 }
 .playback-status {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 9px;
+  font-size: 10px;
   color: var(--text-secondary);
   font-weight: 600;
   letter-spacing: 0.5px;
 }
 
-/* ── Seed input styling ────────────────────────────────── */
-.seed-input {
-  width: 65px;
-  background: var(--bg-panel);
+/* ── Bottom Bar (Downloads + Playback) ─────────────────── */
+.bottom-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  background: var(--bg-screen);
   border: 1px solid var(--border);
-  color: var(--text);
-  padding: 3px 6px;
-  border-radius: 3px;
-  font-family: 'Inter', sans-serif;
-  font-size: 10px;
-  outline: none;
+  border-radius: 4px;
+  margin-bottom: 8px;
 }
-.seed-input:focus { border-color: var(--accent); }
-
-/* ── Separator in controls row 2 ───────────────────────── */
-.ctrl-sep {
-  width: 1px;
-  height: 20px;
-  background: var(--border);
-  flex-shrink: 0;
+.bottom-bar .downloads {
+  margin-bottom: 0;
 }
-
-/* ── Section labels ────────────────────────────────────── */
-.section-label {
-  font-size: 9px;
-  color: var(--text3);
-  font-weight: 700;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-  white-space: nowrap;
-  flex-shrink: 0;
+.bottom-bar .playback {
+  background: none;
+  border: none;
+  padding: 0;
+  border-radius: 0;
 }
 </style>
 </head>
@@ -682,31 +620,24 @@ select:focus { border-color: var(--accent); }
     </div>
   </div>
 
-  <!-- 2a. Controls Row 1: 4 Sliders -->
-  <div class="controls-row1">
+  <!-- 2. Controls Bar -->
+  <div class="controls">
     <div class="control-group"><label>Intensity</label><input type="range" id="intensity" min="0" max="100" value="40"><span class="value" id="intensity-val">0.40</span></div>
     <div class="control-group"><label>Syncopation</label><input type="range" id="syncopation" min="0" max="100" value="20"><span class="value" id="syncopation-val">0.20</span></div>
     <div class="control-group"><label>Swing</label><input type="range" id="swing" min="50" max="75" value="50"><span class="value" id="swing-val">0.50</span></div>
-    <div class="control-group"><label>BPM</label><input type="range" id="bpm" min="120" max="155" value="135"><span class="value" id="bpm-val">135</span></div>
-  </div>
-
-  <!-- 2b. Controls Row 2: Options + Generate -->
-  <div class="controls-row2">
     <div class="control-group"><label>Swing Type</label><select id="swing-type"><option value="shuffle">Shuffle</option><option value="straight">Straight+Vel</option></select></div>
+    <div class="control-group"><label>BPM</label><input type="range" id="bpm" min="120" max="155" value="135"><span class="value" id="bpm-val">135</span></div>
     <div class="control-group"><label>Bars</label><select id="bars-override"><option value="0">Auto</option><option value="1">1</option><option value="2">2</option><option value="4">4</option><option value="8">8</option><option value="16">16</option></select></div>
     <div class="control-group"><label>Polyrhythmic</label><label style="cursor:pointer;font-size:10px"><input type="checkbox" id="polyrhythmic"> On</label></div>
-    <div class="control-group"><label>Seed</label><input type="number" id="seed" value="" placeholder="random" class="seed-input"></div>
-    <div class="ctrl-sep"></div>
+    <div class="control-group"><label>Seed</label><input type="number" id="seed" value="" placeholder="random" style="width:70px;background:var(--bg-panel);border:1px solid var(--border);color:var(--text);padding:3px;border-radius:3px;font-family:inherit;font-size:11px"></div>
     <button class="btn" onclick="generate()">GENERATE</button>
-    <div class="ctrl-sep"></div>
-    <button class="btn-ghost" onclick="undo()" title="Undo (Ctrl+Z)">↩</button>
-    <button class="btn-ghost" onclick="redo()" title="Redo (Ctrl+Y)">↪</button>
-    <div class="ctrl-sep"></div>
-    <button class="btn-ghost" onclick="savePattern()" title="Save to browser">💾 Save</button>
-    <button class="btn-ghost" onclick="loadPattern()" title="Load from browser">📂 Load</button>
+    <button class="btn btn-sm" onclick="undo()" title="Undo (Ctrl+Z)" style="background:var(--bg-panel);color:var(--text2);border:1px solid var(--border)">↩</button>
+    <button class="btn btn-sm" onclick="redo()" title="Redo (Ctrl+Y)" style="background:var(--bg-panel);color:var(--text2);border:1px solid var(--border)">↪</button>
+    <button class="btn btn-sm" onclick="savePattern()" title="Save to browser" style="background:var(--bg-panel);color:var(--text2);border:1px solid var(--border)">💾 Save</button>
+    <button class="btn btn-sm" onclick="loadPattern()" title="Load from browser" style="background:var(--bg-panel);color:var(--text2);border:1px solid var(--border)">📂 Load</button>
   </div>
 
-  <!-- 3. Lane Configuration (2-column layout) -->
+  <!-- 3. Lane Configuration -->
   <div class="lane-config">
     <h3>Lane Configuration (8 Hapax Lanes)</h3>
     <div class="lane-config-grid" id="lane-config-grid"></div>
@@ -716,10 +647,7 @@ select:focus { border-color: var(--accent); }
   <div class="chars-bar" id="chars-bar"></div>
 
   <!-- 5. Variation Tabs -->
-  <div class="tabs-wrap">
-    <span class="section-label">Variation:</span>
-    <div class="tabs" id="tabs"></div>
-  </div>
+  <div class="tabs" id="tabs"></div>
 
   <!-- 6. Bar Navigation -->
   <div class="bar-nav" id="bar-nav">
@@ -734,29 +662,15 @@ select:focus { border-color: var(--accent); }
     <div id="grid"></div>
   </div>
 
-  <!-- 8. Info Panel (3 columns side by side) -->
+  <!-- 8. Info Panel -->
   <div class="info">
-    <div class="info-card">
-      <h3>Pattern Info</h3>
-      <div class="stat"><span>Name</span><span class="val" id="info-name">—</span></div>
-      <div class="stat"><span>Bars</span><span class="val" id="info-bars">—</span></div>
-      <div class="stat"><span>Steps</span><span class="val" id="info-steps">—</span></div>
-      <div class="stat"><span>Swing</span><span class="val" id="info-swing">—</span></div>
-    </div>
-    <div class="info-card">
-      <h3>Metrics</h3>
-      <div class="stat"><span>Density</span><span class="val" id="info-density">—</span></div>
-      <div class="stat"><span>Syncopation</span><span class="val" id="info-syncopation">—</span></div>
-      <div class="stat"><span>Events</span><span class="val" id="info-count">—</span></div>
-    </div>
-    <div class="info-card">
-      <h3>Characteristics</h3>
-      <div class="char-tags" id="info-chars"></div>
-    </div>
+    <div class="info-card"><h3>Pattern</h3><div class="stat"><span>Name</span><span class="val" id="info-name">—</span></div><div class="stat"><span>Bars</span><span class="val" id="info-bars">—</span></div><div class="stat"><span>Steps</span><span class="val" id="info-steps">—</span></div><div class="stat"><span>Swing</span><span class="val" id="info-swing">—</span></div></div>
+    <div class="info-card"><h3>Metrics</h3><div class="stat"><span>Density</span><span class="val" id="info-density">—</span></div><div class="stat"><span>Syncopation</span><span class="val" id="info-syncopation">—</span></div><div class="stat"><span>Events</span><span class="val" id="info-count">—</span></div></div>
+    <div class="info-card"><h3>Characteristics</h3><div class="char-tags" id="info-chars"></div></div>
   </div>
   <div class="var-desc" id="var-desc" style="display:none"></div>
 
-  <!-- 9. Bottom Bar: Downloads left, Playback right -->
+  <!-- 9-10. Download + Playback -->
   <div class="bottom-bar">
     <div class="downloads" id="downloads"></div>
     <div class="playback">
