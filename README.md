@@ -1,4 +1,4 @@
-# Drum Pattern Generator v6.1.2
+# Drum Pattern Generator v7.0.0
 
 Drum pattern generator for **Squarp Hapax** — standalone HTML, no server, no dependencies.
 
@@ -19,6 +19,11 @@ Drum pattern generator for **Squarp Hapax** — standalone HTML, no server, no d
 - **Swing types** — shuffle (timing displacement) or straight+velocity (groove via dynamics)
 - **Seed control** — reproducible RNG, leave empty for random
 - **Characteristics** — select multiple per pattern (e.g. Hypnotic + Sparse + Textural)
+- **Groove templates** — TR-909 (house, techno, acid) and TR-808 (hiphop, bounce, afro) as pattern starting points
+- **Velocity curves** — per-lane: flat, exponential, logarithmic, random walk, crescendo, decrescendo
+- **Energy arcs** — multi-bar evolution: flat, build, peak, valley, cliff, wave
+- **Polyrhythm** — 3:4 tresillo and 5:4 quintuplet on any lane, creating tension against 4/4
+- **Correct primitives** — fixed sixteenth (all 1s), tresillo (16 steps), clave 3-2 (16 steps), accent pattern
 
 ### MIDI Export
 - **960 PPQ** — Hapax native resolution
@@ -49,9 +54,11 @@ Open `drum_pattern_generator.html` in any browser. No server needed.
 
 1. Select style(s) — e.g. Hypnotic, Hardgroove, Tribal
 2. Select characteristics — e.g. Sparse, Textural, Syncopated
-3. Adjust intensity / syncopation / swing / BPM
-4. Configure lanes (name, category, MIDI note, MIDI channel)
-5. **GENERATE** → preview with ▶ PLAY → download MIDI files per variation
+3. Optionally load a groove template (TR-909/808 presets)
+4. Set energy arc (build, peak, valley, wave) for multi-bar evolution
+5. Adjust intensity / syncopation / swing / BPM
+6. Configure lanes (name, category, MIDI note, MIDI channel, velocity curve)
+7. **GENERATE** → preview with ▶ PLAY → download MIDI files per variation
 
 ## Lane Layout
 
@@ -150,6 +157,13 @@ drum-pattern-generator/
 5. **"10 Rules for Techno"** — Underdog (Oscar) — Fullness/emptiness, pulse as foundation
 
 ## Changelog
+
+### v7.0.0
+- Fixed drum primitives: sixteenth (all 1s, was duplicate of binary), tresillo (16 steps, was 15), clave 3-2 (16 steps, was 20), accent (beats 1+3, was all zeros)
+- Added per-lane velocity curves: flat, exponential, logarithmic, random walk, crescendo, decrescendo
+- Added multi-bar energy arc evolution: flat, build, peak, valley, cliff, wave
+- Added TR-909/808 groove templates: 7 presets (909-house, 909-techno, 909-acid, 808-hiphop, 808-bounce, 808-afro) as pattern starting points
+- Added polyrhythm support: 3:4 tresillo and 5:4 quintuplet on any target lane
 
 ### v6.1.2
 - Fixed lane config column layout (explicit flex columns, Kick/Snare/HH left, Perc/Clap/Tom right)
