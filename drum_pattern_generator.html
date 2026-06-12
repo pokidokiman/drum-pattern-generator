@@ -698,117 +698,157 @@ function generateVariations(pattern, rng) {
 
 function generateDrop(pattern, rng) {
   const steps = {}, velocity = {}, microtiming = {};
-  let barStart, barEnd;
-  if (pattern.bars >= 4) { barStart = rng.choice([0, Math.floor(pattern.bars / 2)]); barEnd = barStart + Math.floor(pattern.bars / 2); }
-  else if (pattern.bars >= 2) { barStart = 0; barEnd = Math.floor(pattern.bars / 2); }
-  else { barStart = 0; barEnd = 1; }
+  // Drop length: 2-4 bars depending on base length
+  const dropBars = pattern.bars >= 8 ? rng.choice([2, 4]) : pattern.bars >= 4 ? 2 : Math.max(1, Math.floor(pattern.bars / 2));
+  // Pick which section of the base to use as the drop
+  const maxStart = Math.max(0, pattern.bars - dropBars);
+  const barStart = maxStart > 0 ? rng.choice([0, Math.floor(maxStart / 2), maxStart]) : 0;
+  const srcOffset = barStart * pattern.stepsPerBar;
+  const dropSteps = dropBars * pattern.stepsPerBar;
 
   for (const lane of pattern.lanes) {
     const srcS = pattern.steps[lane.name] || [];
     const srcV = pattern.velocity[lane.name] || [];
-    const ns = [...srcS], nv = [...srcV];
+    const ns = new Array(dropSteps).fill(0);
+    const nv = new Array(dropSteps).fill(0);
 
-    for (let i = 0; i < ns.length; i++) {
-      const bar = Math.floor(i / pattern.stepsPerBar);
-      const inDrop = bar >= barStart && bar < barEnd;
-      if (inDrop) {
-        if (lane.category === "foundation") { ns[i] = 0; nv[i] = 0; }
-        if (lane.category === "hihat" && i % 2 === 1 && rng.next() < 0.4) { ns[i] = 0; nv[i] = 0; }
-      } else { ns[i] = 0; nv[i] = 0; }
+    for (let i = 0; i < dropSteps; i++) {
+      const srcIdx = srcOffset + i;
+      ns[i] = srcS[srcIdx] || 0;
+      nv[i] = srcV[srcIdx] || 0;
     }
+
+    // Apply drop effect: remove foundation, thin hihat
+    for (let i = 0; i < dropSteps; i++) {
+      if (lane.category === "foundation") { ns[i] = 0; nv[i] = 0; }
+      if (lane.category === "hihat" && i % 2 === 1 && rng.next() < 0.4) { ns[i] = 0; nv[i] = 0; }
+    }
+
     steps[lane.name] = ns;
     velocity[lane.name] = nv;
-    microtiming[lane.name] = [...(pattern.microtiming[lane.name] || [])];
+    microtiming[lane.name] = new Array(dropSteps).fill(0);
   }
-  return { name: "Drop", type: "drop", description: `Foundation removed, hihat thinned. Bars ${barStart+1}-${barEnd}.`, steps, velocity, microtiming, bars: pattern.bars, barStart, barEnd };
+  return { name: "Drop", type: "drop", description: `Foundation removed, hihat thinned. ${dropBars} bars.`, steps, velocity, microtiming, bars: dropBars, barStart: 0, barEnd: dropBars };
 }
 
 function generateBuildup(pattern, rng) {
   const steps = {}, velocity = {}, microtiming = {};
-  const buildupStart = Math.max(0, pattern.bars - 2);
+  // Buildup length: 2-4 bars
+  const buildupBars = pattern.bars >= 8 ? rng.choice([2, 4]) : pattern.bars >= 4 ? 2 : Math.max(1, pattern.bars - 1);
+  // Use the LAST N bars of the base as source
+  const srcStart = Math.max(0, pattern.bars - buildupBars) * pattern.stepsPerBar;
+  const buildupSteps = buildupBars * pattern.stepsPerBar;
 
   for (const lane of pattern.lanes) {
-    const srcS = [...(pattern.steps[lane.name] || [])];
-    const srcV = [...(pattern.velocity[lane.name] || [])];
-    const ns = [...srcS], nv = [...srcV];
+    const srcS = pattern.steps[lane.name] || [];
+    const srcV = pattern.velocity[lane.name] || [];
+    const ns = new Array(buildupSteps).fill(0);
+    const nv = new Array(buildupSteps).fill(0);
 
-    for (let i = 0; i < ns.length; i++) {
-      const bar = Math.floor(i / pattern.stepsPerBar);
-      if (bar >= buildupStart) {
-        const posInBuild = i - buildupStart * pattern.stepsPerBar;
-        const buildLen = (pattern.bars - buildupStart) * pattern.stepsPerBar;
-        const progress = posInBuild / buildLen;
+    for (let i = 0; i < buildupSteps; i++) {
+      const srcIdx = srcStart + i;
+      ns[i] = srcS[srcIdx] || 0;
+      nv[i] = srcV[srcIdx] || 0;
+    }
 
-        if (lane.category === "hihat" && ns[i] === 0 && progress > 0.3 && rng.next() < progress * 0.5) {
+    // Apply buildup effect: increasing density
+    const progressStart = 0.3;
+    for (let i = 0; i < buildupSteps; i++) {
+      const progress = i / buildupSteps;
+      if (progress > progressStart) {
+        if (lane.category === "hihat" && ns[i] === 0 && rng.next() < (progress - progressStart) * 0.7) {
           ns[i] = 1; nv[i] = Math.floor(60 + progress * 40);
         }
-        if (lane.category === "pitched" && ns[i] === 0 && progress > 0.5 && rng.next() < progress * 0.3) {
+        if (lane.category === "pitched" && ns[i] === 0 && progress > 0.5 && rng.next() < (progress - 0.5) * 0.4) {
           ns[i] = 1; nv[i] = Math.floor(50 + progress * 50);
         }
         if (ns[i] === 1 && nv[i] > 0) nv[i] = Math.min(127, nv[i] + Math.floor(progress * 15));
       }
     }
+
     steps[lane.name] = ns;
     velocity[lane.name] = nv;
-    microtiming[lane.name] = [...(pattern.microtiming[lane.name] || [])];
+    microtiming[lane.name] = new Array(buildupSteps).fill(0);
   }
-  return { name: "Buildup", type: "buildup", description: `Density increase. Bars ${buildupStart+1}-${pattern.bars}.`, steps, velocity, microtiming, bars: pattern.bars, barStart: buildupStart, barEnd: pattern.bars };
+  return { name: "Buildup", type: "buildup", description: `Density increase. ${buildupBars} bars.`, steps, velocity, microtiming, bars: buildupBars, barStart: 0, barEnd: buildupBars };
 }
 
 function generateFill(pattern, rng) {
   const steps = {}, velocity = {}, microtiming = {};
-  const fillBar = pattern.bars - 1;
-  const fillStart = fillBar * pattern.stepsPerBar;
+  // Fill is always 1 bar (sometimes 2 for longer patterns)
+  const fillBars = pattern.bars >= 8 ? rng.choice([1, 2]) : 1;
+  const fillSteps = fillBars * pattern.stepsPerBar;
+  // Use the LAST bar(s) of the base as source
+  const srcStart = Math.max(0, pattern.bars - fillBars) * pattern.stepsPerBar;
 
   for (const lane of pattern.lanes) {
-    const srcS = [...(pattern.steps[lane.name] || [])];
-    const srcV = [...(pattern.velocity[lane.name] || [])];
-    const ns = [...srcS], nv = [...srcV];
+    const srcS = pattern.steps[lane.name] || [];
+    const srcV = pattern.velocity[lane.name] || [];
+    const ns = new Array(fillSteps).fill(0);
+    const nv = new Array(fillSteps).fill(0);
 
+    for (let i = 0; i < fillSteps; i++) {
+      const srcIdx = srcStart + i;
+      ns[i] = srcS[srcIdx] || 0;
+      nv[i] = srcV[srcIdx] || 0;
+    }
+
+    // Apply fill effect: syncopation + accents
     if (lane.category === "foundation") {
-      for (const pos of [10, 13]) { const i = fillStart + pos; if (i < ns.length && rng.next() < 0.5) { ns[i] = 1; nv[i] = 90; } }
+      for (const pos of [10, 13]) { const i = fillSteps - 16 + pos; if (i >= 0 && i < fillSteps && rng.next() < 0.5) { ns[i] = 1; nv[i] = 90; } }
     }
     if (lane.category === "hihat") {
-      for (const pos of [6, 14]) { const i = fillStart + pos; if (i < ns.length && rng.next() < 0.6) { ns[i] = 1; nv[i] = 85; } }
+      for (const pos of [6, 14]) { const i = fillSteps - 16 + pos; if (i >= 0 && i < fillSteps && rng.next() < 0.6) { ns[i] = 1; nv[i] = 85; } }
     }
     if (lane.category === "accent" || lane.category === "pitched") {
-      for (let i = fillStart + 8; i < Math.min(fillStart + 16, ns.length); i++) {
+      for (let i = Math.max(0, fillSteps - 8); i < fillSteps; i++) {
         if (rng.next() < 0.3) { ns[i] = 1; nv[i] = rng.randInt(50, 80); }
       }
     }
+
     steps[lane.name] = ns;
     velocity[lane.name] = nv;
-    microtiming[lane.name] = [...(pattern.microtiming[lane.name] || [])];
+    microtiming[lane.name] = new Array(fillSteps).fill(0);
   }
-  return { name: "Fill", type: "fill", description: `Syncopation, accents. Bar ${fillBar+1}.`, steps, velocity, microtiming, bars: pattern.bars, barStart: fillBar, barEnd: pattern.bars };
+  return { name: "Fill", type: "fill", description: `Syncopation, accents. ${fillBars} bar${fillBars > 1 ? 's' : ''}.`, steps, velocity, microtiming, bars: fillBars, barStart: 0, barEnd: fillBars };
 }
 
 function generateBreak(pattern, rng) {
   const steps = {}, velocity = {}, microtiming = {};
-  let breakStart, breakEnd;
-  if (pattern.bars >= 4) { breakStart = Math.floor(pattern.bars / 4); breakEnd = Math.floor(pattern.bars * 3 / 4); }
-  else { breakStart = 0; breakEnd = Math.floor(pattern.bars / 2); }
+  // Break length: 2-4 bars
+  const breakBars = pattern.bars >= 8 ? rng.choice([2, 4]) : pattern.bars >= 4 ? 2 : Math.max(1, Math.floor(pattern.bars / 2));
+  // Use the MIDDLE section of the base as source
+  const maxStart = Math.max(0, pattern.bars - breakBars);
+  const barStart = maxStart > 0 ? Math.floor(maxStart / 2) : 0;
+  const srcOffset = barStart * pattern.stepsPerBar;
+  const breakSteps = breakBars * pattern.stepsPerBar;
 
   for (const lane of pattern.lanes) {
-    const srcS = [...(pattern.steps[lane.name] || [])];
-    const srcV = [...(pattern.velocity[lane.name] || [])];
-    const ns = [...srcS], nv = [...srcV];
+    const srcS = pattern.steps[lane.name] || [];
+    const srcV = pattern.velocity[lane.name] || [];
+    const ns = new Array(breakSteps).fill(0);
+    const nv = new Array(breakSteps).fill(0);
 
-    for (let i = 0; i < ns.length; i++) {
-      const bar = Math.floor(i / pattern.stepsPerBar);
-      if (bar >= breakStart && bar < breakEnd) {
-        if (lane.category === "foundation") {
-          if (i % 8 !== 0) { ns[i] = 0; nv[i] = 0; }
-        } else if (lane.category !== "hihat") {
-          ns[i] = 0; nv[i] = 0;
-        }
+    for (let i = 0; i < breakSteps; i++) {
+      const srcIdx = srcOffset + i;
+      ns[i] = srcS[srcIdx] || 0;
+      nv[i] = srcV[srcIdx] || 0;
+    }
+
+    // Apply break effect: keep only foundation (sparse) + hihat
+    for (let i = 0; i < breakSteps; i++) {
+      if (lane.category === "foundation") {
+        if (i % 8 !== 0) { ns[i] = 0; nv[i] = 0; }
+      } else if (lane.category !== "hihat") {
+        ns[i] = 0; nv[i] = 0;
       }
     }
+
     steps[lane.name] = ns;
     velocity[lane.name] = nv;
-    microtiming[lane.name] = [...(pattern.microtiming[lane.name] || [])];
+    microtiming[lane.name] = new Array(breakSteps).fill(0);
   }
-  return { name: "Break", type: "break", description: `Foundation reduced, only hihat. Bars ${breakStart+1}-${breakEnd}.`, steps, velocity, microtiming, bars: pattern.bars, barStart: breakStart, barEnd: breakEnd };
+  return { name: "Break", type: "break", description: `Foundation reduced, only hihat. ${breakBars} bars.`, steps, velocity, microtiming, bars: breakBars, barStart: 0, barEnd: breakBars };
 }
 
 // ─── MIDI EXPORT ──────────────────────────────────────────────
@@ -1111,7 +1151,7 @@ function doPlay(ctx, patternData, variationData) {
   const secPerBeat = 60 / bpm;
   const secPerStep = secPerBeat / 4;
   const stepsPerBar = 16;
-  const bars = patternData.bars || 1;
+  const bars = data.bars || patternData.bars || 1;
   const totalSteps = bars * stepsPerBar;
   const totalDuration = totalSteps * secPerStep;
   const startTime = ctx.currentTime + 0.05;
@@ -1626,7 +1666,7 @@ window.DrumEngine = {
     const data = activeTab === 'base' ? currentPattern : currentVariations.find(v => v.type === activeTab);
     if (!data || !currentPattern) return;
 
-    const bars = currentPattern.bars;
+    const bars = data.bars || currentPattern.bars;
     currentBar = Math.min(currentBar, bars - 1);
     const barOffset = currentBar * 16;
 
@@ -1690,9 +1730,9 @@ window.DrumEngine = {
     const data = activeTab === 'base' ? currentPattern : currentVariations.find(v => v.type === activeTab);
     if (!data || !currentPattern) return;
     const allSteps = Object.values(data.steps || {}).flat();
-    const totalSteps = currentPattern.bars * currentPattern.stepsPerBar;
+    const totalSteps = (data.bars || currentPattern.bars) * (currentPattern.stepsPerBar || 16);
     document.getElementById('info-name').textContent = data.name || currentPattern.name;
-    document.getElementById('info-bars').textContent = currentPattern.bars;
+    document.getElementById('info-bars').textContent = data.bars || currentPattern.bars;
     document.getElementById('info-steps').textContent = totalSteps;
     document.getElementById('info-swing').textContent = (currentPattern.swingRatio || 0.5).toFixed(2);
     const density = DrumEngine.calculateEventDensity(allSteps);
