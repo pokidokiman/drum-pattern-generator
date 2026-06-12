@@ -18,15 +18,15 @@
   --text-prominent: #FFFFFF;
   --text-secondary: #666;
   --accent: #D4A843;
-  /* Lane colors: per-lane (row) coloring */
-  --lane1-active: #FF3344; --lane1-inactive: #401015; --lane1-glow: rgba(255,51,68,0.30);
-  --lane2-active: #44DD44; --lane2-inactive: #1A401A; --lane2-glow: rgba(68,221,68,0.30);
-  --lane3-active: #FFCC00; --lane3-inactive: #403800; --lane3-glow: rgba(255,204,0,0.30);
-  --lane4-active: #FF9933; --lane4-inactive: #402A0D; --lane4-glow: rgba(255,153,51,0.30);
-  --lane5-active: #FF66B2; --lane5-inactive: #401A2E; --lane5-glow: rgba(255,102,178,0.30);
-  --lane6-active: #B066FF; --lane6-inactive: #2A1A40; --lane6-glow: rgba(176,102,255,0.30);
+  /* Lane colors: per-lane (row) — Perc=top(green), Kick=bottom(red) */
+  --lane1-active: #44DD44; --lane1-inactive: #1A401A; --lane1-glow: rgba(68,221,68,0.30);
+  --lane2-active: #FF66B2; --lane2-inactive: #401A2E; --lane2-glow: rgba(255,102,178,0.30);
+  --lane3-active: #B066FF; --lane3-inactive: #2A1A40; --lane3-glow: rgba(176,102,255,0.30);
+  --lane4-active: #9C27B0; --lane4-inactive: #2A1040; --lane4-glow: rgba(156,39,176,0.30);
+  --lane5-active: #FF9933; --lane5-inactive: #402A0D; --lane5-glow: rgba(255,153,51,0.30);
+  --lane6-active: #FFCC00; --lane6-inactive: #403800; --lane6-glow: rgba(255,204,0,0.30);
   --lane7-active: #4DA6FF; --lane7-inactive: #1A2E40; --lane7-glow: rgba(77,166,255,0.30);
-  --lane8-active: #00D4AA; --lane8-inactive: #003830; --lane8-glow: rgba(0,212,170,0.30);
+  --lane8-active: #FF3344; --lane8-inactive: #401015; --lane8-glow: rgba(255,51,68,0.30);
   --green: #4CAF50;
   --red: #E53935;
   --blue: #5C8AC4;
@@ -245,7 +245,8 @@ body {
   border: 1px solid var(--border);
   border-radius: 4px;
   margin-bottom: 8px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  overflow-x: auto;
 }
 .style-label {
   font-size: 10px;
@@ -424,45 +425,45 @@ body {
 }
 
 /* ── Per-lane colors (rows) ───────────────────────────── */
-/* Lane 1 — Kick — Red */
+/* Lane 1 — Perc — Green */
 .step-cell.lane-color-1 { background: var(--lane1-inactive); }
-.step-cell.lane-color-1.beat-marker { background: #50181C; }
-.step-cell.active.lane-color-1 { box-shadow: 0 0 8px var(--lane1-glow); border-color: rgba(255,51,68,0.4); }
+.step-cell.lane-color-1.beat-marker { background: #225022; }
+.step-cell.active.lane-color-1 { box-shadow: 0 0 8px var(--lane1-glow); border-color: rgba(68,221,68,0.4); }
 .step-cell.active.lane-color-1 .velocity-fill { background: var(--lane1-active); }
-/* Lane 2 — Snare — Green */
+/* Lane 2 — Clap — Pink */
 .step-cell.lane-color-2 { background: var(--lane2-inactive); }
-.step-cell.lane-color-2.beat-marker { background: #225022; }
-.step-cell.active.lane-color-2 { box-shadow: 0 0 8px var(--lane2-glow); border-color: rgba(68,221,68,0.4); }
+.step-cell.lane-color-2.beat-marker { background: #50203A; }
+.step-cell.active.lane-color-2 { box-shadow: 0 0 8px var(--lane2-glow); border-color: rgba(255,102,178,0.4); }
 .step-cell.active.lane-color-2 .velocity-fill { background: var(--lane2-active); }
-/* Lane 3 — CH Hat — Yellow */
+/* Lane 3 — Tom Hi — Purple */
 .step-cell.lane-color-3 { background: var(--lane3-inactive); }
-.step-cell.lane-color-3.beat-marker { background: #504800; }
-.step-cell.active.lane-color-3 { box-shadow: 0 0 8px var(--lane3-glow); border-color: rgba(255,204,0,0.4); }
+.step-cell.lane-color-3.beat-marker { background: #362050; }
+.step-cell.active.lane-color-3 { box-shadow: 0 0 8px var(--lane3-glow); border-color: rgba(176,102,255,0.4); }
 .step-cell.active.lane-color-3 .velocity-fill { background: var(--lane3-active); }
-/* Lane 4 — OH Hat — Orange */
+/* Lane 4 — Tom Low — Deep Purple */
 .step-cell.lane-color-4 { background: var(--lane4-inactive); }
-.step-cell.lane-color-4.beat-marker { background: #503510; }
-.step-cell.active.lane-color-4 { box-shadow: 0 0 8px var(--lane4-glow); border-color: rgba(255,153,51,0.4); }
+.step-cell.lane-color-4.beat-marker { background: #362050; }
+.step-cell.active.lane-color-4 { box-shadow: 0 0 8px var(--lane4-glow); border-color: rgba(156,39,176,0.4); }
 .step-cell.active.lane-color-4 .velocity-fill { background: var(--lane4-active); }
-/* Lane 5 — Clap — Pink */
+/* Lane 5 — OH Hat — Orange */
 .step-cell.lane-color-5 { background: var(--lane5-inactive); }
-.step-cell.lane-color-5.beat-marker { background: #50203A; }
-.step-cell.active.lane-color-5 { box-shadow: 0 0 8px var(--lane5-glow); border-color: rgba(255,102,178,0.4); }
+.step-cell.lane-color-5.beat-marker { background: #503510; }
+.step-cell.active.lane-color-5 { box-shadow: 0 0 8px var(--lane5-glow); border-color: rgba(255,153,51,0.4); }
 .step-cell.active.lane-color-5 .velocity-fill { background: var(--lane5-active); }
-/* Lane 6 — Tom — Purple */
+/* Lane 6 — CH Hat — Yellow */
 .step-cell.lane-color-6 { background: var(--lane6-inactive); }
-.step-cell.lane-color-6.beat-marker { background: #362050; }
-.step-cell.active.lane-color-6 { box-shadow: 0 0 8px var(--lane6-glow); border-color: rgba(176,102,255,0.4); }
+.step-cell.lane-color-6.beat-marker { background: #504800; }
+.step-cell.active.lane-color-6 { box-shadow: 0 0 8px var(--lane6-glow); border-color: rgba(255,204,0,0.4); }
 .step-cell.active.lane-color-6 .velocity-fill { background: var(--lane6-active); }
-/* Lane 7 — Rim — Light Blue */
+/* Lane 7 — Snare — Blue */
 .step-cell.lane-color-7 { background: var(--lane7-inactive); }
 .step-cell.lane-color-7.beat-marker { background: #223A50; }
 .step-cell.active.lane-color-7 { box-shadow: 0 0 8px var(--lane7-glow); border-color: rgba(77,166,255,0.4); }
 .step-cell.active.lane-color-7 .velocity-fill { background: var(--lane7-active); }
-/* Lane 8 — Perc — Cyan/Teal */
+/* Lane 8 — Kick — Red */
 .step-cell.lane-color-8 { background: var(--lane8-inactive); }
-.step-cell.lane-color-8.beat-marker { background: #004A3C; }
-.step-cell.active.lane-color-8 { box-shadow: 0 0 8px var(--lane8-glow); border-color: rgba(0,212,170,0.4); }
+.step-cell.lane-color-8.beat-marker { background: #50181C; }
+.step-cell.active.lane-color-8 { box-shadow: 0 0 8px var(--lane8-glow); border-color: rgba(255,51,68,0.4); }
 .step-cell.active.lane-color-8 .velocity-fill { background: var(--lane8-active); }
 
 /* ── Info Panel ────────────────────────────────────────── */
@@ -574,15 +575,14 @@ body {
   cursor: pointer;
 }
 
-/* lane dot colors (match per-lane step colors) */
-.c-kick  { background: var(--lane1-active); }
-.c-snare { background: var(--lane2-active); }
-.c-chh   { background: var(--lane3-active); }
-.c-ohh   { background: var(--lane4-active); }
-.c-clap  { background: var(--lane5-active); }
-.c-tom   { background: var(--lane6-active); }
-.c-rim   { background: var(--lane7-active); }
-.c-perc  { background: var(--lane8-active); }
+/* lane dot colors (match per-lane step colors — Perc=top green, Kick=bottom red) */
+.c-perc  { background: var(--lane1-active); }
+.c-clap  { background: var(--lane2-active); }
+.c-tom   { background: var(--lane3-active); }
+.c-ohh   { background: var(--lane5-active); }
+.c-chh   { background: var(--lane6-active); }
+.c-snare { background: var(--lane7-active); }
+.c-kick  { background: var(--lane8-active); }
 
 /* ── Extra controls (app-specific, integrated into mockup layout) ── */
 .extra-controls {
