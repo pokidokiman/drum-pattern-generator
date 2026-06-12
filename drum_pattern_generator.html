@@ -19,13 +19,13 @@
   --text-secondary: #666;
   --accent: #D4A843;
   /* Lane colors: per-lane (row) — Perc=top(green), Kick=bottom(red) */
-  --lane1-active: #44DD44; --lane1-inactive: #1A401A; --lane1-glow: rgba(68,221,68,0.30);
+  --lane1-active: #00D4AA; --lane1-inactive: #0D3330; --lane1-glow: rgba(0,212,170,0.30);
   --lane2-active: #FF66B2; --lane2-inactive: #401A2E; --lane2-glow: rgba(255,102,178,0.30);
   --lane3-active: #B066FF; --lane3-inactive: #2A1A40; --lane3-glow: rgba(176,102,255,0.30);
   --lane4-active: #9C27B0; --lane4-inactive: #2A1040; --lane4-glow: rgba(156,39,176,0.30);
   --lane5-active: #FF9933; --lane5-inactive: #402A0D; --lane5-glow: rgba(255,153,51,0.30);
   --lane6-active: #FFCC00; --lane6-inactive: #403800; --lane6-glow: rgba(255,204,0,0.30);
-  --lane7-active: #4DA6FF; --lane7-inactive: #1A2E40; --lane7-glow: rgba(77,166,255,0.30);
+  --lane7-active: #44DD44; --lane7-inactive: #1A401A; --lane7-glow: rgba(68,221,68,0.30);
   --lane8-active: #FF3344; --lane8-inactive: #401015; --lane8-glow: rgba(255,51,68,0.30);
   --green: #4CAF50;
   --red: #E53935;
@@ -2147,8 +2147,8 @@ window.DrumEngine = {
     const rightCol = document.createElement('div');
     rightCol.className = 'lane-config-col';
 
-    const leftIndices = [0, 1, 2, 3];   // Kick, Snare, HH Closed, HH Open
-    const rightIndices = [7, 6, 5, 4];  // Perc, Clap, Tom Hi, Tom Low
+    const leftIndices = [3, 2, 1, 0];   // HH Open, HH Closed, Snare, Kick (bottom)
+    const rightIndices = [7, 6, 5, 4];  // Perc, Clap, Tom Hi, Tom Low (bottom)
 
     for (const colData of [[leftCol, leftIndices], [rightCol, rightIndices]]) {
       const [colDiv, indices] = colData;
@@ -2161,9 +2161,10 @@ window.DrumEngine = {
         row.className = 'lane-row';
         row.style.display = 'inline-flex';
 
-        // Color dot
+        // Color dot — use laneConfigDots (indexed by lane array position, not grid position)
+        const laneConfigDots = ['c-kick','c-snare','c-chh','c-ohh','c-tom','c-tom','c-clap','c-perc'];
         const dot = document.createElement('div');
-        dot.className = 'lane-color ' + (dotClasses[i] || 'c-perc');
+        dot.className = 'lane-color ' + (laneConfigDots[i] || 'c-perc');
         row.appendChild(dot);
 
         // Name input
