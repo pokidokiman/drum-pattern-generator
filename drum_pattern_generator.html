@@ -833,6 +833,12 @@ body {
     <span class="style-label">Style</span>
   </div>
 
+  <!-- 4b. Energy Arc Selector -->
+  <div class="style-selector" id="energy-arc-selector" style="gap:8px">
+    <span class="style-label">Energy Arc</span>
+    <select id="energy-arc-select" style="background:var(--bg-panel);color:var(--text);border:1px solid var(--border);border-radius:3px;padding:4px 8px;font-size:12px;cursor:pointer"></select>
+  </div>
+
   <!-- 5. Variation Tabs -->
   <div class="variation-row" id="variation-row">
     <span class="var-label">Variation</span>
@@ -1008,18 +1014,91 @@ const VELOCITY_CURVES = {
 // ─── CHARACTERISTIC PRESETS ───────────────────────────────────
 
 const CHARACTERISTIC_PRESETS = {
-  hypnotic:     { label: "Hypnotic",     desc: "Repetitive, trance-like, minimal" },
-  minimal:      { label: "Minimal",      desc: "Sparse, space between hits" },
-  groove:       { label: "Groove",       desc: "Swing, shuffle, bounce, crescendo" },
-  polyrhythmic: { label: "Polyrhythmic", desc: "3:4, 5:4 tension" },
-  sparse:       { label: "Sparse",       desc: "Very few events, breathing room" },
-  dense:        { label: "Dense",        desc: "Full, driving, energy" },
-  syncopated:   { label: "Syncopated",   desc: "Off-beat emphasis" },
-  textural:     { label: "Textural",     desc: "Ghost notes, subtle dynamics" },
-  tribal:       { label: "Tribal",       desc: "Tresillo, clave, bell, shamanic" },
-  hardgroove:   { label: "Hardgroove",   desc: "138+ BPM, conga, Latin, ride" },
-  humanized:    { label: "Humanized",    desc: "Probability, microtiming, velocity variation" },
-  dynamic:      { label: "Dynamic",      desc: "Fullness & emptiness, build & release" },
+  hypnotic:     { label: "Hypnotic",     desc: "Repetitive, trance-like, minimal",  energy_arc: "wave" },
+  minimal:      { label: "Minimal",      desc: "Sparse, space between hits",         energy_arc: "flat" },
+  groove:       { label: "Groove",       desc: "Swing, shuffle, bounce, crescendo",  energy_arc: "flat" },
+  polyrhythmic: { label: "Polyrhythmic", desc: "3:4, 5:4 tension",                   energy_arc: "peak" },
+  sparse:       { label: "Sparse",       desc: "Very few events, breathing room",    energy_arc: "valley" },
+  dense:        { label: "Dense",        desc: "Full, driving, energy",              energy_arc: "build" },
+  syncopated:   { label: "Syncopated",   desc: "Off-beat emphasis",                  energy_arc: "flat" },
+  textural:     { label: "Textural",     desc: "Ghost notes, subtle dynamics",       energy_arc: "valley" },
+  tribal:       { label: "Tribal",       desc: "Tresillo, clave, bell, shamanic",    energy_arc: "build" },
+  hardgroove:   { label: "Hardgroove",   desc: "138+ BPM, conga, Latin, ride",       energy_arc: "peak" },
+  humanized:    { label: "Humanized",    desc: "Probability, microtiming, velocity variation", energy_arc: "flat" },
+  dynamic:      { label: "Dynamic",      desc: "Fullness & emptiness, build & release", energy_arc: "cliff" },
+};
+
+// ─── ENERGY ARCS ─────────────────────────────────────────────
+
+const ENERGY_ARCS = {
+  flat: {
+    label: "Flat",
+    desc: "No evolution — consistent across all bars",
+    fn: (barIndex, totalBars, rng) => ({
+      densityMultiplier: 0.0,
+      velocityMultiplier: 1.0,
+    }),
+  },
+  build: {
+    label: "Build",
+    desc: "Gradual density increase from sparse to dense",
+    fn: (barIndex, totalBars, rng) => {
+      const t = totalBars > 1 ? barIndex / (totalBars - 1) : 0;
+      return {
+        densityMultiplier: t * 0.8,
+        velocityMultiplier: 0.6 + t * 0.8,
+      };
+    },
+  },
+  peak: {
+    label: "Peak",
+    desc: "Highest density in middle bars, tapers at start and end",
+    fn: (barIndex, totalBars, rng) => {
+      const t = totalBars > 1 ? barIndex / (totalBars - 1) : 0;
+      const peak = Math.sin(t * Math.PI);
+      return {
+        densityMultiplier: peak * 0.9,
+        velocityMultiplier: 0.6 + peak * 0.7,
+      };
+    },
+  },
+  valley: {
+    label: "Valley",
+    desc: "Lowest density in middle bars, dense at start and end",
+    fn: (barIndex, totalBars, rng) => {
+      const t = totalBars > 1 ? barIndex / (totalBars - 1) : 0;
+      const valley = 1 - Math.sin(t * Math.PI);
+      return {
+        densityMultiplier: valley * 0.7,
+        velocityMultiplier: 0.7 + valley * 0.5,
+      };
+    },
+  },
+  cliff: {
+    label: "Cliff",
+    desc: "Sudden density drop after peak — tension then release",
+    fn: (barIndex, totalBars, rng) => {
+      const t = totalBars > 1 ? barIndex / (totalBars - 1) : 0;
+      const peak = t < 0.4 ? t / 0.4 : Math.max(0, 1 - (t - 0.4) / 0.6);
+      return {
+        densityMultiplier: peak * 0.85,
+        velocityMultiplier: 0.55 + peak * 0.85,
+      };
+    },
+  },
+  wave: {
+    label: "Wave",
+    desc: "Sinusoidal density variation across bars",
+    fn: (barIndex, totalBars, rng) => {
+      const t = totalBars > 1 ? barIndex / (totalBars - 1) : 0;
+      const wave = Math.sin(t * Math.PI * 2);
+      const norm = (wave + 1) / 2;
+      return {
+        densityMultiplier: norm * 0.75,
+        velocityMultiplier: 0.55 + norm * 0.8,
+      };
+    },
+  },
 };
 
 // ─── PRIMITIVES ───────────────────────────────────────────────
@@ -1263,6 +1342,7 @@ function generatePattern(params) {
     lanes = DEFAULT_LANES,
     seed = null,
     bars: barsOverride = null,
+    energyArc = 'flat',
   } = params;
 
   const rng = new SeededRNG(seed);
@@ -1307,18 +1387,40 @@ function generatePattern(params) {
     while (base.length < 16) base.push(0);
     base = base.slice(0, 16);
 
-    // Extend to multi-bar with evolution
+    // Extend to multi-bar with evolution (energy arc driven)
+    const arc = ENERGY_ARCS[energyArc] ? ENERGY_ARCS[energyArc] : ENERGY_ARCS.flat;
     let pattern = [];
     for (let bar = 0; bar < bars; bar++) {
       let barPat = [...base];
-      if (bar > 0 && intensity > 0.4 && rng.next() < 0.25) {
-        const idx = rng.randInt(0, 15);
-        if (barPat[idx] === 0) barPat[idx] = 1;
+      const { densityMultiplier, velocityMultiplier } = arc.fn(bar, bars, rng);
+
+      // Apply density changes based on arc (proportional to base density)
+      const baseDensity = barPat.reduce((a, b) => a + b, 0) / barPat.length;
+      const emptySlots = barPat.map((v, i) => v === 0 ? i : -1).filter(i => i >= 0);
+
+      if (emptySlots.length > 0 && bar > 0) {
+        // Number of notes to add proportional to densityMultiplier
+        const notesToAdd = Math.round(emptySlots.length * densityMultiplier * intensity * 0.4);
+        const toAdd = rng.sample(emptySlots, Math.min(notesToAdd, emptySlots.length));
+        for (const i of toAdd) barPat[i] = 1;
       }
+
+      // Density reduction: remove notes when densityMultiplier is low
+      if (bar > 0 && densityMultiplier < 0.3) {
+        const activeSlots = barPat.map((v, i) => v === 1 ? i : -1).filter(i => i >= 0);
+        if (activeSlots.length > 1) {
+          const notesToRemove = Math.round((1 - densityMultiplier) * activeSlots.length * 0.2);
+          const toRemove = rng.sample(activeSlots, Math.min(notesToRemove, activeSlots.length));
+          for (const i of toRemove) barPat[i] = 0;
+        }
+      }
+
+      // Keep last-bar variation for multi-bar patterns
       if (bar === bars - 1 && bars >= 2 && rng.next() < 0.3) {
         const active = barPat.map((v, i) => v === 1 ? i : -1).filter(i => i >= 0);
         if (active.length > 1) barPat[rng.choice(active)] = 0;
       }
+
       pattern.push(...barPat);
     }
 
@@ -1343,12 +1445,14 @@ function generatePattern(params) {
     for (let i = 0; i < pattern.length; i++) {
       if (!pattern[i]) continue;
       const pos = i % 16;
+      const barOfStep = Math.floor(i / 16);
+      let arcVelMul = ENERGY_ARCS[energyArc] ? ENERGY_ARCS[energyArc].fn(barOfStep, bars, rng).velocityMultiplier : 1.0;
       let v = curveValues[pos];
       if (lane.category === "hihat") v = Math.floor(v * 0.75);
       else if (lane.category === "foundation") v = 100;
       else if (lane.category === "accent") v = rng.randInt(60, 90);
       else if (lane.category === "synth") v = rng.randInt(70, 100);
-      vel[i] = v;
+      vel[i] = Math.max(1, Math.min(127, Math.floor(v * arcVelMul)));
     }
 
     // Ghost notes
@@ -2019,7 +2123,7 @@ function updatePlayUI() {
 // ─── EXPORT ───────────────────────────────────────────────────
 
 window.DrumEngine = {
-  CATEGORIES, SOUND_PRESETS, DEFAULT_LANES, CHARACTERISTIC_PRESETS, PRIMITIVES, VELOCITY_CURVES,
+  CATEGORIES, SOUND_PRESETS, DEFAULT_LANES, CHARACTERISTIC_PRESETS, PRIMITIVES, VELOCITY_CURVES, ENERGY_ARCS,
   generatePattern, generateVariations, exportMidi,
   calculateSyncopation, calculateEventDensity, inferCharacteristics,
   playPattern, stopPlayback,
@@ -2031,6 +2135,7 @@ window.DrumEngine = {
   let currentVariations = [];
   let activeTab = 'base';
   let selectedChars = ['hypnotic'];
+  let selectedEnergyArc = 'flat';
   let userLanes = JSON.parse(JSON.stringify(DrumEngine.DEFAULT_LANES));
   let currentBar = 0;
 
@@ -2093,7 +2198,7 @@ window.DrumEngine = {
   function savePattern() {
     if (!currentPattern) return;
     const data = {
-      pattern: currentPattern, variations: currentVariations, userLanes, selectedChars,
+      pattern: currentPattern, variations: currentVariations, userLanes, selectedChars, selectedEnergyArc,
       controls: {
         intensity: document.getElementById('intensity').value,
         syncopation: document.getElementById('syncopation').value,
@@ -2117,6 +2222,7 @@ window.DrumEngine = {
       currentVariations = data.variations || [];
       userLanes = data.userLanes || JSON.parse(JSON.stringify(DrumEngine.DEFAULT_LANES));
       selectedChars = data.selectedChars || ['hypnotic'];
+      selectedEnergyArc = data.selectedEnergyArc || 'flat';
       if (data.controls) {
         document.getElementById('intensity').value = data.controls.intensity || 40;
         document.getElementById('syncopation').value = data.controls.syncopation || 20;
@@ -2360,6 +2466,29 @@ window.DrumEngine = {
       };
       container.appendChild(btn);
     }
+    initEnergyArc();
+  }
+
+  function initEnergyArc() {
+    const select = document.getElementById('energy-arc-select');
+    if (!select) return;
+    select.innerHTML = '';
+    for (const [key, arc] of Object.entries(DrumEngine.ENERGY_ARCS)) {
+      const opt = document.createElement('option');
+      opt.value = key;
+      opt.textContent = arc.label + (arc.desc ? ' — ' + arc.desc : '');
+      if (key === selectedEnergyArc) opt.selected = true;
+      select.appendChild(opt);
+    }
+    // Auto-suggest arc based on selected style (user can override)
+    if (selectedChars.length > 0) {
+      const primaryStyle = selectedChars[0];
+      const preset = DrumEngine.CHARACTERISTIC_PRESETS[primaryStyle];
+      if (preset && preset.energy_arc && preset.energy_arc !== selectedEnergyArc) {
+        // Only auto-set if user hasn't manually changed it (keep flat as safe default)
+      }
+    }
+    select.onchange = () => { selectedEnergyArc = select.value; };
   }
 
   // ─── SLIDER UPDATES ──────────────────────────────────────
@@ -2387,7 +2516,8 @@ window.DrumEngine = {
     currentPattern = DrumEngine.generatePattern({
       intensity, syncopation, swingRatio: swing, swingType,
       polyrhythmic: poly, characteristics: selectedChars,
-      lanes: userLanes, seed, bars
+      lanes: userLanes, seed, bars,
+      energyArc: selectedEnergyArc,
     });
     currentPattern._bpm = bpm;
     currentVariations = DrumEngine.generateVariations(currentPattern);
