@@ -582,7 +582,6 @@ body {
 .c-tom   { background: var(--lane6-active); }
 .c-rim   { background: var(--lane7-active); }
 .c-perc  { background: var(--lane8-active); }
-</style>
 
 /* ── Extra controls (app-specific, integrated into mockup layout) ── */
 .extra-controls {
@@ -2486,8 +2485,23 @@ window.DrumEngine = {
     document.getElementById('info-density').textContent = (density * 100).toFixed(1) + '%';
     document.getElementById('info-syncopation').textContent = (DrumEngine.calculateSyncopation(allSteps) * 100).toFixed(1) + '%';
     document.getElementById('info-count').textContent = events;
-    const chars = activeTab === 'base' ? (currentPattern.characteristics || []) : [];
-    document.getElementById('info-chars').innerHTML = chars.map(c => `<span class="char-tag">${c}</span>`).join('');
+    // Characteristics as dots (mockup format)
+    const groove = Math.min(5, Math.round((currentPattern.swingRatio || 0.5) * 8));
+    const complexity = Math.min(5, Math.round(density * 8));
+    const openness = Math.min(5, Math.round((1 - density) * 5));
+    const energy = Math.min(5, Math.round((currentPattern.intensity || 0.5) * 5));
+    const humanize = Math.min(5, Math.round((currentPattern.syncopation || 0.3) * 5 + 1));
+    const charRows = [
+      { label: 'Groove', value: groove },
+      { label: 'Complexity', value: complexity },
+      { label: 'Openness', value: openness },
+      { label: 'Energy', value: energy },
+      { label: 'Humanize', value: humanize },
+    ];
+    document.getElementById('info-chars').innerHTML = charRows.map(r => {
+      const dots = '●'.repeat(r.value) + '○'.repeat(5 - r.value);
+      return `<div class="info-row"><span class="label">${r.label}</span><span class="value accent">${dots}</span></div>`;
+    }).join('');
     const descEl = document.getElementById('var-desc');
     if (activeTab !== 'base' && data.description) { descEl.style.display = 'block'; descEl.innerHTML = `<strong>${data.name}:</strong> ${data.description}`; }
     else { descEl.style.display = 'none'; }
