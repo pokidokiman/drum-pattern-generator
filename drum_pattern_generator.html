@@ -1675,10 +1675,10 @@ function generatePattern(params) {
         // This creates actual variation that wanders up AND down
         const delta = rng.randInt(-12, 12);
         v = prevVel + delta;
-        // Clamp to reasonable range per category
-        if (lane.category === "hihat") v = Math.max(50, Math.min(110, v));
-        else if (lane.category === "backbeat") v = Math.max(60, Math.min(120, v));
-        else v = Math.max(45, Math.min(127, v));
+        // Clamp to 80-127 — never below 80 (audible on all instruments)
+        if (lane.category === "hihat") v = Math.max(80, Math.min(120, v));
+        else if (lane.category === "backbeat") v = Math.max(80, Math.min(127, v));
+        else v = Math.max(80, Math.min(127, v));
         prevVel = v;
       } else {
         // Default: use velocity curve value directly — energy arc affects density, NOT velocity
