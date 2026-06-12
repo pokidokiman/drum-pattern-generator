@@ -5,52 +5,48 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Drum Pattern Generator — Hapax</title>
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --bg-deepest: #1A1A1A;
-  --bg-screen: #222222;
-  --bg-panel: #222222;
-  --border: #333333;
-  --text: #E0E0E0;
-  --text-prominent: #E0E0E0;
-  --text-secondary: #A0A0A0;
-  --accent: #F0C040;
-  --accent2: #F0C040;
-  --bg: #1A1A1A;
-  --surface: #222222;
-  --surface2: #333333;
-  --surface3: #333333;
-  --text2: #A0A0A0;
-  --text3: #666666;
+  --bg-deepest: #0D0D0D;
+  --bg-screen: #1A1A1A;
+  --bg-panel: #2C2C2C;
+  --border: #3A3A3A;
+  --text: #F0F0F0;
+  --text-prominent: #FFFFFF;
+  --text-secondary: #666;
+  --accent: #D4A843;
+  /* Lane colors: per-lane (row) coloring */
+  --lane1-active: #FF3344; --lane1-inactive: #401015; --lane1-glow: rgba(255,51,68,0.30);
+  --lane2-active: #44DD44; --lane2-inactive: #1A401A; --lane2-glow: rgba(68,221,68,0.30);
+  --lane3-active: #FFCC00; --lane3-inactive: #403800; --lane3-glow: rgba(255,204,0,0.30);
+  --lane4-active: #FF9933; --lane4-inactive: #402A0D; --lane4-glow: rgba(255,153,51,0.30);
+  --lane5-active: #FF66B2; --lane5-inactive: #401A2E; --lane5-glow: rgba(255,102,178,0.30);
+  --lane6-active: #B066FF; --lane6-inactive: #2A1A40; --lane6-glow: rgba(176,102,255,0.30);
+  --lane7-active: #4DA6FF; --lane7-inactive: #1A2E40; --lane7-glow: rgba(77,166,255,0.30);
+  --lane8-active: #00D4AA; --lane8-inactive: #003830; --lane8-glow: rgba(0,212,170,0.30);
   --green: #4CAF50;
-  --red: #F44336;
-  --blue: #2196F3;
-  --cat-foundation: #F44336;
-  --cat-backbeat: #8BC34A;
-  --cat-hihat: #FFC107;
-  --cat-accent: #4CAF50;
-  --cat-metallic: #FFC107;
-  --cat-texture: #E91E63;
-  --cat-pitched: #9C27B0;
-  --cat-synth: #2196F3;
-  --inactive: #333333;
-  --beat-marker: #333333;
+  --red: #E53935;
+  --blue: #5C8AC4;
+  --inactive: #1E1E1E;
+  --beat-marker: #222;
 }
 
 body {
   background: var(--bg-deepest);
   color: var(--text);
-  font-family: system-ui, -apple-system, sans-serif;
-  font-size: 14px;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-size: 13px;
   line-height: 1.4;
-  min-height: 100vh;
+  padding: 20px;
+  min-width: 1100px;
 }
 
 .container {
-  max-width: 1360px;
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 24px 40px;
 }
 
 /* ── Header ────────────────────────────────────────────── */
@@ -58,424 +54,685 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 20px;
+  padding: 12px 16px;
   background: var(--bg-screen);
   border: 1px solid var(--border);
   border-radius: 4px;
-  margin-bottom: 24px;
+  margin-bottom: 8px;
 }
-.header h1 {
-  font-size: 20px;
-  font-weight: 700;
-  letter-spacing: 3px;
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.header-title {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 2.5px;
   color: var(--text-prominent);
   text-transform: uppercase;
 }
-.tag {
+.hapax-badge {
   background: var(--accent);
   color: #000;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
   letter-spacing: 2px;
-  padding: 4px 12px;
-  border-radius: 4px;
+  padding: 3px 10px;
+  border-radius: 2px;
   text-transform: uppercase;
 }
-.header-info {
-  font-size: 12px;
+.version-badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
   color: var(--text-secondary);
   border: 1px solid var(--border);
-  padding: 4px 12px;
-  border-radius: 4px;
+  padding: 2px 8px;
+  border-radius: 2px;
 }
 
-/* ── Controls Row 1: 4 Sliders ────────────────────────── */
-.controls-row1 {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 40px;
-  padding: 16px 20px;
-  background: var(--bg-screen);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  margin-bottom: 24px;
-}
-.controls-row2 {
+/* ── Controls Bar ──────────────────────────────────────── */
+.controls-bar {
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 12px 20px;
+  gap: 20px;
+  padding: 14px 16px;
   background: var(--bg-screen);
   border: 1px solid var(--border);
   border-radius: 4px;
-  margin-bottom: 24px;
+  margin-bottom: 8px;
   flex-wrap: wrap;
 }
 .slider-group {
   display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.slider-group .slider-label {
-  font-size: 12px;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-  color: var(--text-secondary);
-  font-weight: 600;
-}
-.slider-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.control-group {
-  display: flex;
   align-items: center;
   gap: 8px;
 }
-.control-group label {
-  font-size: 12px;
+.slider-group label {
+  font-size: 10px;
   letter-spacing: 1.5px;
   text-transform: uppercase;
   color: var(--text-secondary);
-  font-weight: 600;
-  white-space: nowrap;
+  min-width: 80px;
 }
-.control-group .value {
-  font-size: 14px;
-  color: var(--text);
-  min-width: 36px;
-  text-align: right;
-}
-input[type="range"] {
+.slider-group input[type="range"] {
   -webkit-appearance: none;
   appearance: none;
-  width: 100%;
+  width: 100px;
   height: 4px;
   background: #333;
   border-radius: 2px;
   outline: none;
-  cursor: pointer;
 }
-input[type="range"]::-webkit-slider-thumb {
+.slider-group input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 16px;
-  height: 16px;
+  width: 12px;
+  height: 12px;
   background: var(--accent);
   border-radius: 50%;
   cursor: pointer;
 }
-input[type="range"]::-moz-range-thumb {
-  width: 16px;
-  height: 16px;
-  background: var(--accent);
-  border-radius: 50%;
-  cursor: pointer;
-  border: none;
-}
-select {
-  background: var(--bg-panel);
-  color: var(--text);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  padding: 6px 10px;
-  font-family: system-ui, -apple-system, sans-serif;
-  font-size: 14px;
-  outline: none;
-  cursor: pointer;
-}
-select:focus { border-color: var(--accent); }
-.btn {
-  background: var(--accent);
-  color: #000;
-  border: none;
-  border-radius: 4px;
-  padding: 0 24px;
-  height: 40px;
-  font-family: system-ui, -apple-system, sans-serif;
-  font-size: 14px;
-  font-weight: 700;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  cursor: pointer;
-  white-space: nowrap;
-}
-.btn:hover { opacity: 0.9; }
-.btn-sm {
-  padding: 4px 10px;
+.slider-value {
+  font-family: 'JetBrains Mono', monospace;
   font-size: 12px;
-  letter-spacing: 0.5px;
+  color: var(--accent);
+  min-width: 36px;
+  text-align: right;
 }
-.btn-ghost {
-  background: var(--bg-panel);
-  color: var(--text);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  padding: 0 14px;
-  height: 36px;
-  font-family: system-ui, -apple-system, sans-serif;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  white-space: nowrap;
-}
-.btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
-
-/* ── Lane Configuration (2-column) ─────────────────────── */
-.lane-config {
-  padding: 16px 20px;
-  background: var(--bg-screen);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  margin-bottom: 24px;
-}
-.lane-config h3 {
-  font-size: 12px;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  color: var(--text-secondary);
-  font-weight: 700;
-  margin-bottom: 10px;
-}
-.lane-config-grid {
-  display: grid;
-  grid-template-columns: 20px 1fr 120px 60px 60px 8px 20px 1fr 120px 60px 60px;
-  gap: 8px 8px;
-  align-items: center;
-}
-
-/* Left column: children 1-20 (lanes 1-4) */
-.lane-config-grid > :nth-child(5n+1):nth-child(-n+16) { grid-column: 1; }
-.lane-config-grid > :nth-child(5n+2):nth-child(-n+17) { grid-column: 2; }
-.lane-config-grid > :nth-child(5n+3):nth-child(-n+18) { grid-column: 3; }
-.lane-config-grid > :nth-child(5n+4):nth-child(-n+19) { grid-column: 4; }
-.lane-config-grid > :nth-child(5n+5):nth-child(-n+20) { grid-column: 5; }
-
-/* Right column: children 21-40 (lanes 5-8) */
-.lane-config-grid > :nth-child(5n+1):nth-child(n+21):nth-child(-n+40) { grid-column: 7; }
-.lane-config-grid > :nth-child(5n+2):nth-child(n+21):nth-child(-n+40) { grid-column: 8; }
-.lane-config-grid > :nth-child(5n+3):nth-child(n+21):nth-child(-n+40) { grid-column: 9; }
-.lane-config-grid > :nth-child(5n+4):nth-child(n+21):nth-child(-n+40) { grid-column: 10; }
-.lane-config-grid > :nth-child(5n+5):nth-child(n+21):nth-child(-n+40) { grid-column: 11; }
-
-.lane-config-grid .lane-num {
-  font-size: 14px;
-  color: var(--text);
-  text-align: center;
-  font-weight: 700;
-}
-.lane-config-grid input[type="text"] {
-  background: var(--bg-deepest);
-  border: 1px solid var(--border);
-  color: var(--text);
-  border-radius: 4px;
-  padding: 6px 10px;
-  font-family: system-ui, -apple-system, sans-serif;
-  font-size: 14px;
-  width: 100%;
-  outline: none;
-}
-.lane-config-grid input[type="text"]:focus { border-color: var(--accent); }
-.lane-config-grid input[type="number"] {
-  background: var(--bg-deepest);
-  border: 1px solid var(--border);
-  color: var(--text);
-  border-radius: 4px;
-  padding: 6px 10px;
-  font-family: system-ui, -apple-system, sans-serif;
-  font-size: 14px;
-  width: 60px;
-  outline: none;
-}
-.lane-config-grid input[type="number"]:focus { border-color: var(--accent); }
-.lane-config-grid select { font-size: 12px; padding: 6px 8px; }
-.cat-dot {
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  margin-right: 6px;
-  vertical-align: middle;
-}
-
-/* ── Style Selector (chars-bar) ────────────────────────── */
-.chars-bar {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 20px;
-  background: var(--bg-screen);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  margin-bottom: 24px;
-  flex-wrap: nowrap;
-  overflow-x: auto;
-}
-.char-btn {
-  background: var(--inactive);
-  color: var(--text);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  padding: 6px 14px;
-  font-family: system-ui, -apple-system, sans-serif;
-  font-size: 12px;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  cursor: pointer;
-  font-weight: 600;
-  transition: all 0.1s;
-  white-space: nowrap;
-  flex-shrink: 0;
-  height: 36px;
-}
-.char-btn:hover { border-color: var(--accent); color: var(--text); }
-.char-btn.active {
-  background: var(--accent);
-  color: #1A1A1A;
-  border-color: var(--accent);
-  font-weight: 700;
-}
-
-/* ── Variation Tabs ────────────────────────────────────── */
-.tabs-wrap {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 24px;
-}
-.tabs {
-  display: flex;
-  gap: 4px;
-}
-.tab {
+.select-group {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 8px 14px;
-  background: var(--bg-deepest);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  cursor: pointer;
-  font-family: system-ui, -apple-system, sans-serif;
-  font-size: 12px;
-  font-weight: 600;
+}
+.select-group label {
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
   color: var(--text-secondary);
+}
+.select-group select {
+  background: var(--bg-panel);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 4px 8px;
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  outline: none;
+}
+.btn-generate {
+  background: var(--accent);
+  color: #000;
+  border: none;
+  border-radius: 3px;
+  padding: 8px 24px;
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  cursor: pointer;
+  margin-left: auto;
+}
+.controls-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* ── Lane Config ───────────────────────────────────────── */
+.lane-config {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+.lane-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 12px;
+  background: var(--bg-screen);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+}
+.lane-color {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+.lane-name {
+  font-size: 11px;
+  font-weight: 500;
   letter-spacing: 1px;
   text-transform: uppercase;
-  transition: all 0.1s;
-  white-space: nowrap;
+  min-width: 60px;
 }
-.tab:hover { color: var(--text); background: var(--surface2); }
-.tab.active {
+.lane-cat {
+  font-size: 10px;
+  color: var(--text-secondary);
+}
+.lane-cat select {
+  background: var(--bg-panel);
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  padding: 2px 6px;
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  outline: none;
+}
+.lane-midi {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--text-secondary);
+  margin-left: auto;
+}
+.lane-midi span {
   color: var(--accent);
-  background: var(--inactive);
-  border-color: var(--accent);
+  margin-left: 4px;
 }
 
-/* ── Grid Container ────────────────────────────────────── */
-.grid-container {
-  background: var(--bg-deepest);
+/* ── Style Selector ────────────────────────────────────── */
+.style-selector {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  background: var(--bg-screen);
   border: 1px solid var(--border);
   border-radius: 4px;
-  padding: 16px 20px;
-  margin-bottom: 24px;
+  margin-bottom: 8px;
+}
+.style-label {
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  margin-right: 8px;
+}
+.style-btn {
+  background: var(--bg-panel);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 5px 14px;
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.style-btn.active {
+  background: var(--accent);
+  color: #000;
+  border-color: var(--accent);
+  font-weight: 600;
 }
 
-/* ── Bar Navigation ────────────────────────────────────── */
+/* ── Variation Tabs ────────────────────────────────────── */
+.variation-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 16px;
+  background: var(--bg-screen);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  margin-bottom: 8px;
+}
+.var-tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg-panel);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 5px 14px;
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.var-tab.active {
+  background: var(--blue);
+  color: #fff;
+  border-color: var(--blue);
+  font-weight: 600;
+}
+.var-dice {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 14px;
+  cursor: pointer;
+  padding: 2px 4px;
+}
+.var-label {
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  margin-right: 8px;
+}
+
+/* ── Bar Nav ───────────────────────────────────────────── */
 .bar-nav {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 16px;
   padding: 8px;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 .bar-nav-btn {
-  background: var(--inactive);
+  background: var(--bg-panel);
   color: var(--text);
   border: 1px solid var(--border);
-  border-radius: 4px;
-  width: 32px;
-  height: 32px;
+  border-radius: 3px;
+  width: 28px;
+  height: 28px;
   font-size: 14px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.1s;
 }
-.bar-nav-btn:hover { border-color: var(--accent); color: var(--accent); }
-.bar-nav-btn:disabled { opacity: 0.3; cursor: default; border-color: var(--border); color: var(--text-secondary); }
 .bar-nav-label {
-  font-size: 14px;
+  font-size: 12px;
   letter-spacing: 2px;
   text-transform: uppercase;
   color: var(--text);
-  font-weight: 600;
+  font-weight: 500;
+}
+.bar-nav-label span {
+  color: var(--accent);
+  font-family: 'JetBrains Mono', monospace;
 }
 
-/* ── Step Numbers ──────────────────────────────────────── */
-.step-numbers {
-  display: flex;
-  margin-left: 108px;
+/* ── Step Grid ─────────────────────────────────────────── */
+.grid-wrapper {
+  background: var(--bg-screen);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 12px 16px 16px;
+  margin-bottom: 8px;
+}
+.grid-labels {
+  display: grid;
+  grid-template-columns: 72px repeat(16, 1fr);
+  gap: 2px;
   margin-bottom: 4px;
 }
-.step-num {
-  width: 40px;
-  margin-right: 2px;
+.grid-labels .step-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  color: var(--text-secondary);
   text-align: center;
-  font-size: 12px;
-  color: var(--text3);
-  font-weight: 600;
-  padding-bottom: 4px;
+  padding-bottom: 2px;
 }
-.step-num.beat { color: var(--accent); }
-
-/* ── Grid Rows ─────────────────────────────────────────── */
-.grid-row {
-  display: flex;
-  align-items: center;
-  margin-bottom: 2px;
+.step-num.beat-start {
+  color: var(--accent);
+}
+.grid-body {
+  display: grid;
+  grid-template-columns: 72px repeat(16, 1fr);
+  gap: 2px;
 }
 .lane-label {
-  width: 100px;
-  min-width: 100px;
-  font-size: 14px;
-  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-right: 8px;
+}
+.lane-label .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.lane-label span {
+  font-size: 10px;
+  font-weight: 500;
   letter-spacing: 1px;
   text-transform: uppercase;
   white-space: nowrap;
   overflow: hidden;
-  padding-right: 8px;
-  text-align: right;
 }
-
-/* ── Step Cells ────────────────────────────────────────── */
 .step-cell {
-  width: 40px;
-  height: 40px;
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.08s;
+  aspect-ratio: 1;
+  border: 1px solid rgba(255,255,255,0.04);
+  border-radius: 3px;
   position: relative;
   overflow: hidden;
-  margin-right: 2px;
+  min-height: 32px;
 }
-.step-cell:hover { background: rgba(255,255,255,0.08); }
-.step-cell.beat { background: var(--beat-marker); }
-.step-cell .vel-fill {
+.step-cell.active {
+  border-color: rgba(212,168,67,0.3);
+}
+.step-cell.active .velocity-fill {
   position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
-  border-radius: 2px 2px 0 0;
-  transition: height 0.1s;
+  border-radius: 0 0 2px 2px;
 }
+
+/* ── Per-lane colors (rows) ───────────────────────────── */
+/* Lane 1 — Kick — Red */
+.step-cell.lane-color-1 { background: var(--lane1-inactive); }
+.step-cell.lane-color-1.beat-marker { background: #50181C; }
+.step-cell.active.lane-color-1 { box-shadow: 0 0 8px var(--lane1-glow); border-color: rgba(255,51,68,0.4); }
+.step-cell.active.lane-color-1 .velocity-fill { background: var(--lane1-active); }
+/* Lane 2 — Snare — Green */
+.step-cell.lane-color-2 { background: var(--lane2-inactive); }
+.step-cell.lane-color-2.beat-marker { background: #225022; }
+.step-cell.active.lane-color-2 { box-shadow: 0 0 8px var(--lane2-glow); border-color: rgba(68,221,68,0.4); }
+.step-cell.active.lane-color-2 .velocity-fill { background: var(--lane2-active); }
+/* Lane 3 — CH Hat — Yellow */
+.step-cell.lane-color-3 { background: var(--lane3-inactive); }
+.step-cell.lane-color-3.beat-marker { background: #504800; }
+.step-cell.active.lane-color-3 { box-shadow: 0 0 8px var(--lane3-glow); border-color: rgba(255,204,0,0.4); }
+.step-cell.active.lane-color-3 .velocity-fill { background: var(--lane3-active); }
+/* Lane 4 — OH Hat — Orange */
+.step-cell.lane-color-4 { background: var(--lane4-inactive); }
+.step-cell.lane-color-4.beat-marker { background: #503510; }
+.step-cell.active.lane-color-4 { box-shadow: 0 0 8px var(--lane4-glow); border-color: rgba(255,153,51,0.4); }
+.step-cell.active.lane-color-4 .velocity-fill { background: var(--lane4-active); }
+/* Lane 5 — Clap — Pink */
+.step-cell.lane-color-5 { background: var(--lane5-inactive); }
+.step-cell.lane-color-5.beat-marker { background: #50203A; }
+.step-cell.active.lane-color-5 { box-shadow: 0 0 8px var(--lane5-glow); border-color: rgba(255,102,178,0.4); }
+.step-cell.active.lane-color-5 .velocity-fill { background: var(--lane5-active); }
+/* Lane 6 — Tom — Purple */
+.step-cell.lane-color-6 { background: var(--lane6-inactive); }
+.step-cell.lane-color-6.beat-marker { background: #362050; }
+.step-cell.active.lane-color-6 { box-shadow: 0 0 8px var(--lane6-glow); border-color: rgba(176,102,255,0.4); }
+.step-cell.active.lane-color-6 .velocity-fill { background: var(--lane6-active); }
+/* Lane 7 — Rim — Light Blue */
+.step-cell.lane-color-7 { background: var(--lane7-inactive); }
+.step-cell.lane-color-7.beat-marker { background: #223A50; }
+.step-cell.active.lane-color-7 { box-shadow: 0 0 8px var(--lane7-glow); border-color: rgba(77,166,255,0.4); }
+.step-cell.active.lane-color-7 .velocity-fill { background: var(--lane7-active); }
+/* Lane 8 — Perc — Cyan/Teal */
+.step-cell.lane-color-8 { background: var(--lane8-inactive); }
+.step-cell.lane-color-8.beat-marker { background: #004A3C; }
+.step-cell.active.lane-color-8 { box-shadow: 0 0 8px var(--lane8-glow); border-color: rgba(0,212,170,0.4); }
+.step-cell.active.lane-color-8 .velocity-fill { background: var(--lane8-active); }
+
+/* ── Info Panel ────────────────────────────────────────── */
+.info-panel {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.info-card {
+  background: var(--bg-screen);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 12px 16px;
+}
+.info-card h3 {
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 3px 0;
+}
+.info-row .label {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+.info-row .value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--text);
+}
+.info-row .value.accent {
+  color: var(--accent);
+}
+
+/* ── Download / Playback ───────────────────────────────── */
+.bottom-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  background: var(--bg-screen);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+}
+.download-group {
+  display: flex;
+  gap: 8px;
+}
+.btn-small {
+  background: var(--bg-panel);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 6px 14px;
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.playback-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.btn-play {
+  background: var(--green);
+  color: #fff;
+  border: none;
+  border-radius: 3px;
+  padding: 8px 20px;
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.btn-stop {
+  background: var(--red);
+  color: #fff;
+  border: none;
+  border-radius: 3px;
+  padding: 8px 16px;
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.btn-loop {
+  background: var(--bg-panel);
+  color: var(--blue);
+  border: 1px solid var(--blue);
+  border-radius: 3px;
+  padding: 8px 14px;
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+/* lane dot colors (match per-lane step colors) */
+.c-kick  { background: var(--lane1-active); }
+.c-snare { background: var(--lane2-active); }
+.c-chh   { background: var(--lane3-active); }
+.c-ohh   { background: var(--lane4-active); }
+.c-clap  { background: var(--lane5-active); }
+.c-tom   { background: var(--lane6-active); }
+.c-rim   { background: var(--lane7-active); }
+.c-perc  { background: var(--lane8-active); }
+</style>
+
+/* ── Extra controls (app-specific, integrated into mockup layout) ── */
+.extra-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 16px;
+  background: var(--bg-screen);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+.extra-controls .ctrl-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.extra-controls .ctrl-group label {
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.extra-controls .ctrl-group select,
+.extra-controls .ctrl-group input {
+  background: var(--bg-panel);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  padding: 3px 6px;
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  outline: none;
+}
+.extra-controls .ctrl-group input[type="number"] { width: 60px; }
+.extra-controls .ctrl-group input[type="checkbox"] { width: 14px; height: 14px; }
+.ctrl-sep { width: 1px; height: 20px; background: var(--border); flex-shrink: 0; }
+.btn-undo {
+  background: var(--bg-panel);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 4px 10px;
+  font-size: 12px;
+  cursor: pointer;
+}
+.btn-undo:hover { border-color: var(--accent); color: var(--accent); }
+
+/* Lane config: adapt mockup rows for app inputs */
+.lane-row .lane-name-input {
+  background: var(--bg-panel);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  padding: 3px 6px;
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  width: 70px;
+  outline: none;
+}
+.lane-row .lane-name-input:focus { border-color: var(--accent); }
+.lane-row .lane-note-input {
+  background: var(--bg-panel);
+  color: var(--accent);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  padding: 3px 6px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  width: 45px;
+  outline: none;
+}
+.lane-row .lane-note-input:focus { border-color: var(--accent); }
+.lane-row .lane-ch-select {
+  background: var(--bg-panel);
+  color: var(--accent);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  padding: 3px 6px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  outline: none;
+}
+
+/* Preset row under lane config */
+.preset-row {
+  display: flex;
+  gap: 6px;
+  padding: 8px 16px;
+  background: var(--bg-screen);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  margin-bottom: 8px;
+}
+.preset-btn {
+  background: var(--bg-panel);
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 4px 12px;
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.preset-btn:hover { border-color: var(--accent); color: var(--text); }
+.preset-btn.active { background: var(--accent); color: #000; border-color: var(--accent); }
+
+/* Variation description */
+.var-desc {
+  padding: 10px 16px;
+  background: var(--bg-screen);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-size: 11px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin-bottom: 8px;
+  display: none;
+}
+.var-desc strong { color: var(--text); }
+
+/* Characteristic tags in info card */
+.char-tags { display: flex; flex-wrap: wrap; gap: 4px; }
+.char-tag {
+  font-size: 10px;
+  padding: 2px 8px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  color: var(--accent);
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+/* Playback status */
+.playback-status {
+  font-size: 10px;
+  color: var(--text-secondary);
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+
+/* Step cell velocity text */
 .step-cell .vel-pct {
   position: absolute;
-  bottom: 2px;
+  bottom: 1px;
   left: 0;
   right: 0;
   text-align: center;
@@ -484,182 +741,6 @@ select:focus { border-color: var(--accent); }
   color: rgba(0,0,0,0.9);
   z-index: 1;
 }
-
-/* ── Info Panel (3 columns) ────────────────────────────── */
-.info {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 16px;
-  margin-bottom: 24px;
-}
-.info-card {
-  background: var(--bg-screen);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  padding: 20px 24px;
-}
-.info-card h3 {
-  font-size: 12px;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  color: var(--text-secondary);
-  margin-bottom: 12px;
-  font-weight: 700;
-}
-.info-card .stat {
-  display: flex;
-  justify-content: space-between;
-  padding: 4px 0;
-  font-size: 14px;
-}
-.info-card .stat span:first-child { color: var(--text-secondary); }
-.info-card .stat .val {
-  font-size: 14px;
-  color: var(--text);
-  font-weight: 700;
-}
-.char-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-.char-tag {
-  font-size: 12px;
-  padding: 4px 10px;
-  background: var(--inactive);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  color: var(--accent);
-  font-weight: 600;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-}
-
-/* ── Variation Description ─────────────────────────────── */
-.var-desc {
-  padding: 12px 16px;
-  background: var(--bg-screen);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  font-size: 14px;
-  color: var(--text-secondary);
-  line-height: 1.5;
-  margin-bottom: 24px;
-}
-.var-desc strong { color: var(--text); }
-
-/* ── Bottom Bar (Downloads left, Playback right) ───────── */
-.bottom-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 20px;
-  background: var(--bg-screen);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-}
-.downloads {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-.download-btn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 0 14px;
-  height: 36px;
-  background: var(--inactive);
-  color: var(--text);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  cursor: pointer;
-  font-family: system-ui, -apple-system, sans-serif;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-  transition: all 0.1s;
-}
-.download-btn:hover { border-color: var(--accent); color: var(--accent); }
-
-.playback {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-.play-btn {
-  padding: 0 20px;
-  height: 40px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-family: system-ui, -apple-system, sans-serif;
-  font-size: 14px;
-  font-weight: 700;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  transition: all 0.1s;
-}
-.play-btn.play {
-  background: var(--green);
-  color: #fff;
-}
-.play-btn.play:hover { opacity: 0.9; }
-.play-btn.stop {
-  background: var(--red);
-  color: #fff;
-}
-.play-btn.stop:hover { opacity: 0.9; }
-.play-btn.loop {
-  background: var(--inactive);
-  color: var(--text-secondary);
-  border: 1px solid var(--border);
-}
-.play-btn.loop.active {
-  background: var(--accent);
-  color: #1A1A1A;
-  border-color: var(--accent);
-}
-.playback-status {
-  font-size: 12px;
-  color: var(--text-secondary);
-  font-weight: 600;
-  letter-spacing: 0.5px;
-}
-
-/* ── Seed input styling ────────────────────────────────── */
-.seed-input {
-  width: 70px;
-  background: var(--bg-deepest);
-  border: 1px solid var(--border);
-  color: var(--text);
-  padding: 6px 10px;
-  border-radius: 4px;
-  font-family: system-ui, -apple-system, sans-serif;
-  font-size: 14px;
-  outline: none;
-}
-.seed-input:focus { border-color: var(--accent); }
-
-/* ── Separator in controls row 2 ───────────────────────── */
-.ctrl-sep {
-  width: 1px;
-  height: 24px;
-  background: var(--border);
-  flex-shrink: 0;
-}
-
-/* ── Section labels ────────────────────────────────────── */
-.section-label {
-  font-size: 12px;
-  color: var(--text-secondary);
-  font-weight: 700;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
 </style>
 </head>
 <body>
@@ -667,90 +748,123 @@ select:focus { border-color: var(--accent); }
 
   <!-- 1. Header -->
   <div class="header">
-    <h1>DRUM PATTERN GENERATOR</h1>
-    <span class="tag">HAPAX v5.0.0</span>
+    <div class="header-left">
+      <span class="header-title">Drum Pattern Generator</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <span class="hapax-badge">Hapax</span>
+      <span class="version-badge">v6.0.0</span>
+    </div>
   </div>
 
-  <!-- 2a. Controls Row 1: 4 Sliders -->
-  <div class="controls-row1">
-    <div class="slider-group"><span class="slider-label">Intensity</span><div class="slider-row"><input type="range" id="intensity" min="0" max="100" value="40"><span class="value" id="intensity-val">0.40</span></div></div>
-    <div class="slider-group"><span class="slider-label">Syncopation</span><div class="slider-row"><input type="range" id="syncopation" min="0" max="100" value="20"><span class="value" id="syncopation-val">0.20</span></div></div>
-    <div class="slider-group"><span class="slider-label">Swing</span><div class="slider-row"><input type="range" id="swing" min="50" max="75" value="50"><span class="value" id="swing-val">0.50</span></div></div>
-    <div class="slider-group"><span class="slider-label">BPM</span><div class="slider-row"><input type="range" id="bpm" min="120" max="155" value="135"><span class="value" id="bpm-val">135</span></div></div>
+  <!-- 2. Controls Bar (mockup layout: sliders + selects + generate) -->
+  <div class="controls-bar">
+    <div class="slider-group">
+      <label>Intensity</label>
+      <input type="range" id="intensity" min="0" max="100" value="40">
+      <span class="slider-value" id="intensity-val">40</span>
+    </div>
+    <div class="slider-group">
+      <label>Syncopation</label>
+      <input type="range" id="syncopation" min="0" max="100" value="20">
+      <span class="slider-value" id="syncopation-val">20</span>
+    </div>
+    <div class="slider-group">
+      <label>Swing</label>
+      <input type="range" id="swing" min="50" max="75" value="50">
+      <span class="slider-value" id="swing-val">50</span>
+    </div>
+    <div class="slider-group">
+      <label>BPM</label>
+      <input type="range" id="bpm" min="120" max="155" value="135">
+      <span class="slider-value" id="bpm-val">135</span>
+    </div>
+    <div class="controls-right">
+      <div class="select-group">
+        <label>Swing Type</label>
+        <select id="swing-type"><option value="shuffle">Shuffle</option><option value="straight">Straight+Vel</option></select>
+      </div>
+      <div class="select-group">
+        <label>Bars</label>
+        <select id="bars-override"><option value="0">Auto</option><option value="1">1</option><option value="2">2</option><option value="4">4</option><option value="8">8</option><option value="16">16</option></select>
+      </div>
+      <button class="btn-generate" onclick="generate()">Generate</button>
+    </div>
   </div>
 
-  <!-- 2b. Controls Row 2: Options + Generate -->
-  <div class="controls-row2">
-    <div class="control-group"><label>Swing Type</label><select id="swing-type"><option value="shuffle">Shuffle</option><option value="straight">Straight+Vel</option></select></div>
-    <div class="control-group"><label>Bars</label><select id="bars-override"><option value="0">Auto</option><option value="1">1</option><option value="2">2</option><option value="4">4</option><option value="8">8</option><option value="16">16</option></select></div>
-    <div class="control-group"><label>Polyrhythmic</label><label style="cursor:pointer;font-size:14px"><input type="checkbox" id="polyrhythmic"> On</label></div>
-    <div class="control-group"><label>Seed</label><input type="number" id="seed" value="" placeholder="random" class="seed-input"></div>
+  <!-- 2b. Extra controls (poly, seed, undo, save/load) -->
+  <div class="extra-controls">
+    <div class="ctrl-group"><label>Polyrhythmic</label><input type="checkbox" id="polyrhythmic"></div>
     <div class="ctrl-sep"></div>
-    <button class="btn" onclick="generate()">GENERATE</button>
+    <div class="ctrl-group"><label>Seed</label><input type="number" id="seed" placeholder="random"></div>
     <div class="ctrl-sep"></div>
-    <button class="btn-ghost" onclick="undo()" title="Undo (Ctrl+Z)">↩</button>
-    <button class="btn-ghost" onclick="redo()" title="Redo (Ctrl+Y)">↪</button>
+    <button class="btn-undo" onclick="undo()" title="Undo (Ctrl+Z)">↩</button>
+    <button class="btn-undo" onclick="redo()" title="Redo (Ctrl+Y)">↪</button>
     <div class="ctrl-sep"></div>
-    <button class="btn-ghost" onclick="savePattern()" title="Save to browser">💾 Save</button>
-    <button class="btn-ghost" onclick="loadPattern()" title="Load from browser">📂 Load</button>
+    <button class="btn-undo" onclick="savePattern()" title="Save">💾 Save</button>
+    <button class="btn-undo" onclick="loadPattern()" title="Load">📂 Load</button>
   </div>
 
-  <!-- 3. Lane Configuration (2-column layout) -->
-  <div class="lane-config">
-    <h3>Lane Configuration (8 Hapax Lanes)</h3>
-    <div class="lane-config-grid" id="lane-config-grid"></div>
-  </div>
+  <!-- 3. Lane Configuration (mockup 2-column layout) -->
+  <div class="lane-config" id="lane-config"></div>
+
+  <!-- 3b. Preset buttons -->
+  <div class="preset-row" id="preset-row"></div>
 
   <!-- 4. Style Selector -->
-  <div class="chars-bar" id="chars-bar"></div>
+  <div class="style-selector" id="style-selector">
+    <span class="style-label">Style</span>
+  </div>
 
   <!-- 5. Variation Tabs -->
-  <div class="tabs-wrap">
-    <span class="section-label">Variation:</span>
-    <div class="tabs" id="tabs"></div>
+  <div class="variation-row" id="variation-row">
+    <span class="var-label">Variation</span>
   </div>
 
   <!-- 6. Bar Navigation -->
   <div class="bar-nav" id="bar-nav">
     <button class="bar-nav-btn" onclick="prevBar()" id="bar-prev">◀</button>
-    <span class="bar-nav-label" id="bar-nav-label">BAR 1 / 1</span>
+    <span class="bar-nav-label" id="bar-nav-label">Bar <span>1</span> / <span>1</span></span>
     <button class="bar-nav-btn" onclick="nextBar()" id="bar-next">▶</button>
   </div>
 
   <!-- 7. Step Grid -->
-  <div class="grid-container">
-    <div class="step-numbers" id="step-numbers"></div>
-    <div id="grid"></div>
+  <div class="grid-wrapper">
+    <div class="grid-labels" id="step-numbers"></div>
+    <div class="grid-body" id="grid"></div>
   </div>
 
-  <!-- 8. Info Panel (3 columns side by side) -->
-  <div class="info">
+  <!-- 7b. Variation description -->
+  <div class="var-desc" id="var-desc"></div>
+
+  <!-- 8. Info Panel -->
+  <div class="info-panel">
     <div class="info-card">
       <h3>Pattern Info</h3>
-      <div class="stat"><span>Name</span><span class="val" id="info-name">—</span></div>
-      <div class="stat"><span>Bars</span><span class="val" id="info-bars">—</span></div>
-      <div class="stat"><span>Steps</span><span class="val" id="info-steps">—</span></div>
-      <div class="stat"><span>Swing</span><span class="val" id="info-swing">—</span></div>
+      <div class="info-row"><span class="label">Name</span><span class="value" id="info-name">—</span></div>
+      <div class="info-row"><span class="label">Bars</span><span class="value" id="info-bars">—</span></div>
+      <div class="info-row"><span class="label">Steps</span><span class="value" id="info-steps">—</span></div>
+      <div class="info-row"><span class="label">Swing</span><span class="value" id="info-swing">—</span></div>
     </div>
     <div class="info-card">
       <h3>Metrics</h3>
-      <div class="stat"><span>Density</span><span class="val" id="info-density">—</span></div>
-      <div class="stat"><span>Syncopation</span><span class="val" id="info-syncopation">—</span></div>
-      <div class="stat"><span>Events</span><span class="val" id="info-count">—</span></div>
+      <div class="info-row"><span class="label">Density</span><span class="value" id="info-density">—</span></div>
+      <div class="info-row"><span class="label">Syncopation</span><span class="value" id="info-syncopation">—</span></div>
+      <div class="info-row"><span class="label">Events</span><span class="value" id="info-count">—</span></div>
     </div>
     <div class="info-card">
       <h3>Characteristics</h3>
       <div class="char-tags" id="info-chars"></div>
     </div>
   </div>
-  <div class="var-desc" id="var-desc" style="display:none"></div>
 
-  <!-- 9. Bottom Bar: Downloads left, Playback right -->
+  <!-- 9. Bottom Bar -->
   <div class="bottom-bar">
-    <div class="downloads" id="downloads"></div>
-    <div class="playback">
-      <button class="play-btn play" id="play-btn" onclick="togglePlay()">▶ PLAY</button>
-      <button class="play-btn loop" id="loop-btn" onclick="toggleLoop()">🔁 LOOP</button>
+    <div class="download-group" id="downloads"></div>
+    <div class="playback-group">
+      <button class="btn-play" id="play-btn" onclick="togglePlay()">▶ Play</button>
+      <button class="btn-stop" onclick="stopPlayback();isLooping=false;document.getElementById('loop-btn').classList.remove('active');updatePlayUI();">■ Stop</button>
+      <button class="btn-loop" id="loop-btn" onclick="toggleLoop()">↻ Loop</button>
       <span class="playback-status" id="playback-status">Ready</span>
     </div>
   </div>
@@ -1869,20 +1983,26 @@ window.DrumEngine = {
   let activeTab = 'base';
   let selectedChars = ['hypnotic'];
   let userLanes = JSON.parse(JSON.stringify(DrumEngine.DEFAULT_LANES));
-  let currentBar = 0; // Hapax page view: which bar we're looking at
+  let currentBar = 0;
 
-  // Undo/redo
   let undoStack = [];
   let redoStack = [];
   const MAX_UNDO = 50;
 
-  // Category color map
-  const catColors = {
-    foundation: 'var(--cat-foundation)', backbeat: 'var(--cat-backbeat)',
-    hihat: 'var(--cat-hihat)', accent: 'var(--cat-accent)',
-    metallic: 'var(--cat-metallic)', texture: 'var(--cat-texture)',
-    pitched: 'var(--cat-pitched)', synth: 'var(--cat-synth)',
-  };
+  // Per-lane colors (match mockup CSS variables)
+  const laneColors = [
+    { active: '#FF3344', inactive: '#401015', glow: 'rgba(255,51,68,0.30)' },   // Lane 1 Kick
+    { active: '#44DD44', inactive: '#1A401A', glow: 'rgba(68,221,68,0.30)' },   // Lane 2 Snare
+    { active: '#FFCC00', inactive: '#403800', glow: 'rgba(255,204,0,0.30)' },   // Lane 3 CH Hat
+    { active: '#FF9933', inactive: '#402A0D', glow: 'rgba(255,153,51,0.30)' },  // Lane 4 OH Hat
+    { active: '#FF66B2', inactive: '#401A2E', glow: 'rgba(255,102,178,0.30)' }, // Lane 5 Clap
+    { active: '#B066FF', inactive: '#2A1A40', glow: 'rgba(176,102,255,0.30)' }, // Lane 6 Tom
+    { active: '#4DA6FF', inactive: '#1A2E40', glow: 'rgba(77,166,255,0.30)' },  // Lane 7 Rim
+    { active: '#00D4AA', inactive: '#003830', glow: 'rgba(0,212,170,0.30)' },   // Lane 8 Perc
+  ];
+
+  // Dot color classes (match mockup CSS)
+  const dotClasses = ['c-kick','c-snare','c-chh','c-ohh','c-clap','c-tom','c-rim','c-perc'];
 
   // ─── UNDO / REDO ─────────────────────────────────────────
 
@@ -1923,10 +2043,7 @@ window.DrumEngine = {
   function savePattern() {
     if (!currentPattern) return;
     const data = {
-      pattern: currentPattern,
-      variations: currentVariations,
-      userLanes,
-      selectedChars,
+      pattern: currentPattern, variations: currentVariations, userLanes, selectedChars,
       controls: {
         intensity: document.getElementById('intensity').value,
         syncopation: document.getElementById('syncopation').value,
@@ -1959,18 +2076,25 @@ window.DrumEngine = {
         document.getElementById('bpm').value = data.controls.bpm || 135;
         document.getElementById('bars-override').value = data.controls.bars || 0;
         document.getElementById('polyrhythmic').checked = data.controls.poly || false;
-        ['intensity','syncopation','swing','bpm'].forEach(id => {
-          const el = document.getElementById(id);
-          const val = document.getElementById(id + '-val');
-          if (el && val) val.textContent = id === 'bpm' ? el.value : (el.value / 100).toFixed(2);
-        });
+        updateSliderValues();
       }
       activeTab = 'base';
       currentBar = 0;
       initLaneConfig();
       initChars();
       renderAll();
-    } catch (e) { alert('Failed to load pattern: ' + e.message); }
+    } catch (e) { alert('Failed to load: ' + e.message); }
+  }
+
+  function updateSliderValues() {
+    ['intensity','syncopation','swing'].forEach(id => {
+      const el = document.getElementById(id);
+      const val = document.getElementById(id + '-val');
+      if (el && val) val.textContent = el.value;
+    });
+    const bpmEl = document.getElementById('bpm');
+    const bpmVal = document.getElementById('bpm-val');
+    if (bpmEl && bpmVal) bpmVal.textContent = bpmEl.value;
   }
 
   // ─── BAR NAVIGATION ─────────────────────────────────────
@@ -1986,7 +2110,8 @@ window.DrumEngine = {
 
   function updateBarNav() {
     const bars = currentPattern?.bars || 1;
-    document.getElementById('bar-nav-label').textContent = `BAR ${currentBar + 1} / ${bars}`;
+    const label = document.getElementById('bar-nav-label');
+    label.innerHTML = `Bar <span style="color:var(--accent)">${currentBar + 1}</span> / <span>${bars}</span>`;
     document.getElementById('bar-prev').disabled = currentBar <= 0;
     document.getElementById('bar-next').disabled = currentBar >= bars - 1;
   }
@@ -2002,71 +2127,91 @@ window.DrumEngine = {
     if (e.ctrlKey && e.key === 'y') { e.preventDefault(); redo(); }
   });
 
-  // ─── LANE CONFIG UI ───────────────────────────────────────
+  // ─── LANE CONFIG (mockup 2-column layout) ────────────────
 
   function initLaneConfig() {
-    const grid = document.getElementById('lane-config-grid');
-    grid.innerHTML = '';
+    const container = document.getElementById('lane-config');
+    container.innerHTML = '';
 
-    for (let i = 0; i < 8; i++) {
-      const lane = userLanes[i];
-      if (!lane.midiChannel) lane.midiChannel = 1; // default
+    // Split into 2 columns: lanes 0-3 left, lanes 4-7 right
+    for (let col = 0; col < 2; col++) {
+      const startIdx = col * 4;
+      for (let i = startIdx; i < startIdx + 4; i++) {
+        const lane = userLanes[i];
+        if (!lane) continue;
+        if (!lane.midiChannel) lane.midiChannel = 1;
 
-      // Lane number
-      const num = document.createElement('div');
-      num.className = 'lane-num';
-      num.textContent = i + 1;
-      grid.appendChild(num);
+        const row = document.createElement('div');
+        row.className = 'lane-row';
+        row.style.display = 'inline-flex';
 
-      // Name input
-      const nameInput = document.createElement('input');
-      nameInput.type = 'text';
-      nameInput.value = lane.name;
-      nameInput.onchange = () => { lane.name = nameInput.value; };
-      grid.appendChild(nameInput);
+        // Color dot
+        const dot = document.createElement('div');
+        dot.className = 'lane-color ' + (dotClasses[i] || 'c-perc');
+        row.appendChild(dot);
 
-      // Category dropdown
-      const catSelect = document.createElement('select');
-      for (const [key, cat] of Object.entries(DrumEngine.CATEGORIES)) {
-        const opt = document.createElement('option');
-        opt.value = key;
-        opt.textContent = cat.label;
-        if (key === lane.category) opt.selected = true;
-        catSelect.appendChild(opt);
+        // Name input
+        const nameInput = document.createElement('input');
+        nameInput.type = 'text';
+        nameInput.className = 'lane-name-input';
+        nameInput.value = lane.name;
+        nameInput.onchange = () => { lane.name = nameInput.value; };
+        row.appendChild(nameInput);
+
+        // Category dropdown
+        const catSelect = document.createElement('select');
+        for (const [key, cat] of Object.entries(DrumEngine.CATEGORIES)) {
+          const opt = document.createElement('option');
+          opt.value = key;
+          opt.textContent = cat.label;
+          if (key === lane.category) opt.selected = true;
+          catSelect.appendChild(opt);
+        }
+        catSelect.onchange = () => { lane.category = catSelect.value; };
+        catSelect.style.cssText = 'background:var(--bg-panel);color:var(--text-secondary);border:1px solid var(--border);border-radius:2px;padding:2px 6px;font-family:Inter,sans-serif;font-size:10px;outline:none;';
+        row.appendChild(catSelect);
+
+        // NOTE label + input
+        const noteLabel = document.createElement('span');
+        noteLabel.className = 'lane-midi';
+        noteLabel.innerHTML = 'NOTE ';
+        const noteInput = document.createElement('input');
+        noteInput.type = 'number';
+        noteInput.className = 'lane-note-input';
+        noteInput.value = lane.midiNote;
+        noteInput.min = 0;
+        noteInput.max = 127;
+        noteInput.onchange = () => { lane.midiNote = parseInt(noteInput.value) || 36; };
+        noteLabel.appendChild(noteInput);
+        row.appendChild(noteLabel);
+
+        // CH label + select
+        const chLabel = document.createElement('span');
+        chLabel.className = 'lane-midi';
+        chLabel.innerHTML = 'CH ';
+        const chSelect = document.createElement('select');
+        chSelect.className = 'lane-ch-select';
+        for (let ch = 1; ch <= 16; ch++) {
+          const opt = document.createElement('option');
+          opt.value = ch;
+          opt.textContent = ch;
+          if (ch === (lane.midiChannel || 1)) opt.selected = true;
+          chSelect.appendChild(opt);
+        }
+        chSelect.onchange = () => { lane.midiChannel = parseInt(chSelect.value); };
+        chLabel.appendChild(chSelect);
+        row.appendChild(chLabel);
+
+        container.appendChild(row);
       }
-      catSelect.onchange = () => { lane.category = catSelect.value; };
-      catSelect.style.color = catColors[lane.category] || 'var(--text)';
-      grid.appendChild(catSelect);
-
-      // MIDI note
-      const noteInput = document.createElement('input');
-      noteInput.type = 'number';
-      noteInput.value = lane.midiNote;
-      noteInput.min = 0;
-      noteInput.max = 127;
-      noteInput.onchange = () => { lane.midiNote = parseInt(noteInput.value) || 36; };
-      grid.appendChild(noteInput);
-
-      // MIDI channel
-      const chSelect = document.createElement('select');
-      for (let ch = 1; ch <= 16; ch++) {
-        const opt = document.createElement('option');
-        opt.value = ch;
-        opt.textContent = `CH ${ch}`;
-        if (ch === (lane.midiChannel || 1)) opt.selected = true;
-        chSelect.appendChild(opt);
-      }
-      chSelect.onchange = () => { lane.midiChannel = parseInt(chSelect.value); };
-      grid.appendChild(chSelect);
     }
+  }
 
-    // Quick presets
-    const presetRow = document.createElement('div');
-    presetRow.style.gridColumn = '1 / -1';
-    presetRow.style.marginTop = '6px';
-    presetRow.style.display = 'flex';
-    presetRow.style.gap = '6px';
+  // ─── PRESETS ──────────────────────────────────────────────
 
+  function initPresets() {
+    const row = document.getElementById('preset-row');
+    row.innerHTML = '';
     const presets = [
       { name: 'Default', lanes: DrumEngine.DEFAULT_LANES },
       { name: 'Hypnotic Raw', lanes: [
@@ -2110,31 +2255,28 @@ window.DrumEngine = {
         { name: "Kick", category: "foundation", midiNote: 36, midiChannel: 1 },
       ]},
     ];
-
     for (const p of presets) {
       const btn = document.createElement('button');
-      btn.className = 'btn btn-sm';
+      btn.className = 'preset-btn';
       btn.textContent = p.name;
-      btn.style.background = 'var(--surface2)';
-      btn.style.color = 'var(--text2)';
-      btn.style.border = '1px solid var(--border)';
       btn.onclick = () => {
         userLanes = JSON.parse(JSON.stringify(p.lanes));
         initLaneConfig();
+        document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
       };
-      presetRow.appendChild(btn);
+      row.appendChild(btn);
     }
-    grid.appendChild(presetRow);
   }
 
-  // ─── STYLE SELECTOR ────────────────────────────────────────
+  // ─── STYLE SELECTOR (mockup layout) ──────────────────────
 
   function initChars() {
-    const bar = document.getElementById('chars-bar');
-    bar.innerHTML = '<span style="font-size:9px;color:var(--text3);font-weight:700;letter-spacing:1px;margin-right:6px;">STYLE:</span>';
+    const container = document.getElementById('style-selector');
+    container.innerHTML = '<span class="style-label">Style</span>';
     for (const [key, preset] of Object.entries(DrumEngine.CHARACTERISTIC_PRESETS)) {
       const btn = document.createElement('button');
-      btn.className = 'char-btn' + (selectedChars.includes(key) ? ' active' : '');
+      btn.className = 'style-btn' + (selectedChars.includes(key) ? ' active' : '');
       btn.textContent = preset.label;
       btn.title = preset.desc;
       btn.onclick = () => {
@@ -2142,19 +2284,18 @@ window.DrumEngine = {
         else selectedChars.push(key);
         initChars();
       };
-      bar.appendChild(btn);
+      container.appendChild(btn);
     }
   }
 
-  // ─── SLIDER UPDATES ────────────────────────────────────────
+  // ─── SLIDER UPDATES ──────────────────────────────────────
 
   ['intensity','syncopation','swing','bpm'].forEach(id => {
     const el = document.getElementById(id);
-    const val = document.getElementById(id + '-val');
-    if (el && val) el.addEventListener('input', () => val.textContent = id === 'bpm' ? el.value : (el.value / 100).toFixed(2));
+    if (el) el.addEventListener('input', updateSliderValues);
   });
 
-  // ─── GENERATE ──────────────────────────────────────────────
+  // ─── GENERATE ─────────────────────────────────────────────
 
   function generate() {
     pushUndo();
@@ -2174,35 +2315,37 @@ window.DrumEngine = {
       polyrhythmic: poly, characteristics: selectedChars,
       lanes: userLanes, seed, bars
     });
-    currentPattern._bpm = bpm; // store for MIDI export
+    currentPattern._bpm = bpm;
     currentVariations = DrumEngine.generateVariations(currentPattern);
     activeTab = 'base';
     currentBar = 0;
     renderAll();
-    // Auto-play the new pattern
     playPattern(currentPattern, null);
   }
 
   function renderAll() { renderTabs(); renderGrid(); renderInfo(); renderDownloads(); updateBarNav(); }
 
+  // ─── VARIATION TABS (mockup layout) ──────────────────────
+
   function renderTabs() {
-    const tabs = document.getElementById('tabs');
-    tabs.innerHTML = '';
-    const baseTab = document.createElement('div');
-    baseTab.className = 'tab' + (activeTab === 'base' ? ' active' : '');
+    const container = document.getElementById('variation-row');
+    container.innerHTML = '<span class="var-label">Variation</span>';
+
+    // Base tab
+    const baseTab = document.createElement('button');
+    baseTab.className = 'var-tab' + (activeTab === 'base' ? ' active' : '');
     baseTab.textContent = 'Base';
     baseTab.onclick = () => {
       activeTab = 'base';
       renderAll();
       if (isPlaying) playPattern(currentPattern, null);
     };
-    tabs.appendChild(baseTab);
+    container.appendChild(baseTab);
+
+    // Variation tabs
     for (const v of currentVariations) {
-      const tab = document.createElement('div');
-      tab.className = 'tab' + (activeTab === v.type ? ' active' : '');
-      tab.style.display = 'flex';
-      tab.style.alignItems = 'center';
-      tab.style.gap = '6px';
+      const tab = document.createElement('button');
+      tab.className = 'var-tab' + (activeTab === v.type ? ' active' : '');
 
       const label = document.createElement('span');
       label.textContent = v.name;
@@ -2213,44 +2356,34 @@ window.DrumEngine = {
       };
       tab.appendChild(label);
 
-      // Dice roll button — re-generate only this variation
       const dice = document.createElement('span');
+      dice.className = 'var-dice';
       dice.textContent = '🎲';
-      dice.style.cursor = 'pointer';
-      dice.style.fontSize = '10px';
       dice.title = `Re-roll ${v.name}`;
-      dice.onclick = (e) => {
-        e.stopPropagation();
-        rerollVariation(v.type);
-      };
+      dice.onclick = (e) => { e.stopPropagation(); rerollVariation(v.type); };
       tab.appendChild(dice);
 
-      tabs.appendChild(tab);
+      container.appendChild(tab);
     }
   }
 
   function rerollVariation(type) {
     if (!currentPattern) return;
     pushUndo();
-
-    // Generate all variations fresh (uses new random seed internally)
     const newVariations = DrumEngine.generateVariations(currentPattern);
-
-    // Replace only the one we want to re-roll, keep the rest
     for (let i = 0; i < currentVariations.length; i++) {
       if (currentVariations[i].type === type) {
         const replacement = newVariations.find(v => v.type === type);
         if (replacement) currentVariations[i] = replacement;
       }
     }
-
     activeTab = type;
     renderAll();
     const v = currentVariations.find(v => v.type === type);
     if (isPlaying && v) playPattern(currentPattern, v);
   }
 
-  // ─── HAPAX PAGE VIEW GRID ──────────────────────────────────
+  // ─── GRID (mockup layout with per-lane colors) ───────────
 
   function renderGrid() {
     const grid = document.getElementById('grid');
@@ -2265,48 +2398,64 @@ window.DrumEngine = {
     currentBar = Math.min(currentBar, bars - 1);
     const barOffset = currentBar * 16;
 
-    // Step numbers: always 1-16 (Hapax page view)
+    // Step numbers (mockup format)
+    const emptyLabel = document.createElement('div');
+    stepNums.appendChild(emptyLabel);
     for (let i = 0; i < 16; i++) {
       const num = document.createElement('div');
-      num.className = 'step-num' + (i % 4 === 0 ? ' beat' : '');
+      num.className = 'step-num' + (i % 4 === 0 ? ' beat-start' : '');
       num.textContent = i + 1;
       stepNums.appendChild(num);
     }
 
-    // Grid rows — only current bar (16 steps)
-    for (const lane of currentPattern.lanes) {
-      const row = document.createElement('div');
-      row.className = 'grid-row';
+    // Grid rows
+    for (let laneIdx = 0; laneIdx < currentPattern.lanes.length; laneIdx++) {
+      const lane = currentPattern.lanes[laneIdx];
+      const laneColorIdx = laneIdx; // 0-7 maps to lane-color-1 through lane-color-8
+      const colorClass = 'lane-color-' + (laneColorIdx + 1);
+      const dotClass = dotClasses[laneColorIdx] || 'c-perc';
+
+      // Lane label
       const label = document.createElement('div');
       label.className = 'lane-label';
-      label.textContent = lane.name;
-      label.style.color = catColors[lane.category] || 'var(--text)';
-      row.appendChild(label);
+      const dot = document.createElement('div');
+      dot.className = 'dot ' + dotClass;
+      label.appendChild(dot);
+      const span = document.createElement('span');
+      span.textContent = lane.name;
+      label.appendChild(span);
+      grid.appendChild(label);
 
+      // Step cells
       const steps = data.steps[lane.name] || [];
       const vels = data.velocity[lane.name] || [];
 
       for (let i = 0; i < 16; i++) {
         const globalIdx = barOffset + i;
         const cell = document.createElement('div');
-        cell.className = 'step-cell';
-        if (i % 4 === 0) cell.classList.add('beat');
+        cell.className = 'step-cell ' + colorClass;
+        if (i % 4 === 0) cell.classList.add('beat-marker');
+
         const isOn = steps[globalIdx] === 1;
         if (isOn) {
+          cell.classList.add('active');
           const vel = vels[globalIdx] || 100;
           const pct = Math.round((vel / 127) * 100);
           const fill = document.createElement('div');
-          fill.className = 'vel-fill';
+          fill.className = 'velocity-fill';
           fill.style.height = pct + '%';
-          fill.style.background = catColors[lane.category] || 'var(--accent)';
-          fill.style.opacity = '0.85';
           cell.appendChild(fill);
-          if (pct > 20) { const txt = document.createElement('div'); txt.className = 'vel-pct'; txt.textContent = pct; cell.appendChild(txt); }
-        } else { cell.style.background = '#111'; }
+          if (pct > 20) {
+            const txt = document.createElement('div');
+            txt.className = 'vel-pct';
+            txt.textContent = pct;
+            cell.appendChild(txt);
+          }
+        }
+
         cell.onclick = () => { pushUndo(); toggleStep(lane.name, globalIdx); };
-        row.appendChild(cell);
+        grid.appendChild(cell);
       }
-      grid.appendChild(row);
     }
     updateBarNav();
   }
@@ -2321,6 +2470,8 @@ window.DrumEngine = {
     renderGrid(); renderInfo();
   }
 
+  // ─── INFO PANEL ───────────────────────────────────────────
+
   function renderInfo() {
     const data = activeTab === 'base' ? currentPattern : currentVariations.find(v => v.type === activeTab);
     if (!data || !currentPattern) return;
@@ -2333,16 +2484,16 @@ window.DrumEngine = {
     const density = DrumEngine.calculateEventDensity(allSteps);
     const events = allSteps.reduce((a, b) => a + b, 0);
     document.getElementById('info-density').textContent = (density * 100).toFixed(1) + '%';
+    document.getElementById('info-syncopation').textContent = (DrumEngine.calculateSyncopation(allSteps) * 100).toFixed(1) + '%';
     document.getElementById('info-count').textContent = events;
-    const fbLane = currentPattern.lanes.find(l => l.category === "foundation");
-    const sync = fbLane ? DrumEngine.calculateSyncopation(data.steps[fbLane.name] || []) : 0;
-    document.getElementById('info-syncopation').textContent = (sync * 100).toFixed(1) + '%';
     const chars = activeTab === 'base' ? (currentPattern.characteristics || []) : [];
     document.getElementById('info-chars').innerHTML = chars.map(c => `<span class="char-tag">${c}</span>`).join('');
     const descEl = document.getElementById('var-desc');
     if (activeTab !== 'base' && data.description) { descEl.style.display = 'block'; descEl.innerHTML = `<strong>${data.name}:</strong> ${data.description}`; }
     else { descEl.style.display = 'none'; }
   }
+
+  // ─── DOWNLOADS ────────────────────────────────────────────
 
   function renderDownloads() {
     const dl = document.getElementById('downloads');
@@ -2356,15 +2507,16 @@ window.DrumEngine = {
 
   function createDLBtn(label, fn) {
     const btn = document.createElement('button');
-    btn.className = 'download-btn';
-    btn.innerHTML = `&#11015; ${label}`;
+    btn.className = 'btn-small';
+    btn.textContent = label;
     btn.onclick = fn;
     return btn;
   }
 
-  // ─── INIT ──────────────────────────────────────────────────
+  // ─── INIT ─────────────────────────────────────────────────
 
   initLaneConfig();
+  initPresets();
   initChars();
   generate();
 </script>
