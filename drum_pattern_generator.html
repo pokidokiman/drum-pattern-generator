@@ -2031,7 +2031,7 @@ function exportMidi(patternData, variationData, name, bpm) {
   track.push(...encodeVarLen(0));
   track.push(0xFF, 0x2F, 0x00);
 
-  const header = [0x4D,0x54,0x68,0x64, 0,0,0,6, 0,0, 0,1, (PPQ>>8)&0xFF, PPQ&0xFF];
+  const header = [0x4D,0x54,0x68,0x64, 0,0,0,6, 0,0, 0,0, (PPQ>>8)&0xFF, PPQ&0xFF]; // SMF 0, single track
   const trackHeader = [0x4D,0x54,0x72,0x6B, (track.length>>24)&0xFF, (track.length>>16)&0xFF, (track.length>>8)&0xFF, track.length&0xFF];
   const midi = new Uint8Array(header.length + trackHeader.length + track.length);
   midi.set(header, 0);
@@ -2567,22 +2567,49 @@ window.DrumEngine = {
     const container = document.getElementById('lane-config');
     container.innerHTML = '';
 
-    // Two column divs — split lanes dynamically: first half left, second half right
+    // Two column divs — split by category, NOT by array position
+    // LEFT = foundation/backbeat/hihat (kick, snare, HHc, HHo)
+    // RIGHT = accent/synth/pitched/metallic/texture (perc, clap, tom-hi, tom-lo)
     const leftCol = document.createElement('div');
     leftCol.className = 'lane-config-col';
     const rightCol = document.createElement('div');
     rightCol.className = 'lane-config-col';
 
-    const half = Math.ceil(userLanes.length / 2);
-    // Left column: first half, displayed bottom-to-top (last index at top)
-    const leftIndices = Array.from({length: half}, (_, i) => half - 1 - i);
-    // Right column: second half, displayed bottom-to-top
-    const rightIndices = Array.from({length: userLanes.length - half}, (_, i) => userLanes.length - 1 - i);
+    // Split lanes by FIXED name — NOT by category, NOT by array position
+    // LEFT: Kick, Snare, HH Closed, HH Open, Ride (always)
+    // RIGHT: everything else (Perc, Clap, Tom, Conga, Bell, Stab, Shaker, etc.)
+    const FOUNDATION_NAMES = new Set(['Kick', 'Snare', 'HH Closed', 'HH Open', 'Ride']);
+    // Vertical order within LEFT column (bottom→top)
+    const LEFT_ORDER = ['Kick', 'Snare', 'HH Closed', 'Ride', 'HH Open'];
+    // Vertical order within RIGHT column (bottom→top)
+    const RIGHT_ORDER = ['Tom Low', 'Tom Hi', 'Conga Low', 'Conga Hi', 'Clap', 'Rimshot', 'Shaker', 'Perc', 'Bell', 'Stab', 'Metal Hit'];
 
-    for (const colData of [[leftCol, leftIndices], [rightCol, rightIndices]]) {
-      const [colDiv, indices] = colData;
-      for (const i of indices) {
-        const lane = userLanes[i];
+    function sortByFixedOrder(lanes, orderArr) {
+      const result = [];
+      const used = new Set();
+      for (const name of orderArr) {
+        const idx = lanes.findIndex((l, i) => l.name === name && !used.has(i));
+        if (idx !== -1) { result.push(lanes[idx]); used.add(idx); }
+      }
+      // Append any remaining lanes not in orderArr
+      lanes.forEach((l, i) => { if (!used.has(i)) result.push(l); });
+      return result; // bottom-to-top order
+    }
+
+    const leftLanes = sortByFixedOrder(
+      userLanes.filter(l => FOUNDATION_NAMES.has(l.name)), LEFT_ORDER
+    );
+    const rightLanes = sortByFixedOrder(
+      userLanes.filter(l => !FOUNDATION_NAMES.has(l.name)), RIGHT_ORDER
+    );
+
+    // Display bottom-to-top: last in array = appended last = bottom of column
+    const leftDisplay = leftLanes.slice().reverse(); // HHo(top)→...→kick(bottom)
+    const rightDisplay = rightLanes.slice().reverse(); // perc(top)→...→tom-lo(bottom)
+
+    for (const colData of [[leftCol, leftDisplay], [rightCol, rightDisplay]]) {
+      const [colDiv, lanes] = colData;
+      for (const lane of lanes) {
         if (!lane) continue;
         if (!lane.midiChannel) lane.midiChannel = 1;
 
