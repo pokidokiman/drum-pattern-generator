@@ -963,16 +963,16 @@ const SOUND_PRESETS = [
 // ─── DEFAULT LANE CONFIG (8 Hapax lanes) ──────────────────────
 
 const DEFAULT_LANES = [
-  // LEFT column (indices 0-3): Kick, Snare, HH Closed, HH Open
+  // Grid bottom-to-top: Kick, Snare, HH Closed, HH Open, Tom Low, Tom Hi, Clap, Perc
+  // Lane config: indices 0-3 LEFT, indices 4-7 RIGHT
   { name: "Kick",        category: "foundation", midiNote: 36, midiChannel: 1 },
   { name: "Snare",       category: "backbeat",   midiNote: 38, midiChannel: 1 },
   { name: "HH Closed",   category: "hihat",      midiNote: 42, midiChannel: 1 },
   { name: "HH Open",     category: "hihat",      midiNote: 46, midiChannel: 1 },
-  // RIGHT column (indices 4-7): Perc, Clap, Tom Hi, Tom Low
-  { name: "Perc",        category: "accent",     midiNote: 56, midiChannel: 1 },
-  { name: "Clap",        category: "backbeat",   midiNote: 39, midiChannel: 1 },
-  { name: "Tom Hi",      category: "pitched",    midiNote: 50, midiChannel: 1 },
   { name: "Tom Low",     category: "pitched",    midiNote: 41, midiChannel: 1 },
+  { name: "Tom Hi",      category: "pitched",    midiNote: 50, midiChannel: 1 },
+  { name: "Clap",        category: "backbeat",   midiNote: 39, midiChannel: 1 },
+  { name: "Perc",        category: "accent",     midiNote: 56, midiChannel: 1 },
 ];
 
 // ─── CHARACTERISTIC PRESETS ───────────────────────────────────
@@ -2136,10 +2136,10 @@ window.DrumEngine = {
     const container = document.getElementById('lane-config');
     container.innerHTML = '';
 
-    // Split into 2 columns: lanes 0-3 left, lanes 4-7 right
+    // Split into 2 columns: lanes 0-3 left, lanes 7-4 right (reversed for visual order)
     for (let col = 0; col < 2; col++) {
-      const startIdx = col * 4;
-      for (let i = startIdx; i < startIdx + 4; i++) {
+      const indices = col === 0 ? [0,1,2,3] : [7,6,5,4];
+      for (const i of indices) {
         const lane = userLanes[i];
         if (!lane) continue;
         if (!lane.midiChannel) lane.midiChannel = 1;
