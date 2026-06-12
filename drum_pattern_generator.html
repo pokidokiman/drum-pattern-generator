@@ -899,6 +899,9 @@ let isLooping = false;
 let playbackTimeout = null;
 let playbackStartTime = 0;
 let scheduledNodes = [];
+let lookAheadInterval = null;
+let loopIteration = 0;
+let nextLoopTime = 0;
 
 function getAudioCtx() {
   if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -1098,6 +1101,7 @@ function playPattern(patternData, variationData) {
 function doPlay(ctx, patternData, variationData) {
   // Kill any previous playback completely
   if (playbackTimeout) { clearTimeout(playbackTimeout); playbackTimeout = null; }
+  if (lookAheadInterval) { clearInterval(lookAheadInterval); lookAheadInterval = null; }
   isPlaying = false;
 
   const data = variationData || patternData;
@@ -1109,11 +1113,55 @@ function doPlay(ctx, patternData, variationData) {
   const stepsPerBar = 16;
   const bars = patternData.bars || 1;
   const totalSteps = bars * stepsPerBar;
+  const totalDuration = totalSteps * secPerStep;
   const startTime = ctx.currentTime + 0.05;
   playbackStartTime = startTime;
-  scheduledNodes = [];
+  loopIteration = 0;
+  nextLoopTime = startTime;
 
-  // Schedule all events
+  // Schedule first iteration
+  scheduleIteration(ctx, patternData, data, startTime, secPerStep, totalSteps, totalDuration);
+
+  isPlaying = true;
+  updatePlayUI();
+
+  // Look-ahead scheduler: schedules next loop before current one ends
+  const LOOK_AHEAD = 0.2; // schedule 200ms ahead
+  const SCHEDULE_INTERVAL = 50; // check every 50ms
+
+  lookAheadInterval = setInterval(() => {
+    if (!isPlaying) { clearInterval(lookAheadInterval); return; }
+
+    // If we're within LOOK_AHEAD of the next loop boundary, schedule it
+    while (nextLoopTime - ctx.currentTime < LOOK_AHEAD) {
+      if (!isLooping) break;
+      loopIteration++;
+      nextLoopTime = startTime + (loopIteration + 1) * totalDuration;
+      scheduleIteration(ctx, patternData, data, startTime + loopIteration * totalDuration, secPerStep, totalSteps, totalDuration);
+    }
+
+    // Update position indicator
+    const elapsed = ctx.currentTime - playbackStartTime;
+    const totalElapsed = elapsed % totalDuration;
+    const currentStep = Math.floor(totalElapsed / secPerStep) % 16;
+    const currentBarNum = Math.floor(totalElapsed / secPerStep / 16);
+    const statusEl = document.getElementById('playback-status');
+    if (statusEl) statusEl.textContent = `Playing — Bar ${currentBarNum + 1}, Step ${currentStep + 1}`;
+  }, SCHEDULE_INTERVAL);
+
+  // Stop after pattern ends (if not looping)
+  if (!isLooping) {
+    playbackTimeout = setTimeout(() => {
+      clearInterval(lookAheadInterval);
+      isPlaying = false;
+      updatePlayUI();
+      const statusEl = document.getElementById('playback-status');
+      if (statusEl) statusEl.textContent = 'Done';
+    }, totalDuration * 1000 + 50);
+  }
+}
+
+function scheduleIteration(ctx, patternData, data, offset, secPerStep, totalSteps, totalDuration) {
   for (const lane of patternData.lanes) {
     const steps = data.steps[lane.name] || [];
     const vels = data.velocity[lane.name] || [];
@@ -1125,42 +1173,16 @@ function doPlay(ctx, patternData, variationData) {
       const vel = (vels[i] || 100) / 127;
       if (vel <= 0) continue;
       const microOffset = (mt[i] || 0) / 960 * secPerStep;
-      const hitTime = startTime + (i * secPerStep) + microOffset;
+      const hitTime = offset + (i * secPerStep) + microOffset;
       synthFn(ctx, hitTime, vel);
     }
   }
-
-  const totalDuration = totalSteps * secPerStep;
-  isPlaying = true;
-  updatePlayUI();
-
-  // Update position indicator
-  const posInterval = setInterval(() => {
-    if (!isPlaying) { clearInterval(posInterval); return; }
-    const elapsed = ctx.currentTime - playbackStartTime;
-    const currentStep = Math.floor(elapsed / secPerStep) % 16;
-    const currentBarNum = Math.floor(elapsed / secPerStep / 16);
-    const statusEl = document.getElementById('playback-status');
-    if (statusEl) statusEl.textContent = `Playing — Bar ${currentBarNum + 1}, Step ${currentStep + 1}`;
-  }, 50);
-
-  // Stop or loop after pattern ends
-  playbackTimeout = setTimeout(() => {
-    clearInterval(posInterval);
-    if (isLooping && isPlaying) {
-      doPlay(ctx, patternData, variationData);
-    } else {
-      isPlaying = false;
-      updatePlayUI();
-      const statusEl = document.getElementById('playback-status');
-      if (statusEl) statusEl.textContent = 'Done';
-    }
-  }, totalDuration * 1000 + 100);
 }
 
 function stopPlayback() {
   isPlaying = false;
   if (playbackTimeout) { clearTimeout(playbackTimeout); playbackTimeout = null; }
+  if (lookAheadInterval) { clearInterval(lookAheadInterval); lookAheadInterval = null; }
   // Close context entirely to kill ALL scheduled nodes
   if (audioCtx) { audioCtx.close().catch(() => {}); audioCtx = null; }
   updatePlayUI();
