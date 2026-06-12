@@ -139,9 +139,9 @@ drum-pattern-generator/
 ├── references/
 │   └── hapax_mockup.html         ← Hapax UI reference mockup
 ├── editor/
-│   ├── engine.js                 ← 12 stijlen, alle YouTube data
+│   ├── engine.js                 ← 12 styles, all YouTube data
 │   └── index.html                ← dark theme UI
-├── output/                       ← gegenereerde MIDI files
+├── output/                       ← generated MIDI files
 ├── generate_test_midis.py        ← test MIDI generator
 └── README.md
 ```
