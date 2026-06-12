@@ -1681,10 +1681,8 @@ function generatePattern(params) {
         else v = Math.max(45, Math.min(127, v));
         prevVel = v;
       } else {
-        // Default velocity 100 for all categories — user sets velocity curves manually
+        // Default: use velocity curve value directly — energy arc affects density, NOT velocity
         v = curveValues[pos];
-        if (lane.category !== "foundation") v = Math.floor(v * arcVelMul);
-        else v = 100; // Kick always 100
       }
       vel[i] = Math.max(1, Math.min(127, v));
       // Convert ghost marker back to active
