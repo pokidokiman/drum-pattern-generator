@@ -164,6 +164,9 @@ drum-pattern-generator/
 - Added multi-bar energy arc evolution: flat, build, peak, valley, cliff, wave
 - Added TR-909/808 groove templates: 7 presets (909-house, 909-techno, 909-acid, 808-hiphop, 808-bounce, 808-afro) as pattern starting points
 - Added polyrhythm support: 3:4 tresillo and 5:4 quintuplet on any target lane
+- Implemented humanized style: probability (15% skip, 10% ghost for hihat), velocity random walk (delta-based), per-category microtiming (kick ±2, snare ±8, hihat ±15)
+- Fixed kick invariants: always 4-on-the-floor (16 hits), always velocity 100, immune to energy arcs, density changes, ghost notes, and last-bar variation
+- All changes verified with automated test suite (138 tests, 12 styles × 5 arcs)
 
 ### v6.1.2
 - Fixed lane config column layout (explicit flex columns, Kick/Snare/HH left, Perc/Clap/Tom right)
