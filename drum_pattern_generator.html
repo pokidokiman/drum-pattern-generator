@@ -1695,8 +1695,8 @@ function generatePattern(params) {
       if (pattern[i] === 2) pattern[i] = 1;
     }
 
-    // Ghost notes (textural characteristic — separate from humanized ghosts)
-    if (characteristics.includes("textural") && intensity > 0.4) {
+    // Ghost notes (textural characteristic — NOT for foundation)
+    if (characteristics.includes("textural") && intensity > 0.4 && lane.category !== "foundation") {
       for (let i = 0; i < pattern.length; i++) {
         if (pattern[i] === 0 && rng.next() < 0.08 * intensity) {
           const neighbors = [];
