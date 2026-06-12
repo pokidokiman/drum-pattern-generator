@@ -543,6 +543,21 @@ body {
   color: #fff;
   border: none;
   border-radius: 3px;
+  padding: 8px 24px;
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.btn-play:hover { opacity: 0.85; }
+.btn-stop {
+  background: var(--red);
+  color: #fff;
+  border: none;
+  border-radius: 3px;
   padding: 8px 20px;
   font-family: 'Inter', sans-serif;
   font-size: 11px;
@@ -550,20 +565,10 @@ body {
   letter-spacing: 2px;
   text-transform: uppercase;
   cursor: pointer;
+  transition: opacity 0.15s;
 }
-.btn-stop {
-  background: var(--red);
-  color: #fff;
-  border: none;
-  border-radius: 3px;
-  padding: 8px 16px;
-  font-family: 'Inter', sans-serif;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  cursor: pointer;
-}
+.btn-stop:hover { opacity: 0.85; }
+#stop-btn { display: none; }
 .btn-loop {
   background: var(--bg-panel);
   color: var(--blue);
@@ -795,10 +800,8 @@ body {
     </div>
   </div>
 
-  <!-- 2b. Extra controls (poly, seed, undo, save/load) -->
+  <!-- 2b. Extra controls (seed, undo, save/load) -->
   <div class="extra-controls">
-    <div class="ctrl-group"><label>Polyrhythmic</label><input type="checkbox" id="polyrhythmic"></div>
-    <div class="ctrl-sep"></div>
     <div class="ctrl-group"><label>Seed</label><input type="number" id="seed" placeholder="random"></div>
     <div class="ctrl-sep"></div>
     <button class="btn-undo" onclick="undo()" title="Undo (Ctrl+Z)">↩</button>
@@ -861,15 +864,15 @@ body {
     </div>
   </div>
 
-  <!-- 9. Bottom Bar -->
+  <!-- 9. Bottom Bar: Playback left, Downloads right -->
   <div class="bottom-bar">
-    <div class="download-group" id="downloads"></div>
     <div class="playback-group">
       <button class="btn-play" id="play-btn" onclick="togglePlay()">▶ Play</button>
-      <button class="btn-stop" onclick="stopPlayback();isLooping=false;document.getElementById('loop-btn').classList.remove('active');updatePlayUI();">■ Stop</button>
+      <button class="btn-stop" id="stop-btn" onclick="stopPlayback();isLooping=false;document.getElementById('loop-btn').classList.remove('active');updatePlayUI();">■ Stop</button>
       <button class="btn-loop" id="loop-btn" onclick="toggleLoop()">↻ Loop</button>
       <span class="playback-status" id="playback-status">Ready</span>
     </div>
+    <div class="download-group" id="downloads"></div>
   </div>
 
 </div>
@@ -1959,11 +1962,10 @@ function toggleLoop() {
 }
 
 function updatePlayUI() {
-  const btn = document.getElementById('play-btn');
-  if (btn) {
-    btn.textContent = isPlaying ? '⏹ STOP' : '▶ PLAY';
-    btn.className = 'play-btn ' + (isPlaying ? 'stop' : 'play');
-  }
+  const playBtn = document.getElementById('play-btn');
+  const stopBtn = document.getElementById('stop-btn');
+  if (playBtn) playBtn.style.display = isPlaying ? 'none' : '';
+  if (stopBtn) stopBtn.style.display = isPlaying ? '' : 'none';
   if (!isPlaying) {
     const statusEl = document.getElementById('playback-status');
     if (statusEl && statusEl.textContent.startsWith('Playing')) statusEl.textContent = 'Ready';
@@ -2055,7 +2057,6 @@ window.DrumEngine = {
         swingType: document.getElementById('swing-type').value,
         bpm: document.getElementById('bpm').value,
         bars: document.getElementById('bars-override').value,
-        poly: document.getElementById('polyrhythmic').checked,
       }
     };
     localStorage.setItem('dpg_saved_pattern', JSON.stringify(data));
@@ -2079,7 +2080,6 @@ window.DrumEngine = {
         document.getElementById('swing-type').value = data.controls.swingType || 'shuffle';
         document.getElementById('bpm').value = data.controls.bpm || 135;
         document.getElementById('bars-override').value = data.controls.bars || 0;
-        document.getElementById('polyrhythmic').checked = data.controls.poly || false;
         updateSliderValues();
       }
       activeTab = 'base';
@@ -2308,7 +2308,7 @@ window.DrumEngine = {
     const swing = document.getElementById('swing').value / 100;
     const swingType = document.getElementById('swing-type').value;
     const bpm = parseInt(document.getElementById('bpm').value);
-    const poly = document.getElementById('polyrhythmic').checked;
+    const poly = selectedChars.includes('polyrhythmic');
     const seedVal = document.getElementById('seed').value;
     const seed = seedVal ? parseInt(seedVal) : null;
     const barsVal = parseInt(document.getElementById('bars-override').value);
