@@ -5,62 +5,52 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Drum Pattern Generator — Hapax</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
-
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --bg-deepest: #0D0D0D;
-  --bg-screen: #1A1A1A;
-  --bg-panel: #2C2C2C;
-  --border: #3A3A3A;
-  --text: #F0F0F0;
-  --text-prominent: #FFFFFF;
-  --text-secondary: #888;
-  --accent: #D4A843;
-  --accent2: #E0B84F;
-  --bg: #0D0D0D;
-  --surface: #1A1A1A;
-  --surface2: #2C2C2C;
-  --surface3: #3A3A3A;
-  --text2: #888;
-  --text3: #555;
+  --bg-deepest: #1A1A1A;
+  --bg-screen: #222222;
+  --bg-panel: #222222;
+  --border: #333333;
+  --text: #E0E0E0;
+  --text-prominent: #E0E0E0;
+  --text-secondary: #A0A0A0;
+  --accent: #F0C040;
+  --accent2: #F0C040;
+  --bg: #1A1A1A;
+  --surface: #222222;
+  --surface2: #333333;
+  --surface3: #333333;
+  --text2: #A0A0A0;
+  --text3: #666666;
   --green: #4CAF50;
-  --red: #E53935;
-  --blue: #5C8AC4;
-  --cat-foundation: #FF3344;
-  --cat-backbeat: #44DD44;
-  --cat-hihat: #FFCC00;
-  --cat-accent: #00D4AA;
-  --cat-metallic: #FF9933;
-  --cat-texture: #FF66B2;
-  --cat-pitched: #B066FF;
-  --cat-synth: #4DA6FF;
-  --lane1-active: #FF3344; --lane1-inactive: #401015; --lane1-glow: rgba(255,51,68,0.30);
-  --lane2-active: #44DD44; --lane2-inactive: #1A401A; --lane2-glow: rgba(68,221,68,0.30);
-  --lane3-active: #FFCC00; --lane3-inactive: #403800; --lane3-glow: rgba(255,204,0,0.30);
-  --lane4-active: #FF9933; --lane4-inactive: #402A0D; --lane4-glow: rgba(255,153,51,0.30);
-  --lane5-active: #FF66B2; --lane5-inactive: #401A2E; --lane5-glow: rgba(255,102,178,0.30);
-  --lane6-active: #B066FF; --lane6-inactive: #2A1A40; --lane6-glow: rgba(176,102,255,0.30);
-  --lane7-active: #4DA6FF; --lane7-inactive: #1A2E40; --lane7-glow: rgba(77,166,255,0.30);
-  --lane8-active: #00D4AA; --lane8-inactive: #003830; --lane8-glow: rgba(0,212,170,0.30);
-  --inactive: #1E1E1E;
-  --beat-marker: #222;
+  --red: #F44336;
+  --blue: #2196F3;
+  --cat-foundation: #F44336;
+  --cat-backbeat: #8BC34A;
+  --cat-hihat: #FFC107;
+  --cat-accent: #4CAF50;
+  --cat-metallic: #FFC107;
+  --cat-texture: #E91E63;
+  --cat-pitched: #9C27B0;
+  --cat-synth: #2196F3;
+  --inactive: #333333;
+  --beat-marker: #333333;
 }
 
 body {
   background: var(--bg-deepest);
   color: var(--text);
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  font-size: 13px;
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 14px;
   line-height: 1.4;
   min-height: 100vh;
 }
 
 .container {
-  width: 1200px;
+  max-width: 1360px;
   margin: 0 auto;
-  padding: 12px 16px;
+  padding: 24px 40px;
 }
 
 /* ── Header ────────────────────────────────────────────── */
@@ -68,67 +58,83 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 16px;
+  padding: 14px 20px;
   background: var(--bg-screen);
   border: 1px solid var(--border);
   border-radius: 4px;
-  margin-bottom: 6px;
+  margin-bottom: 24px;
 }
 .header h1 {
-  font-size: 14px;
-  font-weight: 600;
-  letter-spacing: 2.5px;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 3px;
   color: var(--text-prominent);
   text-transform: uppercase;
 }
 .tag {
   background: var(--accent);
   color: #000;
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 700;
   letter-spacing: 2px;
-  padding: 2px 8px;
-  border-radius: 2px;
+  padding: 4px 12px;
+  border-radius: 4px;
   text-transform: uppercase;
 }
 .header-info {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 9px;
+  font-size: 12px;
   color: var(--text-secondary);
   border: 1px solid var(--border);
-  padding: 2px 8px;
-  border-radius: 2px;
+  padding: 4px 12px;
+  border-radius: 4px;
 }
 
 /* ── Controls Row 1: 4 Sliders ────────────────────────── */
 .controls-row1 {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
-  padding: 10px 16px;
+  gap: 40px;
+  padding: 16px 20px;
   background: var(--bg-screen);
   border: 1px solid var(--border);
   border-radius: 4px;
-  margin-bottom: 4px;
+  margin-bottom: 24px;
 }
 .controls-row2 {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 8px 16px;
+  gap: 16px;
+  padding: 12px 20px;
   background: var(--bg-screen);
   border: 1px solid var(--border);
   border-radius: 4px;
-  margin-bottom: 6px;
+  margin-bottom: 24px;
   flex-wrap: wrap;
+}
+.slider-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.slider-group .slider-label {
+  font-size: 12px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+.slider-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 .control-group {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
 }
 .control-group label {
-  font-size: 9px;
+  font-size: 12px;
   letter-spacing: 1.5px;
   text-transform: uppercase;
   color: var(--text-secondary);
@@ -136,10 +142,9 @@ body {
   white-space: nowrap;
 }
 .control-group .value {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 11px;
-  color: var(--accent);
-  min-width: 34px;
+  font-size: 14px;
+  color: var(--text);
+  min-width: 36px;
   text-align: right;
 }
 input[type="range"] {
@@ -155,15 +160,15 @@ input[type="range"] {
 input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 12px;
-  height: 12px;
+  width: 16px;
+  height: 16px;
   background: var(--accent);
   border-radius: 50%;
   cursor: pointer;
 }
 input[type="range"]::-moz-range-thumb {
-  width: 12px;
-  height: 12px;
+  width: 16px;
+  height: 16px;
   background: var(--accent);
   border-radius: 50%;
   cursor: pointer;
@@ -173,10 +178,10 @@ select {
   background: var(--bg-panel);
   color: var(--text);
   border: 1px solid var(--border);
-  border-radius: 3px;
-  padding: 4px 8px;
-  font-family: 'Inter', sans-serif;
-  font-size: 10px;
+  border-radius: 4px;
+  padding: 6px 10px;
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 14px;
   outline: none;
   cursor: pointer;
 }
@@ -185,124 +190,112 @@ select:focus { border-color: var(--accent); }
   background: var(--accent);
   color: #000;
   border: none;
-  border-radius: 3px;
-  padding: 7px 22px;
-  font-family: 'Inter', sans-serif;
-  font-size: 10px;
-  font-weight: 600;
+  border-radius: 4px;
+  padding: 0 24px;
+  height: 40px;
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 14px;
+  font-weight: 700;
   letter-spacing: 2px;
   text-transform: uppercase;
   cursor: pointer;
   white-space: nowrap;
 }
-.btn:hover { background: var(--accent2); }
+.btn:hover { opacity: 0.9; }
 .btn-sm {
   padding: 4px 10px;
-  font-size: 10px;
+  font-size: 12px;
   letter-spacing: 0.5px;
 }
 .btn-ghost {
   background: var(--bg-panel);
-  color: var(--text2);
+  color: var(--text);
   border: 1px solid var(--border);
-  border-radius: 3px;
-  padding: 4px 10px;
-  font-family: 'Inter', sans-serif;
-  font-size: 10px;
+  border-radius: 4px;
+  padding: 0 14px;
+  height: 36px;
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
 }
-.btn-ghost:hover { border-color: var(--accent); color: var(--text); }
+.btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
 
 /* ── Lane Configuration (2-column) ─────────────────────── */
 .lane-config {
-  padding: 8px 16px;
+  padding: 16px 20px;
   background: var(--bg-screen);
   border: 1px solid var(--border);
   border-radius: 4px;
-  margin-bottom: 6px;
+  margin-bottom: 24px;
 }
 .lane-config h3 {
-  font-size: 9px;
+  font-size: 12px;
   letter-spacing: 2px;
   text-transform: uppercase;
   color: var(--text-secondary);
   font-weight: 700;
-  margin-bottom: 6px;
+  margin-bottom: 10px;
 }
 .lane-config-grid {
   display: grid;
-  /* 11 columns: 5 left (dot, name, cat, note, ch) + 1 gap + 5 right */
-  grid-template-columns: 20px 1fr 120px 55px 65px 12px 20px 1fr 120px 55px 65px;
-  gap: 3px 4px;
+  grid-template-columns: 20px 1fr 120px 60px 60px 8px 20px 1fr 120px 60px 60px;
+  gap: 8px 8px;
   align-items: center;
 }
 
 /* Left column: children 1-20 (lanes 1-4) */
-/* Dot/num: children 1,6,11,16 → col 1 */
 .lane-config-grid > :nth-child(5n+1):nth-child(-n+16) { grid-column: 1; }
-/* Name: children 2,7,12,17 → col 2 */
 .lane-config-grid > :nth-child(5n+2):nth-child(-n+17) { grid-column: 2; }
-/* Category: children 3,8,13,18 → col 3 */
 .lane-config-grid > :nth-child(5n+3):nth-child(-n+18) { grid-column: 3; }
-/* Note: children 4,9,14,19 → col 4 */
 .lane-config-grid > :nth-child(5n+4):nth-child(-n+19) { grid-column: 4; }
-/* Channel: children 5,10,15,20 → col 5 */
 .lane-config-grid > :nth-child(5n+5):nth-child(-n+20) { grid-column: 5; }
 
 /* Right column: children 21-40 (lanes 5-8) */
-/* Dot/num: children 21,26,31,36 → col 7 */
 .lane-config-grid > :nth-child(5n+1):nth-child(n+21):nth-child(-n+40) { grid-column: 7; }
-/* Name: children 22,27,32,37 → col 8 */
 .lane-config-grid > :nth-child(5n+2):nth-child(n+21):nth-child(-n+40) { grid-column: 8; }
-/* Category: children 23,28,33,38 → col 9 */
 .lane-config-grid > :nth-child(5n+3):nth-child(n+21):nth-child(-n+40) { grid-column: 9; }
-/* Note: children 24,29,34,39 → col 10 */
 .lane-config-grid > :nth-child(5n+4):nth-child(n+21):nth-child(-n+40) { grid-column: 10; }
-/* Channel: children 25,30,35,40 → col 11 */
 .lane-config-grid > :nth-child(5n+5):nth-child(n+21):nth-child(-n+40) { grid-column: 11; }
 
-/* Preset row: child 41 (JS sets grid-column: 1 / -1 inline) */
-
 .lane-config-grid .lane-num {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 9px;
-  color: var(--text3);
+  font-size: 14px;
+  color: var(--text);
   text-align: center;
   font-weight: 700;
 }
 .lane-config-grid input[type="text"] {
-  background: var(--bg-panel);
+  background: var(--bg-deepest);
   border: 1px solid var(--border);
   color: var(--text);
-  border-radius: 3px;
-  padding: 3px 6px;
-  font-family: 'Inter', sans-serif;
-  font-size: 10px;
+  border-radius: 4px;
+  padding: 6px 10px;
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 14px;
   width: 100%;
   outline: none;
 }
 .lane-config-grid input[type="text"]:focus { border-color: var(--accent); }
 .lane-config-grid input[type="number"] {
-  background: var(--bg-panel);
+  background: var(--bg-deepest);
   border: 1px solid var(--border);
   color: var(--text);
-  border-radius: 3px;
-  padding: 3px 6px;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
-  width: 55px;
+  border-radius: 4px;
+  padding: 6px 10px;
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 14px;
+  width: 60px;
   outline: none;
 }
 .lane-config-grid input[type="number"]:focus { border-color: var(--accent); }
-.lane-config-grid select { font-size: 10px; padding: 3px 4px; }
+.lane-config-grid select { font-size: 12px; padding: 6px 8px; }
 .cat-dot {
   display: inline-block;
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  margin-right: 4px;
+  margin-right: 6px;
   vertical-align: middle;
 }
 
@@ -310,23 +303,23 @@ select:focus { border-color: var(--accent); }
 .chars-bar {
   display: flex;
   align-items: center;
-  gap: 5px;
-  padding: 8px 16px;
+  gap: 8px;
+  padding: 12px 20px;
   background: var(--bg-screen);
   border: 1px solid var(--border);
   border-radius: 4px;
-  margin-bottom: 6px;
+  margin-bottom: 24px;
   flex-wrap: nowrap;
   overflow-x: auto;
 }
 .char-btn {
-  background: var(--bg-panel);
+  background: var(--inactive);
   color: var(--text);
   border: 1px solid var(--border);
-  border-radius: 3px;
-  padding: 4px 12px;
-  font-family: 'Inter', sans-serif;
-  font-size: 9px;
+  border-radius: 4px;
+  padding: 6px 14px;
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 12px;
   letter-spacing: 1px;
   text-transform: uppercase;
   cursor: pointer;
@@ -334,11 +327,12 @@ select:focus { border-color: var(--accent); }
   transition: all 0.1s;
   white-space: nowrap;
   flex-shrink: 0;
+  height: 36px;
 }
 .char-btn:hover { border-color: var(--accent); color: var(--text); }
 .char-btn.active {
   background: var(--accent);
-  color: #000;
+  color: #1A1A1A;
   border-color: var(--accent);
   font-weight: 700;
 }
@@ -347,24 +341,24 @@ select:focus { border-color: var(--accent); }
 .tabs-wrap {
   display: flex;
   align-items: center;
-  gap: 6px;
-  margin-bottom: 6px;
+  gap: 10px;
+  margin-bottom: 24px;
 }
 .tabs {
   display: flex;
-  gap: 2px;
+  gap: 4px;
 }
 .tab {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 12px;
-  background: var(--bg-screen);
+  padding: 8px 14px;
+  background: var(--bg-deepest);
   border: 1px solid var(--border);
   border-radius: 4px;
   cursor: pointer;
-  font-family: 'Inter', sans-serif;
-  font-size: 9px;
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 12px;
   font-weight: 600;
   color: var(--text-secondary);
   letter-spacing: 1px;
@@ -372,10 +366,10 @@ select:focus { border-color: var(--accent); }
   transition: all 0.1s;
   white-space: nowrap;
 }
-.tab:hover { color: var(--text); background: var(--bg-panel); }
+.tab:hover { color: var(--text); background: var(--surface2); }
 .tab.active {
   color: var(--accent);
-  background: var(--bg-deepest);
+  background: var(--inactive);
   border-color: var(--accent);
 }
 
@@ -384,8 +378,8 @@ select:focus { border-color: var(--accent); }
   background: var(--bg-deepest);
   border: 1px solid var(--border);
   border-radius: 4px;
-  padding: 10px 16px 14px;
-  margin-bottom: 6px;
+  padding: 16px 20px;
+  margin-bottom: 24px;
 }
 
 /* ── Bar Navigation ────────────────────────────────────── */
@@ -394,17 +388,17 @@ select:focus { border-color: var(--accent); }
   align-items: center;
   justify-content: center;
   gap: 16px;
-  padding: 6px;
-  margin-bottom: 4px;
+  padding: 8px;
+  margin-bottom: 8px;
 }
 .bar-nav-btn {
-  background: var(--bg-panel);
+  background: var(--inactive);
   color: var(--text);
   border: 1px solid var(--border);
-  border-radius: 3px;
-  width: 26px;
-  height: 26px;
-  font-size: 12px;
+  border-radius: 4px;
+  width: 32px;
+  height: 32px;
+  font-size: 14px;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -414,11 +408,11 @@ select:focus { border-color: var(--accent); }
 .bar-nav-btn:hover { border-color: var(--accent); color: var(--accent); }
 .bar-nav-btn:disabled { opacity: 0.3; cursor: default; border-color: var(--border); color: var(--text-secondary); }
 .bar-nav-label {
-  font-size: 11px;
+  font-size: 14px;
   letter-spacing: 2px;
   text-transform: uppercase;
   color: var(--text);
-  font-weight: 500;
+  font-weight: 600;
 }
 
 /* ── Step Numbers ──────────────────────────────────────── */
@@ -428,13 +422,13 @@ select:focus { border-color: var(--accent); }
   margin-bottom: 4px;
 }
 .step-num {
-  width: 35px;
+  width: 40px;
+  margin-right: 2px;
   text-align: center;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 9px;
+  font-size: 12px;
   color: var(--text3);
   font-weight: 600;
-  padding-bottom: 2px;
+  padding-bottom: 4px;
 }
 .step-num.beat { color: var(--accent); }
 
@@ -442,13 +436,13 @@ select:focus { border-color: var(--accent); }
 .grid-row {
   display: flex;
   align-items: center;
-  margin-bottom: 1px;
+  margin-bottom: 2px;
 }
 .lane-label {
   width: 100px;
   min-width: 100px;
-  font-size: 10px;
-  font-weight: 500;
+  font-size: 14px;
+  font-weight: 700;
   letter-spacing: 1px;
   text-transform: uppercase;
   white-space: nowrap;
@@ -459,17 +453,18 @@ select:focus { border-color: var(--accent); }
 
 /* ── Step Cells ────────────────────────────────────────── */
 .step-cell {
-  width: 35px;
-  height: 30px;
-  border: 1px solid rgba(255,255,255,0.04);
-  border-radius: 3px;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
   cursor: pointer;
   transition: all 0.08s;
   position: relative;
   overflow: hidden;
+  margin-right: 2px;
 }
 .step-cell:hover { background: rgba(255,255,255,0.08); }
-.step-cell.beat { background: rgba(255,255,255,0.03); }
+.step-cell.beat { background: var(--beat-marker); }
 .step-cell .vel-fill {
   position: absolute;
   bottom: 0;
@@ -484,59 +479,56 @@ select:focus { border-color: var(--accent); }
   left: 0;
   right: 0;
   text-align: center;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 7px;
+  font-size: 8px;
   font-weight: 700;
-  color: rgba(0,0,0,0.8);
+  color: rgba(0,0,0,0.9);
   z-index: 1;
-  text-shadow: 0 0 2px rgba(255,255,255,0.3);
 }
 
 /* ── Info Panel (3 columns) ────────────────────────────── */
 .info {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
-  gap: 6px;
-  margin-bottom: 6px;
+  gap: 16px;
+  margin-bottom: 24px;
 }
 .info-card {
   background: var(--bg-screen);
   border: 1px solid var(--border);
   border-radius: 4px;
-  padding: 10px 14px;
+  padding: 20px 24px;
 }
 .info-card h3 {
-  font-size: 9px;
+  font-size: 12px;
   letter-spacing: 2px;
   text-transform: uppercase;
   color: var(--text-secondary);
-  margin-bottom: 6px;
+  margin-bottom: 12px;
   font-weight: 700;
 }
 .info-card .stat {
   display: flex;
   justify-content: space-between;
-  padding: 2px 0;
-  font-size: 10px;
+  padding: 4px 0;
+  font-size: 14px;
 }
 .info-card .stat span:first-child { color: var(--text-secondary); }
 .info-card .stat .val {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
+  font-size: 14px;
   color: var(--text);
   font-weight: 700;
 }
 .char-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
+  gap: 6px;
 }
 .char-tag {
-  font-size: 9px;
-  padding: 2px 8px;
-  background: var(--bg-panel);
+  font-size: 12px;
+  padding: 4px 10px;
+  background: var(--inactive);
   border: 1px solid var(--border);
-  border-radius: 3px;
+  border-radius: 4px;
   color: var(--accent);
   font-weight: 600;
   letter-spacing: 0.5px;
@@ -545,14 +537,14 @@ select:focus { border-color: var(--accent); }
 
 /* ── Variation Description ─────────────────────────────── */
 .var-desc {
-  padding: 8px 14px;
+  padding: 12px 16px;
   background: var(--bg-screen);
   border: 1px solid var(--border);
   border-radius: 4px;
-  font-size: 10px;
+  font-size: 14px;
   color: var(--text-secondary);
   line-height: 1.5;
-  margin-bottom: 6px;
+  margin-bottom: 24px;
 }
 .var-desc strong { color: var(--text); }
 
@@ -561,28 +553,29 @@ select:focus { border-color: var(--accent); }
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 16px;
+  padding: 12px 20px;
   background: var(--bg-screen);
   border: 1px solid var(--border);
   border-radius: 4px;
 }
 .downloads {
   display: flex;
-  gap: 6px;
+  gap: 8px;
   flex-wrap: wrap;
 }
 .download-btn {
   display: flex;
   align-items: center;
-  gap: 5px;
-  padding: 5px 12px;
-  background: var(--bg-panel);
+  gap: 6px;
+  padding: 0 14px;
+  height: 36px;
+  background: var(--inactive);
   color: var(--text);
   border: 1px solid var(--border);
-  border-radius: 3px;
+  border-radius: 4px;
   cursor: pointer;
-  font-family: 'Inter', sans-serif;
-  font-size: 9px;
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 12px;
   font-weight: 600;
   letter-spacing: 1.5px;
   text-transform: uppercase;
@@ -596,13 +589,14 @@ select:focus { border-color: var(--accent); }
   align-items: center;
 }
 .play-btn {
-  padding: 6px 16px;
+  padding: 0 20px;
+  height: 40px;
   border: none;
-  border-radius: 3px;
+  border-radius: 4px;
   cursor: pointer;
-  font-family: 'Inter', sans-serif;
-  font-size: 10px;
-  font-weight: 600;
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 14px;
+  font-weight: 700;
   letter-spacing: 2px;
   text-transform: uppercase;
   transition: all 0.1s;
@@ -611,25 +605,24 @@ select:focus { border-color: var(--accent); }
   background: var(--green);
   color: #fff;
 }
-.play-btn.play:hover { background: #5CBB5F; }
+.play-btn.play:hover { opacity: 0.9; }
 .play-btn.stop {
   background: var(--red);
   color: #fff;
 }
-.play-btn.stop:hover { background: #EF5350; }
+.play-btn.stop:hover { opacity: 0.9; }
 .play-btn.loop {
-  background: var(--bg-panel);
+  background: var(--inactive);
   color: var(--text-secondary);
   border: 1px solid var(--border);
 }
 .play-btn.loop.active {
   background: var(--accent);
-  color: #000;
+  color: #1A1A1A;
   border-color: var(--accent);
 }
 .playback-status {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 9px;
+  font-size: 12px;
   color: var(--text-secondary);
   font-weight: 600;
   letter-spacing: 0.5px;
@@ -637,14 +630,14 @@ select:focus { border-color: var(--accent); }
 
 /* ── Seed input styling ────────────────────────────────── */
 .seed-input {
-  width: 65px;
-  background: var(--bg-panel);
+  width: 70px;
+  background: var(--bg-deepest);
   border: 1px solid var(--border);
   color: var(--text);
-  padding: 3px 6px;
-  border-radius: 3px;
-  font-family: 'Inter', sans-serif;
-  font-size: 10px;
+  padding: 6px 10px;
+  border-radius: 4px;
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 14px;
   outline: none;
 }
 .seed-input:focus { border-color: var(--accent); }
@@ -652,17 +645,17 @@ select:focus { border-color: var(--accent); }
 /* ── Separator in controls row 2 ───────────────────────── */
 .ctrl-sep {
   width: 1px;
-  height: 20px;
+  height: 24px;
   background: var(--border);
   flex-shrink: 0;
 }
 
 /* ── Section labels ────────────────────────────────────── */
 .section-label {
-  font-size: 9px;
-  color: var(--text3);
+  font-size: 12px;
+  color: var(--text-secondary);
   font-weight: 700;
-  letter-spacing: 1.5px;
+  letter-spacing: 2px;
   text-transform: uppercase;
   white-space: nowrap;
   flex-shrink: 0;
@@ -674,27 +667,23 @@ select:focus { border-color: var(--accent); }
 
   <!-- 1. Header -->
   <div class="header">
-    <h1>Drum Pattern Generator</h1>
-    <div style="display:flex;align-items:center;gap:8px;">
-      <span class="tag">HAPAX</span>
-      <span class="tag" style="background:var(--bg-panel);color:var(--text-secondary);">v5.0.0</span>
-      <span class="header-info">Page View • 12 styles • 960PPQ</span>
-    </div>
+    <h1>DRUM PATTERN GENERATOR</h1>
+    <span class="tag">HAPAX v5.0.0</span>
   </div>
 
   <!-- 2a. Controls Row 1: 4 Sliders -->
   <div class="controls-row1">
-    <div class="control-group"><label>Intensity</label><input type="range" id="intensity" min="0" max="100" value="40"><span class="value" id="intensity-val">0.40</span></div>
-    <div class="control-group"><label>Syncopation</label><input type="range" id="syncopation" min="0" max="100" value="20"><span class="value" id="syncopation-val">0.20</span></div>
-    <div class="control-group"><label>Swing</label><input type="range" id="swing" min="50" max="75" value="50"><span class="value" id="swing-val">0.50</span></div>
-    <div class="control-group"><label>BPM</label><input type="range" id="bpm" min="120" max="155" value="135"><span class="value" id="bpm-val">135</span></div>
+    <div class="slider-group"><span class="slider-label">Intensity</span><div class="slider-row"><input type="range" id="intensity" min="0" max="100" value="40"><span class="value" id="intensity-val">0.40</span></div></div>
+    <div class="slider-group"><span class="slider-label">Syncopation</span><div class="slider-row"><input type="range" id="syncopation" min="0" max="100" value="20"><span class="value" id="syncopation-val">0.20</span></div></div>
+    <div class="slider-group"><span class="slider-label">Swing</span><div class="slider-row"><input type="range" id="swing" min="50" max="75" value="50"><span class="value" id="swing-val">0.50</span></div></div>
+    <div class="slider-group"><span class="slider-label">BPM</span><div class="slider-row"><input type="range" id="bpm" min="120" max="155" value="135"><span class="value" id="bpm-val">135</span></div></div>
   </div>
 
   <!-- 2b. Controls Row 2: Options + Generate -->
   <div class="controls-row2">
     <div class="control-group"><label>Swing Type</label><select id="swing-type"><option value="shuffle">Shuffle</option><option value="straight">Straight+Vel</option></select></div>
     <div class="control-group"><label>Bars</label><select id="bars-override"><option value="0">Auto</option><option value="1">1</option><option value="2">2</option><option value="4">4</option><option value="8">8</option><option value="16">16</option></select></div>
-    <div class="control-group"><label>Polyrhythmic</label><label style="cursor:pointer;font-size:10px"><input type="checkbox" id="polyrhythmic"> On</label></div>
+    <div class="control-group"><label>Polyrhythmic</label><label style="cursor:pointer;font-size:14px"><input type="checkbox" id="polyrhythmic"> On</label></div>
     <div class="control-group"><label>Seed</label><input type="number" id="seed" value="" placeholder="random" class="seed-input"></div>
     <div class="ctrl-sep"></div>
     <button class="btn" onclick="generate()">GENERATE</button>
