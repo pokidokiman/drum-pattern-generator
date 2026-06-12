@@ -138,11 +138,6 @@ drum-pattern-generator/
 ├── drum_pattern_generator.html   ← standalone, browser-ready (no deps)
 ├── references/
 │   └── hapax_mockup.html         ← Hapax UI reference mockup
-├── editor/
-│   ├── engine.js                 ← 12 styles, all YouTube data
-│   └── index.html                ← dark theme UI
-├── output/                       ← generated MIDI files
-├── generate_test_midis.py        ← test MIDI generator
 └── README.md
 ```
 
