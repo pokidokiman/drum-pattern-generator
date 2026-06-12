@@ -1534,13 +1534,21 @@ window.DrumEngine = {
     const baseTab = document.createElement('div');
     baseTab.className = 'tab' + (activeTab === 'base' ? ' active' : '');
     baseTab.textContent = 'Base';
-    baseTab.onclick = () => { activeTab = 'base'; renderAll(); };
+    baseTab.onclick = () => {
+      activeTab = 'base';
+      renderAll();
+      if (isPlaying) playPattern(currentPattern, null);
+    };
     tabs.appendChild(baseTab);
     for (const v of currentVariations) {
       const tab = document.createElement('div');
       tab.className = 'tab' + (activeTab === v.type ? ' active' : '');
       tab.textContent = v.name;
-      tab.onclick = () => { activeTab = v.type; renderAll(); };
+      tab.onclick = () => {
+        activeTab = v.type;
+        renderAll();
+        if (isPlaying) playPattern(currentPattern, v);
+      };
       tabs.appendChild(tab);
     }
   }
