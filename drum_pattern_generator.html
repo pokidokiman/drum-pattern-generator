@@ -183,8 +183,8 @@ body {
 
 /* ── Lane Config ───────────────────────────────────────── */
 .lane-config {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  display: flex;
+  flex-wrap: wrap;
   gap: 4px;
   margin-bottom: 8px;
 }
@@ -196,6 +196,8 @@ body {
   background: var(--bg-screen);
   border: 1px solid var(--border);
   border-radius: 3px;
+  width: calc(50% - 2px);
+  box-sizing: border-box;
 }
 .lane-color {
   width: 10px;
