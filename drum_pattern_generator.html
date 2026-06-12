@@ -568,7 +568,6 @@ body {
   transition: opacity 0.15s;
 }
 .btn-stop:hover { opacity: 0.85; }
-#stop-btn { display: none; }
 .btn-loop {
   background: var(--bg-panel);
   color: var(--blue);
@@ -868,7 +867,7 @@ body {
   <div class="bottom-bar">
     <div class="playback-group">
       <button class="btn-play" id="play-btn" onclick="togglePlay()">▶ Play</button>
-      <button class="btn-stop" id="stop-btn" onclick="stopPlayback();isLooping=false;document.getElementById('loop-btn').classList.remove('active');updatePlayUI();">■ Stop</button>
+      <button class="btn-stop" id="stop-btn" style="display:none" onclick="stopPlayback();isLooping=false;document.getElementById('loop-btn').classList.remove('active');updatePlayUI();">■ Stop</button>
       <button class="btn-loop" id="loop-btn" onclick="toggleLoop()">↻ Loop</button>
       <span class="playback-status" id="playback-status">Ready</span>
     </div>
@@ -1964,8 +1963,8 @@ function toggleLoop() {
 function updatePlayUI() {
   const playBtn = document.getElementById('play-btn');
   const stopBtn = document.getElementById('stop-btn');
-  if (playBtn) playBtn.style.display = isPlaying ? 'none' : '';
-  if (stopBtn) stopBtn.style.display = isPlaying ? '' : 'none';
+  if (playBtn) playBtn.style.display = isPlaying ? 'none' : 'inline-block';
+  if (stopBtn) stopBtn.style.display = isPlaying ? 'inline-block' : 'none';
   if (!isPlaying) {
     const statusEl = document.getElementById('playback-status');
     if (statusEl && statusEl.textContent.startsWith('Playing')) statusEl.textContent = 'Ready';
@@ -2137,9 +2136,9 @@ window.DrumEngine = {
     const container = document.getElementById('lane-config');
     container.innerHTML = '';
 
-    // Split into 2 columns: lanes 0-3 left, lanes 4-7 right
+    // Split into 2 columns: lanes 4-7 left (HH/Snare/Kick), lanes 0-3 right (Perc/Clap/Tom)
     for (let col = 0; col < 2; col++) {
-      const startIdx = col * 4;
+      const startIdx = col === 0 ? 4 : 0;
       for (let i = startIdx; i < startIdx + 4; i++) {
         const lane = userLanes[i];
         if (!lane) continue;
