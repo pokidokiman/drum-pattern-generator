@@ -1,0 +1,953 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Drum Pattern Generator — Hapax</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg-deepest: #0D0D0D;
+  --bg-screen: #1A1A1A;
+  --bg-panel: #2C2C2C;
+  --border: #3A3A3A;
+  --text: #F0F0F0;
+  --text-prominent: #FFFFFF;
+  --text-secondary: #666;
+  --accent: #D4A843;
+  /* Lane colors: per-lane (row) coloring */
+  --lane1-active: #FF3344; --lane1-inactive: #401015; --lane1-glow: rgba(255,51,68,0.30);
+  --lane2-active: #44DD44; --lane2-inactive: #1A401A; --lane2-glow: rgba(68,221,68,0.30);
+  --lane3-active: #FFCC00; --lane3-inactive: #403800; --lane3-glow: rgba(255,204,0,0.30);
+  --lane4-active: #FF9933; --lane4-inactive: #402A0D; --lane4-glow: rgba(255,153,51,0.30);
+  --lane5-active: #FF66B2; --lane5-inactive: #401A2E; --lane5-glow: rgba(255,102,178,0.30);
+  --lane6-active: #B066FF; --lane6-inactive: #2A1A40; --lane6-glow: rgba(176,102,255,0.30);
+  --lane7-active: #4DA6FF; --lane7-inactive: #1A2E40; --lane7-glow: rgba(77,166,255,0.30);
+  --lane8-active: #00D4AA; --lane8-inactive: #003830; --lane8-glow: rgba(0,212,170,0.30);
+  --green: #4CAF50;
+  --red: #E53935;
+  --blue: #5C8AC4;
+  --inactive: #1E1E1E;
+  --beat-marker: #222;
+}
+
+body {
+  background: var(--bg-deepest);
+  color: var(--text);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-size: 13px;
+  line-height: 1.4;
+  padding: 20px;
+  min-width: 1100px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* ── Header ────────────────────────────────────────────── */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: var(--bg-screen);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  margin-bottom: 8px;
+}
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.header-title {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 2.5px;
+  color: var(--text-prominent);
+  text-transform: uppercase;
+}
+.hapax-badge {
+  background: var(--accent);
+  color: #000;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  padding: 3px 10px;
+  border-radius: 2px;
+  text-transform: uppercase;
+}
+.version-badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  padding: 2px 8px;
+  border-radius: 2px;
+}
+
+/* ── Controls Bar ──────────────────────────────────────── */
+.controls-bar {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 14px 16px;
+  background: var(--bg-screen);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+.slider-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.slider-group label {
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  min-width: 80px;
+}
+.slider-group input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100px;
+  height: 4px;
+  background: #333;
+  border-radius: 2px;
+  outline: none;
+}
+.slider-group input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  background: var(--accent);
+  border-radius: 50%;
+  cursor: pointer;
+}
+.slider-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--accent);
+  min-width: 36px;
+  text-align: right;
+}
+.select-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.select-group label {
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.select-group select {
+  background: var(--bg-panel);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 4px 8px;
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  outline: none;
+}
+.btn-generate {
+  background: var(--accent);
+  color: #000;
+  border: none;
+  border-radius: 3px;
+  padding: 8px 24px;
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  cursor: pointer;
+  margin-left: auto;
+}
+.controls-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* ── Lane Config ───────────────────────────────────────── */
+.lane-config {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+.lane-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 12px;
+  background: var(--bg-screen);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+}
+.lane-color {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+.lane-name {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  min-width: 60px;
+}
+.lane-cat {
+  font-size: 10px;
+  color: var(--text-secondary);
+}
+.lane-cat select {
+  background: var(--bg-panel);
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  padding: 2px 6px;
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  outline: none;
+}
+.lane-midi {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--text-secondary);
+  margin-left: auto;
+}
+.lane-midi span {
+  color: var(--accent);
+  margin-left: 4px;
+}
+
+/* ── Style Selector ────────────────────────────────────── */
+.style-selector {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  background: var(--bg-screen);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  margin-bottom: 8px;
+}
+.style-label {
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  margin-right: 8px;
+}
+.style-btn {
+  background: var(--bg-panel);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 5px 14px;
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.style-btn.active {
+  background: var(--accent);
+  color: #000;
+  border-color: var(--accent);
+  font-weight: 600;
+}
+
+/* ── Variation Tabs ────────────────────────────────────── */
+.variation-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 16px;
+  background: var(--bg-screen);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  margin-bottom: 8px;
+}
+.var-tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg-panel);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 5px 14px;
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.var-tab.active {
+  background: var(--blue);
+  color: #fff;
+  border-color: var(--blue);
+  font-weight: 600;
+}
+.var-dice {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 14px;
+  cursor: pointer;
+  padding: 2px 4px;
+}
+.var-label {
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  margin-right: 8px;
+}
+
+/* ── Bar Nav ───────────────────────────────────────────── */
+.bar-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 8px;
+  margin-bottom: 6px;
+}
+.bar-nav-btn {
+  background: var(--bg-panel);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  width: 28px;
+  height: 28px;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.bar-nav-label {
+  font-size: 12px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text);
+  font-weight: 500;
+}
+.bar-nav-label span {
+  color: var(--accent);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* ── Step Grid ─────────────────────────────────────────── */
+.grid-wrapper {
+  background: var(--bg-screen);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 12px 16px 16px;
+  margin-bottom: 8px;
+}
+.grid-labels {
+  display: grid;
+  grid-template-columns: 72px repeat(16, 1fr);
+  gap: 2px;
+  margin-bottom: 4px;
+}
+.grid-labels .step-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  color: var(--text-secondary);
+  text-align: center;
+  padding-bottom: 2px;
+}
+.step-num.beat-start {
+  color: var(--accent);
+}
+.grid-body {
+  display: grid;
+  grid-template-columns: 72px repeat(16, 1fr);
+  gap: 2px;
+}
+.lane-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-right: 8px;
+}
+.lane-label .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.lane-label span {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.step-cell {
+  aspect-ratio: 1;
+  border: 1px solid rgba(255,255,255,0.04);
+  border-radius: 3px;
+  position: relative;
+  overflow: hidden;
+  min-height: 32px;
+}
+.step-cell.active {
+  border-color: rgba(212,168,67,0.3);
+}
+.step-cell.active .velocity-fill {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  border-radius: 0 0 2px 2px;
+}
+
+/* ── Per-lane colors (rows) ───────────────────────────── */
+/* Lane 1 — Kick — Red */
+.step-cell.lane-color-1 { background: var(--lane1-inactive); }
+.step-cell.lane-color-1.beat-marker { background: #50181C; }
+.step-cell.active.lane-color-1 { box-shadow: 0 0 8px var(--lane1-glow); border-color: rgba(255,51,68,0.4); }
+.step-cell.active.lane-color-1 .velocity-fill { background: var(--lane1-active); }
+/* Lane 2 — Snare — Green */
+.step-cell.lane-color-2 { background: var(--lane2-inactive); }
+.step-cell.lane-color-2.beat-marker { background: #225022; }
+.step-cell.active.lane-color-2 { box-shadow: 0 0 8px var(--lane2-glow); border-color: rgba(68,221,68,0.4); }
+.step-cell.active.lane-color-2 .velocity-fill { background: var(--lane2-active); }
+/* Lane 3 — CH Hat — Yellow */
+.step-cell.lane-color-3 { background: var(--lane3-inactive); }
+.step-cell.lane-color-3.beat-marker { background: #504800; }
+.step-cell.active.lane-color-3 { box-shadow: 0 0 8px var(--lane3-glow); border-color: rgba(255,204,0,0.4); }
+.step-cell.active.lane-color-3 .velocity-fill { background: var(--lane3-active); }
+/* Lane 4 — OH Hat — Orange */
+.step-cell.lane-color-4 { background: var(--lane4-inactive); }
+.step-cell.lane-color-4.beat-marker { background: #503510; }
+.step-cell.active.lane-color-4 { box-shadow: 0 0 8px var(--lane4-glow); border-color: rgba(255,153,51,0.4); }
+.step-cell.active.lane-color-4 .velocity-fill { background: var(--lane4-active); }
+/* Lane 5 — Clap — Pink */
+.step-cell.lane-color-5 { background: var(--lane5-inactive); }
+.step-cell.lane-color-5.beat-marker { background: #50203A; }
+.step-cell.active.lane-color-5 { box-shadow: 0 0 8px var(--lane5-glow); border-color: rgba(255,102,178,0.4); }
+.step-cell.active.lane-color-5 .velocity-fill { background: var(--lane5-active); }
+/* Lane 6 — Tom — Purple */
+.step-cell.lane-color-6 { background: var(--lane6-inactive); }
+.step-cell.lane-color-6.beat-marker { background: #362050; }
+.step-cell.active.lane-color-6 { box-shadow: 0 0 8px var(--lane6-glow); border-color: rgba(176,102,255,0.4); }
+.step-cell.active.lane-color-6 .velocity-fill { background: var(--lane6-active); }
+/* Lane 7 — Rim — Light Blue */
+.step-cell.lane-color-7 { background: var(--lane7-inactive); }
+.step-cell.lane-color-7.beat-marker { background: #223A50; }
+.step-cell.active.lane-color-7 { box-shadow: 0 0 8px var(--lane7-glow); border-color: rgba(77,166,255,0.4); }
+.step-cell.active.lane-color-7 .velocity-fill { background: var(--lane7-active); }
+/* Lane 8 — Perc — Cyan/Teal */
+.step-cell.lane-color-8 { background: var(--lane8-inactive); }
+.step-cell.lane-color-8.beat-marker { background: #004A3C; }
+.step-cell.active.lane-color-8 { box-shadow: 0 0 8px var(--lane8-glow); border-color: rgba(0,212,170,0.4); }
+.step-cell.active.lane-color-8 .velocity-fill { background: var(--lane8-active); }
+
+/* ── Info Panel ────────────────────────────────────────── */
+.info-panel {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.info-card {
+  background: var(--bg-screen);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 12px 16px;
+}
+.info-card h3 {
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 3px 0;
+}
+.info-row .label {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+.info-row .value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--text);
+}
+.info-row .value.accent {
+  color: var(--accent);
+}
+
+/* ── Download / Playback ───────────────────────────────── */
+.bottom-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  background: var(--bg-screen);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+}
+.download-group {
+  display: flex;
+  gap: 8px;
+}
+.btn-small {
+  background: var(--bg-panel);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 6px 14px;
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.playback-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.btn-play {
+  background: var(--green);
+  color: #fff;
+  border: none;
+  border-radius: 3px;
+  padding: 8px 20px;
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.btn-stop {
+  background: var(--red);
+  color: #fff;
+  border: none;
+  border-radius: 3px;
+  padding: 8px 16px;
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.btn-loop {
+  background: var(--bg-panel);
+  color: var(--blue);
+  border: 1px solid var(--blue);
+  border-radius: 3px;
+  padding: 8px 14px;
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+/* lane dot colors (match per-lane step colors) */
+.c-kick  { background: var(--lane1-active); }
+.c-snare { background: var(--lane2-active); }
+.c-chh   { background: var(--lane3-active); }
+.c-ohh   { background: var(--lane4-active); }
+.c-clap  { background: var(--lane5-active); }
+.c-tom   { background: var(--lane6-active); }
+.c-rim   { background: var(--lane7-active); }
+.c-perc  { background: var(--lane8-active); }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- 1. Header -->
+  <div class="header">
+    <div class="header-left">
+      <span class="header-title">Drum Pattern Generator</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <span class="hapax-badge">Hapax</span>
+      <span class="version-badge">v1.0.0</span>
+    </div>
+  </div>
+
+  <!-- 2. Controls Bar -->
+  <div class="controls-bar">
+    <div class="slider-group">
+      <label>Intensity</label>
+      <input type="range" min="0" max="100" value="65">
+      <span class="slider-value">65</span>
+    </div>
+    <div class="slider-group">
+      <label>Syncopation</label>
+      <input type="range" min="0" max="100" value="40">
+      <span class="slider-value">40</span>
+    </div>
+    <div class="slider-group">
+      <label>Swing</label>
+      <input type="range" min="0" max="100" value="20">
+      <span class="slider-value">20</span>
+    </div>
+    <div class="slider-group">
+      <label>BPM</label>
+      <input type="range" min="60" max="200" value="128">
+      <span class="slider-value">128</span>
+    </div>
+    <div class="controls-right">
+      <div class="select-group">
+        <label>Time Sig</label>
+        <select><option>4/4</option><option>3/4</option><option>6/8</option></select>
+      </div>
+      <div class="select-group">
+        <label>Steps</label>
+        <select><option>16</option><option>32</option><option>8</option></select>
+      </div>
+      <button class="btn-generate">Generate</button>
+    </div>
+  </div>
+
+  <!-- 3. Lane Configuration (top-to-bottom: Perc, Rim, Tom, Clap, OH Hat, CH Hat, Snare, Kick) -->
+  <div class="lane-config">
+    <div class="lane-row">
+      <div class="lane-color c-perc"></div>
+      <span class="lane-name">Perc</span>
+      <div class="lane-cat">
+        <select><option>Kick</option><option>Snare</option><option>HiHat</option><option selected>Percussion</option></select>
+      </div>
+      <span class="lane-midi">NOTE <span>G#2</span></span>
+      <span class="lane-midi">CH <span>10</span></span>
+    </div>
+    <div class="lane-row">
+      <div class="lane-color c-rim"></div>
+      <span class="lane-name">Rim</span>
+      <div class="lane-cat">
+        <select><option>Kick</option><option>Snare</option><option>HiHat</option><option selected>Percussion</option></select>
+      </div>
+      <span class="lane-midi">NOTE <span>C#1</span></span>
+      <span class="lane-midi">CH <span>10</span></span>
+    </div>
+    <div class="lane-row">
+      <div class="lane-color c-tom"></div>
+      <span class="lane-name">Tom</span>
+      <div class="lane-cat">
+        <select><option>Kick</option><option>Snare</option><option>HiHat</option><option selected>Percussion</option></select>
+      </div>
+      <span class="lane-midi">NOTE <span>F1</span></span>
+      <span class="lane-midi">CH <span>10</span></span>
+    </div>
+    <div class="lane-row">
+      <div class="lane-color c-clap"></div>
+      <span class="lane-name">Clap</span>
+      <div class="lane-cat">
+        <select><option>Kick</option><option selected>Snare</option><option>HiHat</option><option>Percussion</option></select>
+      </div>
+      <span class="lane-midi">NOTE <span>D#1</span></span>
+      <span class="lane-midi">CH <span>10</span></span>
+    </div>
+    <div class="lane-row">
+      <div class="lane-color c-ohh"></div>
+      <span class="lane-name">OH Hat</span>
+      <div class="lane-cat">
+        <select><option>Kick</option><option>Snare</option><option selected>HiHat</option><option>Percussion</option></select>
+      </div>
+      <span class="lane-midi">NOTE <span>A#1</span></span>
+      <span class="lane-midi">CH <span>10</span></span>
+    </div>
+    <div class="lane-row">
+      <div class="lane-color c-chh"></div>
+      <span class="lane-name">CH Hat</span>
+      <div class="lane-cat">
+        <select><option>Kick</option><option>Snare</option><option selected>HiHat</option><option>Percussion</option></select>
+      </div>
+      <span class="lane-midi">NOTE <span>F#1</span></span>
+      <span class="lane-midi">CH <span>10</span></span>
+    </div>
+    <div class="lane-row">
+      <div class="lane-color c-snare"></div>
+      <span class="lane-name">Snare</span>
+      <div class="lane-cat">
+        <select><option>Kick</option><option selected>Snare</option><option>HiHat</option><option>Percussion</option></select>
+      </div>
+      <span class="lane-midi">NOTE <span>D1</span></span>
+      <span class="lane-midi">CH <span>10</span></span>
+    </div>
+    <div class="lane-row">
+      <div class="lane-color c-kick"></div>
+      <span class="lane-name">Kick</span>
+      <div class="lane-cat">
+        <select><option selected>Kick</option><option>Snare</option><option>HiHat</option><option>Percussion</option></select>
+      </div>
+      <span class="lane-midi">NOTE <span>C1</span></span>
+      <span class="lane-midi">CH <span>10</span></span>
+    </div>
+  </div>
+
+  <!-- 4. Style Selector -->
+  <div class="style-selector">
+    <span class="style-label">Style</span>
+    <button class="style-btn active">Hypnotic</button>
+    <button class="style-btn">Minimal</button>
+    <button class="style-btn">Groove</button>
+    <button class="style-btn">Broken</button>
+    <button class="style-btn">Ambient</button>
+    <button class="style-btn">Techno</button>
+    <button class="style-btn">House</button>
+    <button class="style-btn">DnB</button>
+    <button class="style-btn">Experimental</button>
+  </div>
+
+  <!-- 5. Variation Tabs -->
+  <div class="variation-row">
+    <span class="var-label">Variation</span>
+    <button class="var-tab active">Base <span class="var-dice">🎲</span></button>
+    <button class="var-tab">Drop <span class="var-dice">🎲</span></button>
+    <button class="var-tab">Fill <span class="var-dice">🎲</span></button>
+    <button class="var-tab">Buildup <span class="var-dice">🎲</span></button>
+    <button class="var-tab">Break <span class="var-dice">🎲</span></button>
+  </div>
+
+  <!-- 6. Bar Navigation -->
+  <div class="bar-nav">
+    <button class="bar-nav-btn">◀</button>
+    <span class="bar-nav-label">Bar <span>1</span> / <span>4</span></span>
+    <button class="bar-nav-btn">▶</button>
+  </div>
+
+  <!-- 7. Step Grid -->
+  <div class="grid-wrapper">
+    <!-- Column numbers -->
+    <div class="grid-labels">
+      <div></div>
+      <div class="step-num beat-start">1</div><div class="step-num">2</div><div class="step-num">3</div><div class="step-num">4</div>
+      <div class="step-num beat-start">5</div><div class="step-num">6</div><div class="step-num">7</div><div class="step-num">8</div>
+      <div class="step-num beat-start">9</div><div class="step-num">10</div><div class="step-num">11</div><div class="step-num">12</div>
+      <div class="step-num beat-start">13</div><div class="step-num">14</div><div class="step-num">15</div><div class="step-num">16</div>
+    </div>
+
+    <!-- Row: Perc (top) -->
+    <div class="grid-body">
+      <div class="lane-label"><div class="dot c-perc"></div><span>Perc</span></div>
+      <div class="step-cell lane-color-8 beat-marker"></div>
+      <div class="step-cell lane-color-8"></div>
+      <div class="step-cell lane-color-8 active"><div class="velocity-fill" style="height:45%"></div></div>
+      <div class="step-cell lane-color-8"></div>
+      <div class="step-cell lane-color-8 beat-marker active"><div class="velocity-fill" style="height:50%"></div></div>
+      <div class="step-cell lane-color-8"></div>
+      <div class="step-cell lane-color-8 active"><div class="velocity-fill" style="height:30%"></div></div>
+      <div class="step-cell lane-color-8"></div>
+      <div class="step-cell lane-color-8 beat-marker"></div>
+      <div class="step-cell lane-color-8"></div>
+      <div class="step-cell lane-color-8 active"><div class="velocity-fill" style="height:45%"></div></div>
+      <div class="step-cell lane-color-8"></div>
+      <div class="step-cell lane-color-8 beat-marker active"><div class="velocity-fill" style="height:50%"></div></div>
+      <div class="step-cell lane-color-8"></div>
+      <div class="step-cell lane-color-8 active"><div class="velocity-fill" style="height:25%"></div></div>
+      <div class="step-cell lane-color-8"></div>
+
+      <!-- Row: Rim -->
+      <div class="lane-label"><div class="dot c-rim"></div><span>Rim</span></div>
+      <div class="step-cell lane-color-7 beat-marker"></div>
+      <div class="step-cell lane-color-7 active"><div class="velocity-fill" style="height:40%"></div></div>
+      <div class="step-cell lane-color-7"></div>
+      <div class="step-cell lane-color-7 active"><div class="velocity-fill" style="height:35%"></div></div>
+      <div class="step-cell lane-color-7 beat-marker"></div>
+      <div class="step-cell lane-color-7 active"><div class="velocity-fill" style="height:40%"></div></div>
+      <div class="step-cell lane-color-7"></div>
+      <div class="step-cell lane-color-7 active"><div class="velocity-fill" style="height:30%"></div></div>
+      <div class="step-cell lane-color-7 beat-marker"></div>
+      <div class="step-cell lane-color-7 active"><div class="velocity-fill" style="height:40%"></div></div>
+      <div class="step-cell lane-color-7"></div>
+      <div class="step-cell lane-color-7 active"><div class="velocity-fill" style="height:35%"></div></div>
+      <div class="step-cell lane-color-7 beat-marker"></div>
+      <div class="step-cell lane-color-7 active"><div class="velocity-fill" style="height:40%"></div></div>
+      <div class="step-cell lane-color-7"></div>
+      <div class="step-cell lane-color-7 active"><div class="velocity-fill" style="height:30%"></div></div>
+
+      <!-- Row: Tom -->
+      <div class="lane-label"><div class="dot c-tom"></div><span>Tom</span></div>
+      <div class="step-cell lane-color-6 beat-marker"></div>
+      <div class="step-cell lane-color-6"></div>
+      <div class="step-cell lane-color-6"></div>
+      <div class="step-cell lane-color-6 active"><div class="velocity-fill" style="height:55%"></div></div>
+      <div class="step-cell lane-color-6 beat-marker"></div>
+      <div class="step-cell lane-color-6"></div>
+      <div class="step-cell lane-color-6"></div>
+      <div class="step-cell lane-color-6"></div>
+      <div class="step-cell lane-color-6 beat-marker"></div>
+      <div class="step-cell lane-color-6"></div>
+      <div class="step-cell lane-color-6"></div>
+      <div class="step-cell lane-color-6 active"><div class="velocity-fill" style="height:60%"></div></div>
+      <div class="step-cell lane-color-6 beat-marker"></div>
+      <div class="step-cell lane-color-6 active"><div class="velocity-fill" style="height:45%"></div></div>
+      <div class="step-cell lane-color-6 active"><div class="velocity-fill" style="height:50%"></div></div>
+      <div class="step-cell lane-color-6 active"><div class="velocity-fill" style="height:35%"></div></div>
+
+      <!-- Row: Clap -->
+      <div class="lane-label"><div class="dot c-clap"></div><span>Clap</span></div>
+      <div class="step-cell lane-color-5 beat-marker"></div>
+      <div class="step-cell lane-color-5"></div>
+      <div class="step-cell lane-color-5"></div>
+      <div class="step-cell lane-color-5"></div>
+      <div class="step-cell lane-color-5 beat-marker active"><div class="velocity-fill" style="height:70%"></div></div>
+      <div class="step-cell lane-color-5"></div>
+      <div class="step-cell lane-color-5"></div>
+      <div class="step-cell lane-color-5"></div>
+      <div class="step-cell lane-color-5 beat-marker"></div>
+      <div class="step-cell lane-color-5"></div>
+      <div class="step-cell lane-color-5"></div>
+      <div class="step-cell lane-color-5"></div>
+      <div class="step-cell lane-color-5 beat-marker active"><div class="velocity-fill" style="height:65%"></div></div>
+      <div class="step-cell lane-color-5"></div>
+      <div class="step-cell lane-color-5"></div>
+      <div class="step-cell lane-color-5"></div>
+
+      <!-- Row: OH Hat -->
+      <div class="lane-label"><div class="dot c-ohh"></div><span>OH Hat</span></div>
+      <div class="step-cell lane-color-4 beat-marker"></div>
+      <div class="step-cell lane-color-4"></div>
+      <div class="step-cell lane-color-4 active"><div class="velocity-fill" style="height:50%"></div></div>
+      <div class="step-cell lane-color-4"></div>
+      <div class="step-cell lane-color-4 beat-marker"></div>
+      <div class="step-cell lane-color-4"></div>
+      <div class="step-cell lane-color-4 active"><div class="velocity-fill" style="height:45%"></div></div>
+      <div class="step-cell lane-color-4"></div>
+      <div class="step-cell lane-color-4 beat-marker"></div>
+      <div class="step-cell lane-color-4"></div>
+      <div class="step-cell lane-color-4 active"><div class="velocity-fill" style="height:50%"></div></div>
+      <div class="step-cell lane-color-4"></div>
+      <div class="step-cell lane-color-4 beat-marker"></div>
+      <div class="step-cell lane-color-4"></div>
+      <div class="step-cell lane-color-4 active"><div class="velocity-fill" style="height:40%"></div></div>
+      <div class="step-cell lane-color-4"></div>
+
+      <!-- Row: CH Hat -->
+      <div class="lane-label"><div class="dot c-chh"></div><span>CH Hat</span></div>
+      <div class="step-cell lane-color-3 beat-marker active"><div class="velocity-fill" style="height:80%"></div></div>
+      <div class="step-cell lane-color-3 active"><div class="velocity-fill" style="height:60%"></div></div>
+      <div class="step-cell lane-color-3 active"><div class="velocity-fill" style="height:75%"></div></div>
+      <div class="step-cell lane-color-3 active"><div class="velocity-fill" style="height:55%"></div></div>
+      <div class="step-cell lane-color-3 beat-marker active"><div class="velocity-fill" style="height:80%"></div></div>
+      <div class="step-cell lane-color-3 active"><div class="velocity-fill" style="height:60%"></div></div>
+      <div class="step-cell lane-color-3 active"><div class="velocity-fill" style="height:75%"></div></div>
+      <div class="step-cell lane-color-3 active"><div class="velocity-fill" style="height:50%"></div></div>
+      <div class="step-cell lane-color-3 beat-marker active"><div class="velocity-fill" style="height:80%"></div></div>
+      <div class="step-cell lane-color-3 active"><div class="velocity-fill" style="height:65%"></div></div>
+      <div class="step-cell lane-color-3 active"><div class="velocity-fill" style="height:75%"></div></div>
+      <div class="step-cell lane-color-3 active"><div class="velocity-fill" style="height:55%"></div></div>
+      <div class="step-cell lane-color-3 beat-marker active"><div class="velocity-fill" style="height:80%"></div></div>
+      <div class="step-cell lane-color-3 active"><div class="velocity-fill" style="height:60%"></div></div>
+      <div class="step-cell lane-color-3 active"><div class="velocity-fill" style="height:70%"></div></div>
+      <div class="step-cell lane-color-3 active"><div class="velocity-fill" style="height:45%"></div></div>
+
+      <!-- Row: Snare -->
+      <div class="lane-label"><div class="dot c-snare"></div><span>Snare</span></div>
+      <div class="step-cell lane-color-2 beat-marker"></div>
+      <div class="step-cell lane-color-2"></div>
+      <div class="step-cell lane-color-2"></div>
+      <div class="step-cell lane-color-2"></div>
+      <div class="step-cell lane-color-2 beat-marker active"><div class="velocity-fill" style="height:95%"></div></div>
+      <div class="step-cell lane-color-2"></div>
+      <div class="step-cell lane-color-2"></div>
+      <div class="step-cell lane-color-2"></div>
+      <div class="step-cell lane-color-2 beat-marker"></div>
+      <div class="step-cell lane-color-2"></div>
+      <div class="step-cell lane-color-2"></div>
+      <div class="step-cell lane-color-2"></div>
+      <div class="step-cell lane-color-2 beat-marker active"><div class="velocity-fill" style="height:90%"></div></div>
+      <div class="step-cell lane-color-2"></div>
+      <div class="step-cell lane-color-2 active"><div class="velocity-fill" style="height:35%"></div></div>
+      <div class="step-cell lane-color-2"></div>
+
+      <!-- Row: Kick (bottom) -->
+      <div class="lane-label"><div class="dot c-kick"></div><span>Kick</span></div>
+      <div class="step-cell lane-color-1 beat-marker active"><div class="velocity-fill" style="height:90%"></div></div>
+      <div class="step-cell lane-color-1"></div>
+      <div class="step-cell lane-color-1"></div>
+      <div class="step-cell lane-color-1"></div>
+      <div class="step-cell lane-color-1 beat-marker active"><div class="velocity-fill" style="height:75%"></div></div>
+      <div class="step-cell lane-color-1"></div>
+      <div class="step-cell lane-color-1 active"><div class="velocity-fill" style="height:40%"></div></div>
+      <div class="step-cell lane-color-1"></div>
+      <div class="step-cell lane-color-1 beat-marker active"><div class="velocity-fill" style="height:85%"></div></div>
+      <div class="step-cell lane-color-1"></div>
+      <div class="step-cell lane-color-1"></div>
+      <div class="step-cell lane-color-1"></div>
+      <div class="step-cell lane-color-1 beat-marker active"><div class="velocity-fill" style="height:70%"></div></div>
+      <div class="step-cell lane-color-1"></div>
+      <div class="step-cell lane-color-1 active"><div class="velocity-fill" style="height:50%"></div></div>
+      <div class="step-cell lane-color-1"></div>
+    </div>
+  </div>
+
+  <!-- 8. Info Panel -->
+  <div class="info-panel">
+    <div class="info-card">
+      <h3>Pattern Info</h3>
+      <div class="info-row"><span class="label">Style</span><span class="value">Hypnotic</span></div>
+      <div class="info-row"><span class="label">Variation</span><span class="value accent">Base</span></div>
+      <div class="info-row"><span class="label">Steps</span><span class="value">16</span></div>
+      <div class="info-row"><span class="label">Time Sig</span><span class="value">4/4</span></div>
+      <div class="info-row"><span class="label">BPM</span><span class="value accent">128</span></div>
+    </div>
+    <div class="info-card">
+      <h3>Metrics</h3>
+      <div class="info-row"><span class="label">Density</span><span class="value">42%</span></div>
+      <div class="info-row"><span class="label">Syncopation</span><span class="value accent">0.38</span></div>
+      <div class="info-row"><span class="label">Swing</span><span class="value">20%</span></div>
+      <div class="info-row"><span class="label">Polyrhythm</span><span class="value">None</span></div>
+      <div class="info-row"><span class="label">Active Steps</span><span class="value accent">54 / 128</span></div>
+    </div>
+    <div class="info-card">
+      <h3>Characteristics</h3>
+      <div class="info-row"><span class="label">Groove</span><span class="value accent">●●●○○</span></div>
+      <div class="info-row"><span class="label">Complexity</span><span class="value">●●○○○</span></div>
+      <div class="info-row"><span class="label">Openness</span><span class="value accent">●●●●○</span></div>
+      <div class="info-row"><span class="label">Energy</span><span class="value">●●●○○</span></div>
+      <div class="info-row"><span class="label">Humanize</span><span class="value">●●○○○</span></div>
+    </div>
+  </div>
+
+  <!-- 9. Download / Playback -->
+  <div class="bottom-bar">
+    <div class="download-group">
+      <button class="btn-small">Export MIDI</button>
+      <button class="btn-small">Save Pattern</button>
+      <button class="btn-small">Load Pattern</button>
+    </div>
+    <div class="playback-group">
+      <button class="btn-play">▶ Play</button>
+      <button class="btn-stop">■ Stop</button>
+      <button class="btn-loop">↻ Loop</button>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

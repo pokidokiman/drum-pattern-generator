@@ -5,106 +5,601 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Drum Pattern Generator — Hapax</title>
 <style>
-  :root {
-    --bg: #0a0a0a; --surface: #141414; --surface2: #1e1e1e; --surface3: #282828;
-    --border: #333; --text: #e0e0e0; --text2: #777; --text3: #555;
-    --accent: #ff6b2b; --accent2: #ff9a5c;
-    --cat-foundation: #ff3333; --cat-backbeat: #ffaa00; --cat-hihat: #33cc33;
-    --cat-accent: #ff88cc; --cat-metallic: #ffcc00; --cat-texture: #88ccff;
-    --cat-pitched: #3388ff; --cat-synth: #cc44cc;
-  }
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace; background: var(--bg); color: var(--text); min-height: 100vh; }
-  .container { max-width: 1400px; margin: 0 auto; padding: 16px; }
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
-  .header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
-  .header h1 { font-size: 16px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; }
-  .header .tag { font-size: 9px; background: var(--accent); color: #000; padding: 2px 6px; border-radius: 3px; font-weight: 800; }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-  .controls { display: flex; gap: 20px; align-items: end; flex-wrap: wrap; margin-bottom: 12px; padding: 12px; background: var(--surface); border-radius: 6px; border: 1px solid var(--border); }
-  .control-group { display: flex; flex-direction: column; gap: 3px; }
-  .control-group label { font-size: 9px; text-transform: uppercase; color: var(--text2); letter-spacing: 1.5px; font-weight: 600; }
-  .control-group .value { font-size: 13px; font-weight: 700; color: var(--accent); min-width: 36px; }
-  input[type="range"] { width: 120px; accent-color: var(--accent); cursor: pointer; height: 4px; }
-  select { background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 4px 8px; border-radius: 3px; font-family: inherit; font-size: 11px; cursor: pointer; }
-  select:focus { border-color: var(--accent); outline: none; }
-  .btn { padding: 8px 20px; background: var(--accent); color: #000; border: none; border-radius: 4px; font-family: inherit; font-size: 12px; font-weight: 800; cursor: pointer; letter-spacing: 1.5px; text-transform: uppercase; transition: all 0.1s; }
-  .btn:hover { background: var(--accent2); }
-  .btn-sm { padding: 4px 10px; font-size: 10px; letter-spacing: 0.5px; }
+:root {
+  /* Hapax color palette */
+  --bg-deepest: #0D0D0D;
+  --bg-screen: #1A1A1A;
+  --bg-panel: #2C2C2C;
+  --border: #3A3A3A;
+  --text: #F0F0F0;
+  --text-prominent: #FFFFFF;
+  --text-secondary: #888;
+  --accent: #D4A843;
+  --accent2: #E0B84F;
 
-  .chars-bar { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; padding: 8px 12px; background: var(--surface); border-radius: 6px; border: 1px solid var(--border); }
-  .char-btn { font-size: 10px; padding: 4px 10px; border-radius: 3px; cursor: pointer; font-family: inherit; font-weight: 600; letter-spacing: 0.5px; border: 1px solid var(--border); background: var(--surface2); color: var(--text2); transition: all 0.1s; }
-  .char-btn:hover { border-color: var(--accent); color: var(--text); }
-  .char-btn.active { background: var(--accent); color: #000; border-color: var(--accent); }
+  /* Aliases for JS compatibility (JS uses var(--bg), var(--surface), etc.) */
+  --bg: #0D0D0D;
+  --surface: #1A1A1A;
+  --surface2: #2C2C2C;
+  --surface3: #3A3A3A;
+  --text2: #888;
+  --text3: #555;
+  --green: #4CAF50;
+  --red: #E53935;
+  --blue: #5C8AC4;
 
-  /* LANE CONFIG */
-  .lane-config { margin-bottom: 12px; padding: 10px 12px; background: var(--surface); border-radius: 6px; border: 1px solid var(--border); }
-  .lane-config h3 { font-size: 9px; text-transform: uppercase; color: var(--text2); letter-spacing: 1.5px; font-weight: 700; margin-bottom: 8px; }
-  .lane-config-grid { display: grid; grid-template-columns: 30px 1fr 120px 60px 70px; gap: 4px 8px; align-items: center; }
-  .lane-config-grid .lane-num { font-size: 10px; color: var(--text3); text-align: center; font-weight: 700; }
-  .lane-config-grid input, .lane-config-grid select { font-size: 10px; padding: 3px 6px; }
-  .lane-config-grid input[type="text"] { background: var(--surface2); border: 1px solid var(--border); color: var(--text); border-radius: 3px; font-family: inherit; width: 100%; }
-  .lane-config-grid input[type="number"] { background: var(--surface2); border: 1px solid var(--border); color: var(--text); border-radius: 3px; font-family: inherit; width: 60px; }
-  .cat-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; vertical-align: middle; }
+  /* Category colors (JS catColors maps categories to these) */
+  /* foundation=Kick=Red, backbeat=Snare=Green, hihat=CH/OH Hat=Yellow,
+     accent=Perc=Cyan, metallic=Orange, texture=Pink, pitched=Tom=Purple, synth=Blue */
+  --cat-foundation: #FF3344;
+  --cat-backbeat: #44DD44;
+  --cat-hihat: #FFCC00;
+  --cat-accent: #00D4AA;
+  --cat-metallic: #FF9933;
+  --cat-texture: #FF66B2;
+  --cat-pitched: #B066FF;
+  --cat-synth: #4DA6FF;
 
-  .tabs { display: flex; gap: 2px; margin-bottom: 2px; }
-  .tab { padding: 7px 14px; background: var(--surface); border: 1px solid var(--border); border-bottom: none; border-radius: 5px 5px 0 0; cursor: pointer; font-size: 11px; font-weight: 700; color: var(--text2); transition: all 0.1s; letter-spacing: 0.5px; }
-  .tab:hover { color: var(--text); background: var(--surface2); }
-  .tab.active { color: var(--accent); background: var(--bg); border-color: var(--accent); border-bottom-color: var(--bg); }
+  /* Lane position colors (for per-lane grid styling) */
+  --lane1-active: #FF3344; --lane1-inactive: #401015; --lane1-glow: rgba(255,51,68,0.30);
+  --lane2-active: #44DD44; --lane2-inactive: #1A401A; --lane2-glow: rgba(68,221,68,0.30);
+  --lane3-active: #FFCC00; --lane3-inactive: #403800; --lane3-glow: rgba(255,204,0,0.30);
+  --lane4-active: #FF9933; --lane4-inactive: #402A0D; --lane4-glow: rgba(255,153,51,0.30);
+  --lane5-active: #FF66B2; --lane5-inactive: #401A2E; --lane5-glow: rgba(255,102,178,0.30);
+  --lane6-active: #B066FF; --lane6-inactive: #2A1A40; --lane6-glow: rgba(176,102,255,0.30);
+  --lane7-active: #4DA6FF; --lane7-inactive: #1A2E40; --lane7-glow: rgba(77,166,255,0.30);
+  --lane8-active: #00D4AA; --lane8-inactive: #003830; --lane8-glow: rgba(0,212,170,0.30);
 
-  .grid-container { background: var(--bg); border: 1px solid var(--border); border-radius: 0 6px 6px 6px; padding: 8px 12px 12px 12px; max-width: 700px; }
-  .bar-nav { display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 8px; padding: 6px 0; }
-  .bar-nav-btn { background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 4px 12px; border-radius: 3px; cursor: pointer; font-size: 12px; font-family: inherit; transition: all 0.1s; }
-  .bar-nav-btn:hover { border-color: var(--accent); color: var(--accent); }
-  .bar-nav-btn:disabled { opacity: 0.3; cursor: default; }
-  .bar-nav-label { font-size: 11px; font-weight: 700; color: var(--accent); letter-spacing: 1.5px; text-transform: uppercase; min-width: 100px; text-align: center; }
-  .step-numbers { display: flex; margin-left: 108px; margin-bottom: 4px; }
-  .step-num { width: 35px; text-align: center; font-size: 8px; color: var(--text3); font-weight: 600; }
-  .step-num.beat { color: var(--text2); }
-  .grid-row { display: flex; align-items: center; margin-bottom: 1px; }
-  .lane-label { width: 100px; min-width: 100px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; padding-right: 8px; text-align: right; }
-  .step-cell { width: 35px; height: 30px; margin: 0; border-right: 1px solid #1a1a1a; border-bottom: 1px solid #1a1a1a; cursor: pointer; transition: all 0.08s; position: relative; }
-  .step-cell:hover { background: rgba(255,255,255,0.08); }
-  .step-cell.beat { background: #1a1a1a; }
-  .step-cell .vel-fill { position: absolute; bottom: 0; left: 0; right: 0; border-radius: 2px 2px 0 0; transition: height 0.1s; }
-  .step-cell .vel-pct { position: absolute; bottom: 2px; left: 0; right: 0; text-align: center; font-size: 7px; font-weight: 700; color: rgba(0,0,0,0.8); z-index: 1; text-shadow: 0 0 2px rgba(255,255,255,0.3); }
+  --inactive: #1E1E1E;
+  --beat-marker: #222;
+}
 
-  .info { display: flex; gap: 16px; margin-top: 12px; flex-wrap: wrap; }
-  .info-card { flex: 1; min-width: 180px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 10px; }
-  .info-card h3 { font-size: 9px; text-transform: uppercase; color: var(--text2); margin-bottom: 6px; letter-spacing: 1.5px; font-weight: 700; }
-  .info-card .stat { display: flex; justify-content: space-between; padding: 2px 0; font-size: 11px; }
-  .info-card .stat .val { color: var(--accent); font-weight: 700; }
-  .char-tags { display: flex; flex-wrap: wrap; gap: 3px; }
-  .char-tag { font-size: 9px; padding: 2px 6px; background: var(--surface2); border: 1px solid var(--border); border-radius: 3px; color: var(--accent); font-weight: 600; }
-  .var-desc { margin-top: 10px; padding: 8px 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; font-size: 11px; color: var(--text2); line-height: 1.5; }
-  .var-desc strong { color: var(--text); }
-  .downloads { margin-top: 12px; display: flex; gap: 6px; flex-wrap: wrap; }
-  .download-btn { display: flex; align-items: center; gap: 5px; padding: 6px 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 4px; cursor: pointer; font-family: inherit; font-size: 10px; color: var(--text); font-weight: 600; transition: all 0.1s; }
-  .download-btn:hover { border-color: var(--accent); color: var(--accent); }
+body {
+  background: var(--bg-deepest);
+  color: var(--text);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-size: 13px;
+  line-height: 1.4;
+  min-height: 100vh;
+}
 
-  /* PLAYBACK */
-  .playback { display: flex; gap: 8px; align-items: center; margin-top: 12px; padding: 10px 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; }
-  .play-btn { padding: 6px 16px; border: 1px solid var(--border); border-radius: 4px; cursor: pointer; font-family: inherit; font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; transition: all 0.1s; }
-  .play-btn.play { background: #22cc44; color: #000; border-color: #22cc44; }
-  .play-btn.play:hover { background: #33dd55; }
-  .play-btn.stop { background: #cc3333; color: #000; border-color: #cc3333; }
-  .play-btn.stop:hover { background: #dd4444; }
-  .play-btn.loop { background: var(--surface2); color: var(--text2); }
-  .play-btn.loop.active { background: var(--accent); color: #000; border-color: var(--accent); }
-  .playback-status { font-size: 10px; color: var(--text3); font-weight: 600; letter-spacing: 0.5px; }
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+/* ── Header ────────────────────────────────────────────── */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: var(--bg-screen);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  margin-bottom: 8px;
+}
+.header h1 {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 2.5px;
+  color: var(--text-prominent);
+  text-transform: uppercase;
+}
+.tag {
+  background: var(--accent);
+  color: #000;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  padding: 3px 10px;
+  border-radius: 2px;
+  text-transform: uppercase;
+}
+.header-info {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  padding: 2px 8px;
+  border-radius: 2px;
+}
+
+/* ── Controls Bar ──────────────────────────────────────── */
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 16px;
+  background: var(--bg-screen);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+.control-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.control-group label {
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  font-weight: 600;
+  min-width: 65px;
+}
+.control-group .value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--accent);
+  min-width: 36px;
+  text-align: right;
+}
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100px;
+  height: 4px;
+  background: #333;
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  background: var(--accent);
+  border-radius: 50%;
+  cursor: pointer;
+}
+input[type="range"]::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  background: var(--accent);
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+}
+select {
+  background: var(--bg-panel);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 4px 8px;
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  outline: none;
+  cursor: pointer;
+}
+select:focus { border-color: var(--accent); }
+.btn {
+  background: var(--accent);
+  color: #000;
+  border: none;
+  border-radius: 3px;
+  padding: 8px 24px;
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.btn:hover { background: var(--accent2); }
+.btn-sm {
+  padding: 5px 12px;
+  font-size: 10px;
+  letter-spacing: 0.5px;
+}
+
+/* ── Characteristic / Style Selector ───────────────────── */
+.chars-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  background: var(--bg-screen);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+.char-btn {
+  background: var(--bg-panel);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 5px 14px;
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.1s;
+}
+.char-btn:hover { border-color: var(--accent); color: var(--text); }
+.char-btn.active {
+  background: var(--accent);
+  color: #000;
+  border-color: var(--accent);
+  font-weight: 700;
+}
+
+/* ── Lane Configuration ────────────────────────────────── */
+.lane-config {
+  padding: 10px 16px;
+  background: var(--bg-screen);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  margin-bottom: 8px;
+}
+.lane-config h3 {
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+.lane-config-grid {
+  display: grid;
+  grid-template-columns: 30px 1fr 140px 70px 80px;
+  gap: 4px 8px;
+  align-items: center;
+}
+.lane-config-grid .lane-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--text3);
+  text-align: center;
+  font-weight: 700;
+}
+.lane-config-grid input[type="text"] {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 3px;
+  padding: 3px 6px;
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  width: 100%;
+  outline: none;
+}
+.lane-config-grid input[type="text"]:focus { border-color: var(--accent); }
+.lane-config-grid input[type="number"] {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 3px;
+  padding: 3px 6px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  width: 60px;
+  outline: none;
+}
+.lane-config-grid input[type="number"]:focus { border-color: var(--accent); }
+.lane-config-grid select { font-size: 10px; padding: 3px 6px; }
+.cat-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 4px;
+  vertical-align: middle;
+}
+
+/* ── Variation Tabs ────────────────────────────────────── */
+.tabs {
+  display: flex;
+  gap: 2px;
+  margin-bottom: 2px;
+}
+.tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  background: var(--bg-screen);
+  border: 1px solid var(--border);
+  border-bottom: none;
+  border-radius: 4px 4px 0 0;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  transition: all 0.1s;
+}
+.tab:hover { color: var(--text); background: var(--bg-panel); }
+.tab.active {
+  color: var(--accent);
+  background: var(--bg-deepest);
+  border-color: var(--accent);
+  border-bottom-color: var(--bg-deepest);
+}
+
+/* ── Grid Container ────────────────────────────────────── */
+.grid-container {
+  background: var(--bg-deepest);
+  border: 1px solid var(--border);
+  border-radius: 0 4px 4px 4px;
+  padding: 12px 16px 16px;
+  margin-bottom: 8px;
+}
+
+/* ── Bar Navigation ────────────────────────────────────── */
+.bar-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 8px;
+  margin-bottom: 6px;
+}
+.bar-nav-btn {
+  background: var(--bg-panel);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  width: 28px;
+  height: 28px;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.1s;
+}
+.bar-nav-btn:hover { border-color: var(--accent); color: var(--accent); }
+.bar-nav-btn:disabled { opacity: 0.3; cursor: default; border-color: var(--border); color: var(--text-secondary); }
+.bar-nav-label {
+  font-size: 12px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text);
+  font-weight: 500;
+}
+
+/* ── Step Numbers ──────────────────────────────────────── */
+.step-numbers {
+  display: flex;
+  margin-left: 108px;
+  margin-bottom: 4px;
+}
+.step-num {
+  width: 35px;
+  text-align: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  color: var(--text3);
+  font-weight: 600;
+  padding-bottom: 2px;
+}
+.step-num.beat { color: var(--accent); }
+
+/* ── Grid Rows ─────────────────────────────────────────── */
+.grid-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1px;
+}
+.lane-label {
+  width: 100px;
+  min-width: 100px;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  padding-right: 8px;
+  text-align: right;
+}
+
+/* ── Step Cells ────────────────────────────────────────── */
+.step-cell {
+  width: 35px;
+  height: 30px;
+  border: 1px solid rgba(255,255,255,0.04);
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.08s;
+  position: relative;
+  overflow: hidden;
+}
+.step-cell:hover { background: rgba(255,255,255,0.08); }
+.step-cell.beat { background: rgba(255,255,255,0.03); }
+.step-cell .vel-fill {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  border-radius: 2px 2px 0 0;
+  transition: height 0.1s;
+}
+.step-cell .vel-pct {
+  position: absolute;
+  bottom: 2px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 7px;
+  font-weight: 700;
+  color: rgba(0,0,0,0.8);
+  z-index: 1;
+  text-shadow: 0 0 2px rgba(255,255,255,0.3);
+}
+
+/* ── Info Panel ────────────────────────────────────────── */
+.info {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+.info-card {
+  flex: 1;
+  min-width: 180px;
+  background: var(--bg-screen);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 12px 16px;
+}
+.info-card h3 {
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+  font-weight: 700;
+}
+.info-card .stat {
+  display: flex;
+  justify-content: space-between;
+  padding: 3px 0;
+  font-size: 11px;
+}
+.info-card .stat span:first-child { color: var(--text-secondary); }
+.info-card .stat .val {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--text);
+  font-weight: 700;
+}
+.char-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+}
+.char-tag {
+  font-size: 9px;
+  padding: 2px 8px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  color: var(--accent);
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+/* ── Variation Description ─────────────────────────────── */
+.var-desc {
+  padding: 10px 16px;
+  background: var(--bg-screen);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-size: 11px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin-bottom: 8px;
+}
+.var-desc strong { color: var(--text); }
+
+/* ── Download Buttons ──────────────────────────────────── */
+.downloads {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+.download-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 14px;
+  background: var(--bg-panel);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  transition: all 0.1s;
+}
+.download-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ── Playback ──────────────────────────────────────────── */
+.playback {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 10px 16px;
+  background: var(--bg-screen);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+}
+.play-btn {
+  padding: 8px 20px;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  transition: all 0.1s;
+}
+.play-btn.play {
+  background: var(--green);
+  color: #fff;
+}
+.play-btn.play:hover { background: #5CBB5F; }
+.play-btn.stop {
+  background: var(--red);
+  color: #fff;
+}
+.play-btn.stop:hover { background: #EF5350; }
+.play-btn.loop {
+  background: var(--bg-panel);
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+}
+.play-btn.loop.active {
+  background: var(--accent);
+  color: #000;
+  border-color: var(--accent);
+}
+.playback-status {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--text-secondary);
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
 </style>
 </head>
 <body>
 <div class="container">
+
+  <!-- Header -->
   <div class="header">
     <h1>Drum Pattern Generator</h1>
-    <span class="tag">HAPAX</span>
-    <span class="tag">v4.0.0</span>
-    <span style="flex:1"></span>
-    <span style="font-size:9px;color:var(--text3)">Hapax Page View • 12 styles • 960PPQ</span>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <span class="tag">HAPAX</span>
+      <span class="tag" style="background:var(--bg-panel);color:var(--text-secondary);">v4.0.0</span>
+      <span class="header-info">Page View • 12 styles • 960PPQ</span>
+    </div>
   </div>
 
-  <!-- CONTROLS -->
+  <!-- Controls -->
   <div class="controls">
     <div class="control-group"><label>Intensity</label><input type="range" id="intensity" min="0" max="100" value="40"><span class="value" id="intensity-val">0.40</span></div>
     <div class="control-group"><label>Syncopation</label><input type="range" id="syncopation" min="0" max="100" value="20"><span class="value" id="syncopation-val">0.20</span></div>
@@ -113,27 +608,27 @@
     <div class="control-group"><label>BPM</label><input type="range" id="bpm" min="120" max="155" value="135"><span class="value" id="bpm-val">135</span></div>
     <div class="control-group"><label>Bars</label><select id="bars-override"><option value="0">Auto</option><option value="1">1</option><option value="2">2</option><option value="4">4</option><option value="8">8</option><option value="16">16</option></select></div>
     <div class="control-group"><label>Polyrhythmic</label><label style="cursor:pointer;font-size:10px"><input type="checkbox" id="polyrhythmic"> On</label></div>
-    <div class="control-group"><label>Seed</label><input type="number" id="seed" value="" placeholder="random" style="width:70px;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:3px;border-radius:3px;font-family:inherit;font-size:11px"></div>
+    <div class="control-group"><label>Seed</label><input type="number" id="seed" value="" placeholder="random" style="width:70px;background:var(--bg-panel);border:1px solid var(--border);color:var(--text);padding:3px;border-radius:3px;font-family:inherit;font-size:11px"></div>
     <button class="btn" onclick="generate()">GENERATE</button>
-    <button class="btn btn-sm" onclick="undo()" title="Undo (Ctrl+Z)" style="background:var(--surface2);color:var(--text2);border:1px solid var(--border)">↩</button>
-    <button class="btn btn-sm" onclick="redo()" title="Redo (Ctrl+Y)" style="background:var(--surface2);color:var(--text2);border:1px solid var(--border)">↪</button>
-    <button class="btn btn-sm" onclick="savePattern()" title="Save to browser" style="background:var(--surface2);color:var(--text2);border:1px solid var(--border)">💾 Save</button>
-    <button class="btn btn-sm" onclick="loadPattern()" title="Load from browser" style="background:var(--surface2);color:var(--text2);border:1px solid var(--border)">📂 Load</button>
+    <button class="btn btn-sm" onclick="undo()" title="Undo (Ctrl+Z)" style="background:var(--bg-panel);color:var(--text2);border:1px solid var(--border)">↩</button>
+    <button class="btn btn-sm" onclick="redo()" title="Redo (Ctrl+Y)" style="background:var(--bg-panel);color:var(--text2);border:1px solid var(--border)">↪</button>
+    <button class="btn btn-sm" onclick="savePattern()" title="Save to browser" style="background:var(--bg-panel);color:var(--text2);border:1px solid var(--border)">💾 Save</button>
+    <button class="btn btn-sm" onclick="loadPattern()" title="Load from browser" style="background:var(--bg-panel);color:var(--text2);border:1px solid var(--border)">📂 Load</button>
   </div>
 
-  <!-- LANE CONFIGURATION -->
+  <!-- Lane Configuration -->
   <div class="lane-config">
-    <h3>LANE CONFIGURATION (8 Hapax lanes)</h3>
+    <h3>Lane Configuration (8 Hapax Lanes)</h3>
     <div class="lane-config-grid" id="lane-config-grid"></div>
   </div>
 
-  <!-- STYLE SELECTOR -->
+  <!-- Style Selector -->
   <div class="chars-bar" id="chars-bar"></div>
 
-  <!-- VARIATION TABS -->
+  <!-- Variation Tabs -->
   <div class="tabs" id="tabs"></div>
 
-  <!-- GRID (Hapax Page View) -->
+  <!-- Grid (Hapax Page View) -->
   <div class="grid-container">
     <div class="bar-nav" id="bar-nav">
       <button class="bar-nav-btn" onclick="prevBar()" id="bar-prev">◀</button>
@@ -144,7 +639,7 @@
     <div id="grid"></div>
   </div>
 
-  <!-- INFO -->
+  <!-- Info -->
   <div class="info">
     <div class="info-card"><h3>Pattern</h3><div class="stat"><span>Name</span><span class="val" id="info-name">—</span></div><div class="stat"><span>Bars</span><span class="val" id="info-bars">—</span></div><div class="stat"><span>Steps</span><span class="val" id="info-steps">—</span></div><div class="stat"><span>Swing</span><span class="val" id="info-swing">—</span></div></div>
     <div class="info-card"><h3>Metrics</h3><div class="stat"><span>Density</span><span class="val" id="info-density">—</span></div><div class="stat"><span>Syncopation</span><span class="val" id="info-syncopation">—</span></div><div class="stat"><span>Events</span><span class="val" id="info-count">—</span></div></div>
@@ -153,14 +648,14 @@
   <div class="var-desc" id="var-desc" style="display:none"></div>
   <div class="downloads" id="downloads"></div>
 
-  <!-- PLAYBACK -->
+  <!-- Playback -->
   <div class="playback">
     <button class="play-btn play" id="play-btn" onclick="togglePlay()">▶ PLAY</button>
     <button class="play-btn loop" id="loop-btn" onclick="toggleLoop()">🔁 LOOP</button>
     <span class="playback-status" id="playback-status">Ready</span>
   </div>
-</div>
 
+</div>
 <script>
 /* Drum Pattern Generator Engine v4.0.0
  * Hapax Page View — generative drum pattern system for Squarp Hapax
