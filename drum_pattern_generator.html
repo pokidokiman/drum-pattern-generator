@@ -585,6 +585,13 @@ body {
   letter-spacing: 1.5px;
   text-transform: uppercase;
   cursor: pointer;
+  transition: all 0.15s ease;
+}
+.btn-loop.active {
+  background-color: var(--blue) !important;
+  color: #000 !important;
+  border-color: var(--blue) !important;
+  box-shadow: 0 0 8px rgba(92,138,196,0.4);
 }
 
 /* lane dot colors (match per-lane step colors — Perc=top green, Kick=bottom red) */
@@ -630,7 +637,7 @@ body {
   font-size: 10px;
   outline: none;
 }
-.extra-controls .ctrl-group input[type="number"] { width: 60px; }
+.extra-controls .ctrl-group input[type="number"] { width: 90px; }
 .extra-controls .ctrl-group input[type="checkbox"] { width: 14px; height: 14px; }
 .ctrl-sep { width: 1px; height: 20px; background: var(--border); flex-shrink: 0; }
 .btn-undo {
@@ -765,7 +772,7 @@ body {
     </div>
     <div style="display:flex;align-items:center;gap:8px;">
       <span class="hapax-badge">Hapax</span>
-      <span class="version-badge">v6.0.0</span>
+      <span class="version-badge">v6.1.3</span>
     </div>
   </div>
 
@@ -872,7 +879,7 @@ body {
   <div class="bottom-bar">
     <div class="playback-group">
       <button class="btn-play" id="play-btn" onclick="togglePlay()">▶ Play</button>
-      <button class="btn-stop" id="stop-btn" style="display:none" onclick="stopPlayback();isLooping=false;document.getElementById('loop-btn').classList.remove('active');updatePlayUI();">■ Stop</button>
+      <button class="btn-stop" id="stop-btn" style="display:none" onclick="stopPlayback();isLooping=false;const lb=document.getElementById('loop-btn');lb.classList.remove('active');lb.style.cssText='';updatePlayUI();">■ Stop</button>
       <button class="btn-loop" id="loop-btn" onclick="toggleLoop()">↻ Loop</button>
       <span class="playback-status" id="playback-status">Ready</span>
     </div>
@@ -1962,7 +1969,20 @@ function togglePlay() {
 
 function toggleLoop() {
   isLooping = !isLooping;
-  document.getElementById('loop-btn').classList.toggle('active', isLooping);
+  const btn = document.getElementById('loop-btn');
+  btn.classList.toggle('active', isLooping);
+  // Inline style backup for browsers that don't apply .active class properly
+  if (isLooping) {
+    btn.style.backgroundColor = '#5C8AC4';
+    btn.style.color = '#000';
+    btn.style.borderColor = '#5C8AC4';
+    btn.style.boxShadow = '0 0 8px rgba(92,138,196,0.4)';
+  } else {
+    btn.style.backgroundColor = '';
+    btn.style.color = '';
+    btn.style.borderColor = '';
+    btn.style.boxShadow = '';
+  }
 }
 
 function updatePlayUI() {
