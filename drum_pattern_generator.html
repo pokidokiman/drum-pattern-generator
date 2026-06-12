@@ -1622,25 +1622,30 @@ function generatePattern(params) {
     // ── Humanized: probability, velocity random walk, microtiming ──
     const isHumanized = characteristics.includes("humanized");
     if (isHumanized) {
-      // Probability: drop 10-20% of hits, convert some to ghost notes
+      // Probability: drop hits and add ghost notes
+      // Foundation (kick) is NEVER dropped — it's the anchor
       for (let i = 0; i < pattern.length; i++) {
         if (!pattern[i]) continue;
+        // Foundation stays untouched
+        if (lane.category === "foundation") continue;
         const roll = rng.next();
-        if (roll < 0.12) {
-          // 12% chance: skip entirely (human missed the hit)
-          pattern[i] = 0;
-        } else if (roll < 0.22) {
-          // 10% chance: ghost note (soft hit, human didn't fully commit)
-          // Will be handled in velocity section below
-          pattern[i] = 2; // marker for ghost note
+        if (lane.category === "hihat") {
+          // Hi-hat: more drops (humanized feel, not machine-gun)
+          if (roll < 0.15) pattern[i] = 0;        // 15% skip
+          else if (roll < 0.25) pattern[i] = 2;    // 10% ghost
+        } else {
+          // Other lanes: moderate drops
+          if (roll < 0.10) pattern[i] = 0;          // 10% skip
+          else if (roll < 0.18) pattern[i] = 2;     // 8% ghost
         }
       }
       // Add ghost notes near existing hits (human anticipation/lag)
       for (let i = 0; i < pattern.length; i++) {
         if (pattern[i] !== 0) continue;
+        if (lane.category === "foundation") continue; // no ghost kicks
         const prev = i > 0 ? pattern[i-1] : 0;
         const next = i < pattern.length - 1 ? pattern[i+1] : 0;
-        if ((prev === 1 || prev === 2 || next === 1 || next === 2) && rng.next() < 0.15) {
+        if ((prev === 1 || prev === 2 || next === 1 || next === 2) && rng.next() < 0.12) {
           pattern[i] = 2; // ghost note
         }
       }
@@ -1660,11 +1665,18 @@ function generatePattern(params) {
       if (isHumanized && pattern[i] === 2) {
         // Ghost note: very soft
         v = rng.randInt(20, 45);
+      } else if (isHumanized && lane.category === "foundation") {
+        // Kick: always 100, no variation — it's the anchor
+        v = 100;
       } else if (isHumanized) {
-        // Random walk velocity: base ± variation, correlated with previous step
-        const base = lane.category === "foundation" ? 100 : lane.category === "hihat" ? 75 : 85;
-        const walk = rng.randInt(-15, 15);
-        v = Math.max(40, Math.min(127, Math.floor(prevVel * 0.6 + (base + walk) * 0.4)));
+        // Random walk: delta from previous velocity, not blend toward base
+        // This creates actual variation that wanders up AND down
+        const delta = rng.randInt(-12, 12);
+        v = prevVel + delta;
+        // Clamp to reasonable range per category
+        if (lane.category === "hihat") v = Math.max(50, Math.min(110, v));
+        else if (lane.category === "backbeat") v = Math.max(60, Math.min(120, v));
+        else v = Math.max(45, Math.min(127, v));
         prevVel = v;
       } else {
         v = curveValues[pos];
@@ -1714,15 +1726,18 @@ function generatePattern(params) {
       }
     }
 
-    // Humanized microtiming: random ±5-15ms offset on ALL active steps
+    // Humanized microtiming: random offset on ALL active steps
     // This is independent of swing — it simulates human timing imperfection
+    // Kick is nearly locked (±2), hihat gets most movement (±15)
     if (isHumanized) {
       for (let i = 0; i < pattern.length; i++) {
         if (!pattern[i]) continue;
-        // ±5-15 ticks random offset (at 960PPQ, ~5-15ms at 130 BPM)
-        const offset = rng.randInt(-15, 15);
-        // Foundation (kick) gets less displacement — humans anchor to kick
-        mt[i] = lane.category === "foundation" ? Math.floor(offset * 0.3) : offset;
+        let offset;
+        if (lane.category === "foundation") offset = rng.randInt(-2, 2);       // kick: locked
+        else if (lane.category === "hihat") offset = rng.randInt(-15, 15);     // hihat: most human
+        else if (lane.category === "backbeat") offset = rng.randInt(-8, 8);    // snare: moderate
+        else offset = rng.randInt(-10, 10);                                     // other: moderate
+        mt[i] = offset;
       }
     }
 
