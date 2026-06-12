@@ -249,15 +249,16 @@ const SOUND_PRESETS = [
 // ─── DEFAULT LANE CONFIG (8 Hapax lanes) ──────────────────────
 
 const DEFAULT_LANES = [
-  // Hapax import: lowest MIDI note → Lane 1. Notes are correct per manual p59.
-  { name: "Kick",        category: "foundation", midiNote: 36, midiChannel: 1 },
-  { name: "Snare",       category: "backbeat",   midiNote: 38, midiChannel: 1 },
-  { name: "HH Closed",   category: "hihat",      midiNote: 42, midiChannel: 1 },
-  { name: "HH Open",     category: "hihat",      midiNote: 46, midiChannel: 1 },
-  { name: "Tom Low",     category: "pitched",    midiNote: 41, midiChannel: 1 },
-  { name: "Tom Hi",      category: "pitched",    midiNote: 50, midiChannel: 1 },
-  { name: "Clap",        category: "backbeat",   midiNote: 39, midiChannel: 1 },
+  // Hapax screen: Lane 1 (Kick) at BOTTOM, Lane 8 (Perc) at TOP
+  // Array order = visual order top-to-bottom in the grid
   { name: "Perc",        category: "accent",     midiNote: 56, midiChannel: 1 },
+  { name: "Clap",        category: "backbeat",   midiNote: 39, midiChannel: 1 },
+  { name: "Tom Hi",      category: "pitched",    midiNote: 50, midiChannel: 1 },
+  { name: "Tom Low",     category: "pitched",    midiNote: 41, midiChannel: 1 },
+  { name: "HH Open",     category: "hihat",      midiNote: 46, midiChannel: 1 },
+  { name: "HH Closed",   category: "hihat",      midiNote: 42, midiChannel: 1 },
+  { name: "Snare",       category: "backbeat",   midiNote: 38, midiChannel: 1 },
+  { name: "Kick",        category: "foundation", midiNote: 36, midiChannel: 1 },
 ];
 
 // ─── CHARACTERISTIC PRESETS ───────────────────────────────────
@@ -896,6 +897,8 @@ let audioCtx = null;
 let isPlaying = false;
 let isLooping = false;
 let playbackTimeout = null;
+let playbackStartTime = 0;
+let scheduledNodes = [];
 
 function getAudioCtx() {
   if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -1083,8 +1086,15 @@ function getSynthForNote(note, name) {
 
 function playPattern(patternData, variationData) {
   const ctx = getAudioCtx();
-  if (ctx.state === 'suspended') ctx.resume();
-  stopPlayback();
+  if (ctx.state === 'suspended') {
+    ctx.resume().then(() => doPlay(ctx, patternData, variationData));
+  } else {
+    doPlay(ctx, patternData, variationData);
+  }
+}
+
+function doPlay(ctx, patternData, variationData) {
+  stopPlayback(false); // don't close ctx
 
   const data = variationData || patternData;
   if (!data || !patternData) return;
@@ -1096,6 +1106,8 @@ function playPattern(patternData, variationData) {
   const bars = patternData.bars || 1;
   const totalSteps = bars * stepsPerBar;
   const startTime = ctx.currentTime + 0.05;
+  playbackStartTime = startTime;
+  scheduledNodes = [];
 
   // Schedule all events
   for (const lane of patternData.lanes) {
@@ -1107,7 +1119,8 @@ function playPattern(patternData, variationData) {
     for (let i = 0; i < totalSteps; i++) {
       if (!steps[i]) continue;
       const vel = (vels[i] || 100) / 127;
-      const microOffset = (mt[i] || 0) / 960 * secPerStep; // ticks to seconds
+      if (vel <= 0) continue;
+      const microOffset = (mt[i] || 0) / 960 * secPerStep;
       const hitTime = startTime + (i * secPerStep) + microOffset;
       synthFn(ctx, hitTime, vel);
     }
@@ -1120,7 +1133,7 @@ function playPattern(patternData, variationData) {
   // Update position indicator
   const posInterval = setInterval(() => {
     if (!isPlaying) { clearInterval(posInterval); return; }
-    const elapsed = ctx.currentTime - startTime;
+    const elapsed = ctx.currentTime - playbackStartTime;
     const currentStep = Math.floor(elapsed / secPerStep) % 16;
     const currentBarNum = Math.floor(elapsed / secPerStep / 16);
     const statusEl = document.getElementById('playback-status');
@@ -1131,7 +1144,7 @@ function playPattern(patternData, variationData) {
   playbackTimeout = setTimeout(() => {
     clearInterval(posInterval);
     if (isLooping && isPlaying) {
-      playPattern(patternData, variationData);
+      doPlay(ctx, patternData, variationData);
     } else {
       isPlaying = false;
       updatePlayUI();
@@ -1141,17 +1154,22 @@ function playPattern(patternData, variationData) {
   }, totalDuration * 1000 + 100);
 }
 
-function stopPlayback() {
+function stopPlayback(closeCtx) {
   isPlaying = false;
-  isLooping = false;
   if (playbackTimeout) { clearTimeout(playbackTimeout); playbackTimeout = null; }
-  if (audioCtx) { audioCtx.close(); audioCtx = null; }
+  // Suspend context to stop all audio immediately (reusable)
+  if (audioCtx && audioCtx.state === 'running') {
+    audioCtx.suspend();
+  }
+  if (closeCtx && audioCtx) { audioCtx.close(); audioCtx = null; }
   updatePlayUI();
 }
 
 function togglePlay() {
   if (isPlaying) {
-    stopPlayback();
+    stopPlayback(false);
+    isLooping = false;
+    document.getElementById('loop-btn').classList.remove('active');
     const statusEl = document.getElementById('playback-status');
     if (statusEl) statusEl.textContent = 'Stopped';
   } else {
@@ -1394,44 +1412,44 @@ window.DrumEngine = {
     const presets = [
       { name: 'Default', lanes: DrumEngine.DEFAULT_LANES },
       { name: 'Hypnotic Raw', lanes: [
-        { name: "Kick", category: "foundation", midiNote: 36, midiChannel: 1 },
-        { name: "Snare", category: "backbeat", midiNote: 38, midiChannel: 1 },
-        { name: "HH Closed", category: "hihat", midiNote: 42, midiChannel: 1 },
-        { name: "HH Open", category: "hihat", midiNote: 46, midiChannel: 1 },
-        { name: "Ride", category: "hihat", midiNote: 51, midiChannel: 1 },
-        { name: "Perc", category: "accent", midiNote: 56, midiChannel: 1 },
-        { name: "Clap", category: "backbeat", midiNote: 39, midiChannel: 1 },
         { name: "Stab", category: "synth", midiNote: 80, midiChannel: 1 },
+        { name: "Clap", category: "backbeat", midiNote: 39, midiChannel: 1 },
+        { name: "Perc", category: "accent", midiNote: 56, midiChannel: 1 },
+        { name: "Ride", category: "hihat", midiNote: 51, midiChannel: 1 },
+        { name: "HH Open", category: "hihat", midiNote: 46, midiChannel: 1 },
+        { name: "HH Closed", category: "hihat", midiNote: 42, midiChannel: 1 },
+        { name: "Snare", category: "backbeat", midiNote: 38, midiChannel: 1 },
+        { name: "Kick", category: "foundation", midiNote: 36, midiChannel: 1 },
       ]},
       { name: 'Hardgroove', lanes: [
-        { name: "Kick", category: "foundation", midiNote: 36, midiChannel: 1 },
-        { name: "Snare", category: "backbeat", midiNote: 38, midiChannel: 1 },
-        { name: "HH Closed", category: "hihat", midiNote: 42, midiChannel: 1 },
-        { name: "Ride", category: "hihat", midiNote: 51, midiChannel: 1 },
-        { name: "Conga Hi", category: "pitched", midiNote: 63, midiChannel: 1 },
-        { name: "Shaker", category: "accent", midiNote: 70, midiChannel: 1 },
-        { name: "Perc", category: "accent", midiNote: 56, midiChannel: 1 },
         { name: "Clap", category: "backbeat", midiNote: 39, midiChannel: 1 },
+        { name: "Perc", category: "accent", midiNote: 56, midiChannel: 1 },
+        { name: "Shaker", category: "accent", midiNote: 70, midiChannel: 1 },
+        { name: "Conga Hi", category: "pitched", midiNote: 63, midiChannel: 1 },
+        { name: "Ride", category: "hihat", midiNote: 51, midiChannel: 1 },
+        { name: "HH Closed", category: "hihat", midiNote: 42, midiChannel: 1 },
+        { name: "Snare", category: "backbeat", midiNote: 38, midiChannel: 1 },
+        { name: "Kick", category: "foundation", midiNote: 36, midiChannel: 1 },
       ]},
       { name: 'Tribal', lanes: [
-        { name: "Kick", category: "foundation", midiNote: 36, midiChannel: 1 },
-        { name: "Clap", category: "backbeat", midiNote: 39, midiChannel: 1 },
-        { name: "HH Closed", category: "hihat", midiNote: 42, midiChannel: 1 },
-        { name: "Shaker", category: "texture", midiNote: 70, midiChannel: 1 },
-        { name: "Tom Low", category: "pitched", midiNote: 41, midiChannel: 1 },
-        { name: "Conga Hi", category: "pitched", midiNote: 63, midiChannel: 1 },
-        { name: "Conga Low", category: "pitched", midiNote: 64, midiChannel: 1 },
         { name: "Bell", category: "accent", midiNote: 56, midiChannel: 1 },
+        { name: "Conga Low", category: "pitched", midiNote: 64, midiChannel: 1 },
+        { name: "Conga Hi", category: "pitched", midiNote: 63, midiChannel: 1 },
+        { name: "Tom Low", category: "pitched", midiNote: 41, midiChannel: 1 },
+        { name: "Shaker", category: "texture", midiNote: 70, midiChannel: 1 },
+        { name: "HH Closed", category: "hihat", midiNote: 42, midiChannel: 1 },
+        { name: "Clap", category: "backbeat", midiNote: 39, midiChannel: 1 },
+        { name: "Kick", category: "foundation", midiNote: 36, midiChannel: 1 },
       ]},
       { name: 'Industrial', lanes: [
-        { name: "Kick", category: "foundation", midiNote: 36, midiChannel: 1 },
-        { name: "Snare", category: "backbeat", midiNote: 38, midiChannel: 1 },
-        { name: "HH Closed", category: "hihat", midiNote: 42, midiChannel: 1 },
-        { name: "HH Open", category: "hihat", midiNote: 46, midiChannel: 1 },
-        { name: "Rimshot", category: "backbeat", midiNote: 37, midiChannel: 1 },
-        { name: "Metal Hit", category: "metallic", midiNote: 52, midiChannel: 1 },
         { name: "Clap", category: "backbeat", midiNote: 39, midiChannel: 1 },
         { name: "Stab", category: "synth", midiNote: 80, midiChannel: 1 },
+        { name: "Metal Hit", category: "metallic", midiNote: 52, midiChannel: 1 },
+        { name: "Rimshot", category: "backbeat", midiNote: 37, midiChannel: 1 },
+        { name: "HH Open", category: "hihat", midiNote: 46, midiChannel: 1 },
+        { name: "HH Closed", category: "hihat", midiNote: 42, midiChannel: 1 },
+        { name: "Snare", category: "backbeat", midiNote: 38, midiChannel: 1 },
+        { name: "Kick", category: "foundation", midiNote: 36, midiChannel: 1 },
       ]},
     ];
 
