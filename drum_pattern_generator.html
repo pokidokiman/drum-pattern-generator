@@ -977,15 +977,33 @@ const SOUND_PRESETS = [
 const DEFAULT_LANES = [
   // Grid bottom-to-top: Kick, Snare, HH Closed, HH Open, Tom Low, Tom Hi, Clap, Perc
   // Lane config: indices 0-3 LEFT, indices 4-7 RIGHT
-  { name: "Kick",        category: "foundation", midiNote: 36, midiChannel: 1 },
-  { name: "Snare",       category: "backbeat",   midiNote: 38, midiChannel: 1 },
-  { name: "HH Closed",   category: "hihat",      midiNote: 42, midiChannel: 1 },
-  { name: "HH Open",     category: "hihat",      midiNote: 46, midiChannel: 1 },
-  { name: "Tom Low",     category: "pitched",    midiNote: 41, midiChannel: 1 },
-  { name: "Tom Hi",      category: "pitched",    midiNote: 50, midiChannel: 1 },
-  { name: "Clap",        category: "backbeat",   midiNote: 39, midiChannel: 1 },
-  { name: "Perc",        category: "accent",     midiNote: 56, midiChannel: 1 },
+  { name: "Kick",        category: "foundation", midiNote: 36, midiChannel: 1, velocity_curve: "flat" },
+  { name: "Snare",       category: "backbeat",   midiNote: 38, midiChannel: 1, velocity_curve: "flat" },
+  { name: "HH Closed",   category: "hihat",      midiNote: 42, midiChannel: 1, velocity_curve: "flat" },
+  { name: "HH Open",     category: "hihat",      midiNote: 46, midiChannel: 1, velocity_curve: "flat" },
+  { name: "Tom Low",     category: "pitched",    midiNote: 41, midiChannel: 1, velocity_curve: "flat" },
+  { name: "Tom Hi",      category: "pitched",    midiNote: 50, midiChannel: 1, velocity_curve: "flat" },
+  { name: "Clap",        category: "backbeat",   midiNote: 39, midiChannel: 1, velocity_curve: "flat" },
+  { name: "Perc",        category: "accent",     midiNote: 56, midiChannel: 1, velocity_curve: "flat" },
 ];
+
+// ─── VELOCITY CURVES ───────────────────────────────────────
+
+const VELOCITY_CURVES = {
+  flat: () => Array(16).fill(100),
+  exponential: () => [127,60,60,60, 127,60,60,60, 127,60,60,60, 127,60,60,60],
+  logarithmic: () => [110,85,95,85, 110,85,95,85, 110,85,95,85, 110,85,95,85],
+  random_walk: () => {
+    const base = 100;
+    let v = base;
+    return Array.from({length:16}, () => {
+      v = Math.max(40, Math.min(127, v + Math.floor(Math.random()*41) - 20));
+      return v;
+    });
+  },
+  crescendo: () => Array.from({length:16}, (_, i) => Math.round(70 + (i / 15) * 57)),
+  decrescendo: () => Array.from({length:16}, (_, i) => Math.round(127 - (i / 15) * 57)),
+};
 
 // ─── CHARACTERISTIC PRESETS ───────────────────────────────────
 
@@ -1320,10 +1338,12 @@ function generatePattern(params) {
 
     // Velocity
     const vel = new Array(totalSteps).fill(0);
+    const curve = VELOCITY_CURVES[lane.velocity_curve] ? lane.velocity_curve : "flat";
+    const curveValues = VELOCITY_CURVES[curve]();
     for (let i = 0; i < pattern.length; i++) {
       if (!pattern[i]) continue;
       const pos = i % 16;
-      let v = pos % 4 === 0 ? 100 : pos % 4 === 2 ? 90 : 75;
+      let v = curveValues[pos];
       if (lane.category === "hihat") v = Math.floor(v * 0.75);
       else if (lane.category === "foundation") v = 100;
       else if (lane.category === "accent") v = rng.randInt(60, 90);
@@ -1999,7 +2019,7 @@ function updatePlayUI() {
 // ─── EXPORT ───────────────────────────────────────────────────
 
 window.DrumEngine = {
-  CATEGORIES, SOUND_PRESETS, DEFAULT_LANES, CHARACTERISTIC_PRESETS, PRIMITIVES,
+  CATEGORIES, SOUND_PRESETS, DEFAULT_LANES, CHARACTERISTIC_PRESETS, PRIMITIVES, VELOCITY_CURVES,
   generatePattern, generateVariations, exportMidi,
   calculateSyncopation, calculateEventDensity, inferCharacteristics,
   playPattern, stopPlayback,
@@ -2207,6 +2227,20 @@ window.DrumEngine = {
         catSelect.onchange = () => { lane.category = catSelect.value; };
         catSelect.style.cssText = 'background:var(--bg-panel);color:var(--text-secondary);border:1px solid var(--border);border-radius:2px;padding:2px 6px;font-family:Inter,sans-serif;font-size:10px;outline:none;';
         row.appendChild(catSelect);
+
+        // Velocity curve dropdown
+        const velSelect = document.createElement('select');
+        for (const curveName of Object.keys(DrumEngine.VELOCITY_CURVES)) {
+          const opt = document.createElement('option');
+          opt.value = curveName;
+          opt.textContent = curveName;
+          if (curveName === (lane.velocity_curve || 'flat')) opt.selected = true;
+          velSelect.appendChild(opt);
+        }
+        velSelect.onchange = () => { lane.velocity_curve = velSelect.value; };
+        velSelect.title = 'Velocity curve';
+        velSelect.style.cssText = 'background:var(--bg-panel);color:var(--text-secondary);border:1px solid var(--border);border-radius:2px;padding:2px 6px;font-family:Inter,sans-serif;font-size:10px;outline:none;margin-left:4px;';
+        row.appendChild(velSelect);
 
         // NOTE label + input
         const noteLabel = document.createElement('span');
