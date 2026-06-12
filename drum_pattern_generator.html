@@ -40,7 +40,7 @@
   /* LANE CONFIG */
   .lane-config { margin-bottom: 12px; padding: 10px 12px; background: var(--surface); border-radius: 6px; border: 1px solid var(--border); }
   .lane-config h3 { font-size: 9px; text-transform: uppercase; color: var(--text2); letter-spacing: 1.5px; font-weight: 700; margin-bottom: 8px; }
-  .lane-config-grid { display: grid; grid-template-columns: 30px 1fr 120px 60px; gap: 4px 8px; align-items: center; }
+  .lane-config-grid { display: grid; grid-template-columns: 30px 1fr 120px 60px 70px; gap: 4px 8px; align-items: center; }
   .lane-config-grid .lane-num { font-size: 10px; color: var(--text3); text-align: center; font-weight: 700; }
   .lane-config-grid input, .lane-config-grid select { font-size: 10px; padding: 3px 6px; }
   .lane-config-grid input[type="text"] { background: var(--surface2); border: 1px solid var(--border); color: var(--text); border-radius: 3px; font-family: inherit; width: 100%; }
@@ -52,15 +52,18 @@
   .tab:hover { color: var(--text); background: var(--surface2); }
   .tab.active { color: var(--accent); background: var(--bg); border-color: var(--accent); border-bottom-color: var(--bg); }
 
-  .grid-container { background: var(--bg); border: 1px solid var(--border); border-radius: 0 6px 6px 6px; padding: 8px 12px 12px 12px; overflow-x: auto; max-width: 100vw; margin-left: -16px; margin-right: -16px; padding-left: 28px; padding-right: 28px; }
+  .grid-container { background: var(--bg); border: 1px solid var(--border); border-radius: 0 6px 6px 6px; padding: 8px 12px 12px 12px; max-width: 700px; }
+  .bar-nav { display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 8px; padding: 6px 0; }
+  .bar-nav-btn { background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 4px 12px; border-radius: 3px; cursor: pointer; font-size: 12px; font-family: inherit; transition: all 0.1s; }
+  .bar-nav-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .bar-nav-btn:disabled { opacity: 0.3; cursor: default; }
+  .bar-nav-label { font-size: 11px; font-weight: 700; color: var(--accent); letter-spacing: 1.5px; text-transform: uppercase; min-width: 100px; text-align: center; }
   .step-numbers { display: flex; margin-left: 108px; margin-bottom: 4px; }
-  .step-num { width: 30px; text-align: center; font-size: 8px; color: var(--text3); font-weight: 600; }
+  .step-num { width: 35px; text-align: center; font-size: 8px; color: var(--text3); font-weight: 600; }
   .step-num.beat { color: var(--text2); }
-  .bar-indicators { display: flex; margin-left: 108px; margin-bottom: 6px; }
-  .bar-indicator { text-align: center; font-size: 9px; color: var(--accent); font-weight: 700; letter-spacing: 1px; text-transform: uppercase; border-bottom: 1px solid var(--border); padding-bottom: 2px; }
   .grid-row { display: flex; align-items: center; margin-bottom: 1px; }
   .lane-label { width: 100px; min-width: 100px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; padding-right: 8px; text-align: right; }
-  .step-cell { width: 30px; height: 26px; margin: 0; border-right: 1px solid #1a1a1a; border-bottom: 1px solid #1a1a1a; cursor: pointer; transition: all 0.08s; position: relative; }
+  .step-cell { width: 35px; height: 30px; margin: 0; border-right: 1px solid #1a1a1a; border-bottom: 1px solid #1a1a1a; cursor: pointer; transition: all 0.08s; position: relative; }
   .step-cell:hover { background: rgba(255,255,255,0.08); }
   .step-cell.beat { background: #1a1a1a; }
   .step-cell .vel-fill { position: absolute; bottom: 0; left: 0; right: 0; border-radius: 2px 2px 0 0; transition: height 0.1s; }
@@ -85,9 +88,9 @@
   <div class="header">
     <h1>Drum Pattern Generator</h1>
     <span class="tag">HAPAX</span>
-    <span class="tag">v3.0.2</span>
+    <span class="tag">v4.0.0</span>
     <span style="flex:1"></span>
-    <span style="font-size:9px;color:var(--text3)">Category-based • User-configurable lanes • 12 styles</span>
+    <span style="font-size:9px;color:var(--text3)">Hapax Page View • 12 styles • 960PPQ</span>
   </div>
 
   <!-- CONTROLS -->
@@ -95,10 +98,16 @@
     <div class="control-group"><label>Intensity</label><input type="range" id="intensity" min="0" max="100" value="40"><span class="value" id="intensity-val">0.40</span></div>
     <div class="control-group"><label>Syncopation</label><input type="range" id="syncopation" min="0" max="100" value="20"><span class="value" id="syncopation-val">0.20</span></div>
     <div class="control-group"><label>Swing</label><input type="range" id="swing" min="50" max="75" value="50"><span class="value" id="swing-val">0.50</span></div>
+    <div class="control-group"><label>Swing Type</label><select id="swing-type"><option value="shuffle">Shuffle</option><option value="straight">Straight+Vel</option></select></div>
+    <div class="control-group"><label>BPM</label><input type="range" id="bpm" min="120" max="155" value="135"><span class="value" id="bpm-val">135</span></div>
     <div class="control-group"><label>Bars</label><select id="bars-override"><option value="0">Auto</option><option value="1">1</option><option value="2">2</option><option value="4">4</option><option value="8">8</option><option value="16">16</option></select></div>
     <div class="control-group"><label>Polyrhythmic</label><label style="cursor:pointer;font-size:10px"><input type="checkbox" id="polyrhythmic"> On</label></div>
     <div class="control-group"><label>Seed</label><input type="number" id="seed" value="" placeholder="random" style="width:70px;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:3px;border-radius:3px;font-family:inherit;font-size:11px"></div>
     <button class="btn" onclick="generate()">GENERATE</button>
+    <button class="btn btn-sm" onclick="undo()" title="Undo (Ctrl+Z)" style="background:var(--surface2);color:var(--text2);border:1px solid var(--border)">↩</button>
+    <button class="btn btn-sm" onclick="redo()" title="Redo (Ctrl+Y)" style="background:var(--surface2);color:var(--text2);border:1px solid var(--border)">↪</button>
+    <button class="btn btn-sm" onclick="savePattern()" title="Save to browser" style="background:var(--surface2);color:var(--text2);border:1px solid var(--border)">💾 Save</button>
+    <button class="btn btn-sm" onclick="loadPattern()" title="Load from browser" style="background:var(--surface2);color:var(--text2);border:1px solid var(--border)">📂 Load</button>
   </div>
 
   <!-- LANE CONFIGURATION -->
@@ -113,10 +122,14 @@
   <!-- VARIATION TABS -->
   <div class="tabs" id="tabs"></div>
 
-  <!-- GRID -->
+  <!-- GRID (Hapax Page View) -->
   <div class="grid-container">
+    <div class="bar-nav" id="bar-nav">
+      <button class="bar-nav-btn" onclick="prevBar()" id="bar-prev">◀</button>
+      <span class="bar-nav-label" id="bar-nav-label">BAR 1 / 1</span>
+      <button class="bar-nav-btn" onclick="nextBar()" id="bar-next">▶</button>
+    </div>
     <div class="step-numbers" id="step-numbers"></div>
-    <div class="bar-indicators" id="bar-indicators"></div>
     <div id="grid"></div>
   </div>
 
@@ -131,8 +144,17 @@
 </div>
 
 <script>
-/* Drum Pattern Generator Engine v3.0.2
- * Research-backed generative drum pattern system for Squarp Hapax
+/* Drum Pattern Generator Engine v4.0.0
+ * Hapax Page View — generative drum pattern system for Squarp Hapax
+ *
+ * v4.0 CHANGES:
+ * - Hapax Page View: 16-step viewport with bar navigation
+ * - BPM slider (not hardcoded) — Hapax is tempo master
+ * - Per-lane MIDI channel support (1-16)
+ * - Track name meta-event in MIDI export
+ * - Swing type: shuffle vs straight+velocity
+ * - Undo/redo stack
+ * - Pattern save/load (localStorage)
  *
  * v3.0 KEY CHANGE: Category-based lane system
  * - Lanes are user-configurable (any name, any MIDI note)
@@ -209,15 +231,15 @@ const SOUND_PRESETS = [
 // ─── DEFAULT LANE CONFIG (8 Hapax lanes) ──────────────────────
 
 const DEFAULT_LANES = [
-  // Hapax drum track order: Lane 8 = top (Perc), Lane 1 = bottom (Kick)
-  { name: "Perc",        category: "accent",     midiNote: 56 },
-  { name: "Clap",        category: "backbeat",   midiNote: 39 },
-  { name: "Tom Hi",      category: "pitched",    midiNote: 50 },
-  { name: "Tom Low",     category: "pitched",    midiNote: 41 },
-  { name: "HH Open",     category: "hihat",      midiNote: 46 },
-  { name: "HH Closed",   category: "hihat",      midiNote: 42 },
-  { name: "Snare",       category: "backbeat",   midiNote: 38 },
-  { name: "Kick",        category: "foundation", midiNote: 36 },
+  // Hapax import: lowest MIDI note → Lane 1. Notes are correct per manual p59.
+  { name: "Kick",        category: "foundation", midiNote: 36, midiChannel: 1 },
+  { name: "Snare",       category: "backbeat",   midiNote: 38, midiChannel: 1 },
+  { name: "HH Closed",   category: "hihat",      midiNote: 42, midiChannel: 1 },
+  { name: "HH Open",     category: "hihat",      midiNote: 46, midiChannel: 1 },
+  { name: "Tom Low",     category: "pitched",    midiNote: 41, midiChannel: 1 },
+  { name: "Tom Hi",      category: "pitched",    midiNote: 50, midiChannel: 1 },
+  { name: "Clap",        category: "backbeat",   midiNote: 39, midiChannel: 1 },
+  { name: "Perc",        category: "accent",     midiNote: 56, midiChannel: 1 },
 ];
 
 // ─── CHARACTERISTIC PRESETS ───────────────────────────────────
@@ -472,6 +494,7 @@ function generatePattern(params) {
     intensity = 0.5,
     syncopation = 0.3,
     swingRatio = 0.5,
+    swingType = 'shuffle',
     polyrhythmic = false,
     characteristics = ["hypnotic"],
     lanes = DEFAULT_LANES,
@@ -580,10 +603,15 @@ function generatePattern(params) {
 
     // Microtiming
     const mt = new Array(totalSteps).fill(0);
-    if (swingRatio > 0.5 || characteristics.includes("groove")) {
+    if (swingType === 'straight') {
+      // Straight timing: groove comes from velocity variation only
+      // On-beats strong, off-beats softer — no timing displacement
+      for (let i = 0; i < pattern.length; i++) {
+        mt[i] = 0;
+      }
+    } else if (swingRatio > 0.5 || characteristics.includes("groove")) {
+      // Shuffle swing: delay off-beats
       const swing = Math.max(swingRatio, characteristics.includes("groove") ? 0.58 : 0.5);
-    // Aesthetic cap (not evidence-based). Both Madison 2011 and Frühauf 2013 found
-    // microtiming does NOT improve groove as a general claim. Kept as user-facing option.
       const maxOffset = Math.min(50, Math.floor(240 * (swing * 100 - 50) / 25));
       for (let i = 0; i < pattern.length; i++) {
         if (pattern[i] === 1 && i % 2 === 1) mt[i] = rng.randInt(3, maxOffset);
@@ -617,7 +645,7 @@ function generatePattern(params) {
     name: generateName(intensity, syncopation, characteristics, rng),
     lanes, steps, velocity, microtiming, bars, stepsPerBar,
     intensity, syncopation, swingRatio,
-    swingType: swingRatio > 0.5 ? "binary" : "none",
+    swingType,
     characteristics,
   };
   pattern.characteristics = inferCharacteristics(pattern);
@@ -766,7 +794,7 @@ function generateBreak(pattern, rng) {
 
 // ─── MIDI EXPORT ──────────────────────────────────────────────
 
-function exportMidi(patternData, variationData, name) {
+function exportMidi(patternData, variationData, name, bpm) {
   const PPQ = 960;
   const TICKS_PER_STEP = PPQ / 4;
   const GATE = TICKS_PER_STEP / 2;
@@ -778,22 +806,33 @@ function exportMidi(patternData, variationData, name) {
     const st = (data.steps[lane.name] || []);
     const vel = (data.velocity[lane.name] || []);
     const mt = (data.microtiming[lane.name] || []);
+    const ch = (lane.midiChannel || 1) - 1; // MIDI channel is 0-indexed in wire format
     for (let i = 0; i < st.length; i++) {
       if (!st[i]) continue;
       const v = vel[i] || 100;
       if (v === 0) continue;
       const tick = Math.max(0, i * TICKS_PER_STEP + (mt[i] || 0));
-      events.push({ tick, type: 'on', note: lane.midiNote, vel: v });
-      events.push({ tick: tick + GATE, type: 'off', note: lane.midiNote, vel: 0 });
+      events.push({ tick, type: 'on', note: lane.midiNote, vel: v, ch });
+      events.push({ tick: tick + GATE, type: 'off', note: lane.midiNote, vel: 0, ch });
     }
   }
 
   events.sort((a, b) => a.tick - b.tick);
   const track = [];
+
+  // Track name meta-event
+  const trackName = (name || 'pattern').replace(/\.mid$/i, '');
+  track.push(...encodeVarLen(0));
+  track.push(0xFF, 0x03, trackName.length);
+  for (let i = 0; i < trackName.length; i++) track.push(trackName.charCodeAt(i));
+
+  // Tempo meta-event (user-specified BPM, not hardcoded)
   track.push(...encodeVarLen(0));
   track.push(0xFF, 0x51, 0x03);
-  const tempo = Math.floor(60000000 / 130);
+  const tempo = Math.floor(60000000 / (bpm || 135));
   track.push((tempo >> 16) & 0xFF, (tempo >> 8) & 0xFF, tempo & 0xFF);
+
+  // Time signature 4/4
   track.push(...encodeVarLen(0));
   track.push(0xFF, 0x58, 0x04, 0x04, 0x02, 0x18, 0x08);
 
@@ -801,8 +840,8 @@ function exportMidi(patternData, variationData, name) {
   for (const ev of events) {
     const delta = ev.tick - prevTick;
     track.push(...encodeVarLen(delta));
-    if (ev.type === 'on') track.push(0x90, ev.note & 0x7F, ev.vel & 0x7F);
-    else track.push(0x80, ev.note & 0x7F, 0);
+    if (ev.type === 'on') track.push(0x90 | ev.ch, ev.note & 0x7F, ev.vel & 0x7F);
+    else track.push(0x80 | ev.ch, ev.note & 0x7F, 0);
     prevTick = ev.tick;
   }
   track.push(...encodeVarLen(0));
@@ -848,6 +887,12 @@ window.DrumEngine = {
   let activeTab = 'base';
   let selectedChars = ['hypnotic'];
   let userLanes = JSON.parse(JSON.stringify(DrumEngine.DEFAULT_LANES));
+  let currentBar = 0; // Hapax page view: which bar we're looking at
+
+  // Undo/redo
+  let undoStack = [];
+  let redoStack = [];
+  const MAX_UNDO = 50;
 
   // Category color map
   const catColors = {
@@ -857,6 +902,123 @@ window.DrumEngine = {
     pitched: 'var(--cat-pitched)', synth: 'var(--cat-synth)',
   };
 
+  // ─── UNDO / REDO ─────────────────────────────────────────
+
+  function pushUndo() {
+    if (!currentPattern) return;
+    const snapshot = JSON.stringify({ pattern: currentPattern, variations: currentVariations, activeTab });
+    undoStack.push(snapshot);
+    if (undoStack.length > MAX_UNDO) undoStack.shift();
+    redoStack = [];
+  }
+
+  function undo() {
+    if (undoStack.length === 0) return;
+    const snapshot = JSON.stringify({ pattern: currentPattern, variations: currentVariations, activeTab });
+    redoStack.push(snapshot);
+    const prev = JSON.parse(undoStack.pop());
+    currentPattern = prev.pattern;
+    currentVariations = prev.variations;
+    activeTab = prev.activeTab;
+    currentBar = Math.min(currentBar, (currentPattern?.bars || 1) - 1);
+    renderAll();
+  }
+
+  function redo() {
+    if (redoStack.length === 0) return;
+    const snapshot = JSON.stringify({ pattern: currentPattern, variations: currentVariations, activeTab });
+    undoStack.push(snapshot);
+    const next = JSON.parse(redoStack.pop());
+    currentPattern = next.pattern;
+    currentVariations = next.variations;
+    activeTab = next.activeTab;
+    currentBar = Math.min(currentBar, (currentPattern?.bars || 1) - 1);
+    renderAll();
+  }
+
+  // ─── SAVE / LOAD ─────────────────────────────────────────
+
+  function savePattern() {
+    if (!currentPattern) return;
+    const data = {
+      pattern: currentPattern,
+      variations: currentVariations,
+      userLanes,
+      selectedChars,
+      controls: {
+        intensity: document.getElementById('intensity').value,
+        syncopation: document.getElementById('syncopation').value,
+        swing: document.getElementById('swing').value,
+        swingType: document.getElementById('swing-type').value,
+        bpm: document.getElementById('bpm').value,
+        bars: document.getElementById('bars-override').value,
+        poly: document.getElementById('polyrhythmic').checked,
+      }
+    };
+    localStorage.setItem('dpg_saved_pattern', JSON.stringify(data));
+    alert('Pattern saved!');
+  }
+
+  function loadPattern() {
+    const raw = localStorage.getItem('dpg_saved_pattern');
+    if (!raw) { alert('No saved pattern found.'); return; }
+    try {
+      const data = JSON.parse(raw);
+      pushUndo();
+      currentPattern = data.pattern;
+      currentVariations = data.variations || [];
+      userLanes = data.userLanes || JSON.parse(JSON.stringify(DrumEngine.DEFAULT_LANES));
+      selectedChars = data.selectedChars || ['hypnotic'];
+      if (data.controls) {
+        document.getElementById('intensity').value = data.controls.intensity || 40;
+        document.getElementById('syncopation').value = data.controls.syncopation || 20;
+        document.getElementById('swing').value = data.controls.swing || 50;
+        document.getElementById('swing-type').value = data.controls.swingType || 'shuffle';
+        document.getElementById('bpm').value = data.controls.bpm || 135;
+        document.getElementById('bars-override').value = data.controls.bars || 0;
+        document.getElementById('polyrhythmic').checked = data.controls.poly || false;
+        ['intensity','syncopation','swing','bpm'].forEach(id => {
+          const el = document.getElementById(id);
+          const val = document.getElementById(id + '-val');
+          if (el && val) val.textContent = id === 'bpm' ? el.value : (el.value / 100).toFixed(2);
+        });
+      }
+      activeTab = 'base';
+      currentBar = 0;
+      initLaneConfig();
+      initChars();
+      renderAll();
+    } catch (e) { alert('Failed to load pattern: ' + e.message); }
+  }
+
+  // ─── BAR NAVIGATION ─────────────────────────────────────
+
+  function prevBar() {
+    if (currentBar > 0) { currentBar--; renderGrid(); updateBarNav(); }
+  }
+
+  function nextBar() {
+    const maxBar = (currentPattern?.bars || 1) - 1;
+    if (currentBar < maxBar) { currentBar++; renderGrid(); updateBarNav(); }
+  }
+
+  function updateBarNav() {
+    const bars = currentPattern?.bars || 1;
+    document.getElementById('bar-nav-label').textContent = `BAR ${currentBar + 1} / ${bars}`;
+    document.getElementById('bar-prev').disabled = currentBar <= 0;
+    document.getElementById('bar-next').disabled = currentBar >= bars - 1;
+  }
+
+  // ─── KEYBOARD SHORTCUTS ─────────────────────────────────
+
+  document.addEventListener('keydown', (e) => {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+    if (e.key === 'ArrowLeft') { e.preventDefault(); prevBar(); }
+    if (e.key === 'ArrowRight') { e.preventDefault(); nextBar(); }
+    if (e.ctrlKey && e.key === 'z') { e.preventDefault(); undo(); }
+    if (e.ctrlKey && e.key === 'y') { e.preventDefault(); redo(); }
+  });
+
   // ─── LANE CONFIG UI ───────────────────────────────────────
 
   function initLaneConfig() {
@@ -865,6 +1027,7 @@ window.DrumEngine = {
 
     for (let i = 0; i < 8; i++) {
       const lane = userLanes[i];
+      if (!lane.midiChannel) lane.midiChannel = 1; // default
 
       // Lane number
       const num = document.createElement('div');
@@ -900,6 +1063,18 @@ window.DrumEngine = {
       noteInput.max = 127;
       noteInput.onchange = () => { lane.midiNote = parseInt(noteInput.value) || 36; };
       grid.appendChild(noteInput);
+
+      // MIDI channel
+      const chSelect = document.createElement('select');
+      for (let ch = 1; ch <= 16; ch++) {
+        const opt = document.createElement('option');
+        opt.value = ch;
+        opt.textContent = `CH ${ch}`;
+        if (ch === (lane.midiChannel || 1)) opt.selected = true;
+        chSelect.appendChild(opt);
+      }
+      chSelect.onchange = () => { lane.midiChannel = parseInt(chSelect.value); };
+      grid.appendChild(chSelect);
     }
 
     // Quick presets
@@ -912,44 +1087,44 @@ window.DrumEngine = {
     const presets = [
       { name: 'Default', lanes: DrumEngine.DEFAULT_LANES },
       { name: 'Hypnotic Raw', lanes: [
-        { name: "Stab", category: "synth", midiNote: 80 },
-        { name: "Clap", category: "backbeat", midiNote: 39 },
-        { name: "Perc", category: "accent", midiNote: 56 },
-        { name: "Ride", category: "hihat", midiNote: 51 },
-        { name: "HH Open", category: "hihat", midiNote: 46 },
-        { name: "HH Closed", category: "hihat", midiNote: 42 },
-        { name: "Snare", category: "backbeat", midiNote: 38 },
-        { name: "Kick", category: "foundation", midiNote: 36 },
+        { name: "Kick", category: "foundation", midiNote: 36, midiChannel: 1 },
+        { name: "Snare", category: "backbeat", midiNote: 38, midiChannel: 1 },
+        { name: "HH Closed", category: "hihat", midiNote: 42, midiChannel: 1 },
+        { name: "HH Open", category: "hihat", midiNote: 46, midiChannel: 1 },
+        { name: "Ride", category: "hihat", midiNote: 51, midiChannel: 1 },
+        { name: "Perc", category: "accent", midiNote: 56, midiChannel: 1 },
+        { name: "Clap", category: "backbeat", midiNote: 39, midiChannel: 1 },
+        { name: "Stab", category: "synth", midiNote: 80, midiChannel: 1 },
       ]},
       { name: 'Hardgroove', lanes: [
-        { name: "Clap", category: "backbeat", midiNote: 39 },
-        { name: "Perc", category: "accent", midiNote: 56 },
-        { name: "Shaker", category: "accent", midiNote: 70 },
-        { name: "Conga Hi", category: "pitched", midiNote: 63 },
-        { name: "Ride", category: "hihat", midiNote: 51 },
-        { name: "HH Closed", category: "hihat", midiNote: 42 },
-        { name: "Snare", category: "backbeat", midiNote: 38 },
-        { name: "Kick", category: "foundation", midiNote: 36 },
+        { name: "Kick", category: "foundation", midiNote: 36, midiChannel: 1 },
+        { name: "Snare", category: "backbeat", midiNote: 38, midiChannel: 1 },
+        { name: "HH Closed", category: "hihat", midiNote: 42, midiChannel: 1 },
+        { name: "Ride", category: "hihat", midiNote: 51, midiChannel: 1 },
+        { name: "Conga Hi", category: "pitched", midiNote: 63, midiChannel: 1 },
+        { name: "Shaker", category: "accent", midiNote: 70, midiChannel: 1 },
+        { name: "Perc", category: "accent", midiNote: 56, midiChannel: 1 },
+        { name: "Clap", category: "backbeat", midiNote: 39, midiChannel: 1 },
       ]},
       { name: 'Tribal', lanes: [
-        { name: "Bell", category: "accent", midiNote: 56 },
-        { name: "Conga Low", category: "pitched", midiNote: 64 },
-        { name: "Conga Hi", category: "pitched", midiNote: 63 },
-        { name: "Tom Low", category: "pitched", midiNote: 41 },
-        { name: "Shaker", category: "texture", midiNote: 70 },
-        { name: "HH Closed", category: "hihat", midiNote: 42 },
-        { name: "Clap", category: "backbeat", midiNote: 39 },
-        { name: "Kick", category: "foundation", midiNote: 36 },
+        { name: "Kick", category: "foundation", midiNote: 36, midiChannel: 1 },
+        { name: "Clap", category: "backbeat", midiNote: 39, midiChannel: 1 },
+        { name: "HH Closed", category: "hihat", midiNote: 42, midiChannel: 1 },
+        { name: "Shaker", category: "texture", midiNote: 70, midiChannel: 1 },
+        { name: "Tom Low", category: "pitched", midiNote: 41, midiChannel: 1 },
+        { name: "Conga Hi", category: "pitched", midiNote: 63, midiChannel: 1 },
+        { name: "Conga Low", category: "pitched", midiNote: 64, midiChannel: 1 },
+        { name: "Bell", category: "accent", midiNote: 56, midiChannel: 1 },
       ]},
       { name: 'Industrial', lanes: [
-        { name: "Clap", category: "backbeat", midiNote: 39 },
-        { name: "Stab", category: "synth", midiNote: 80 },
-        { name: "Metal Hit", category: "metallic", midiNote: 52 },
-        { name: "Rimshot", category: "backbeat", midiNote: 37 },
-        { name: "HH Open", category: "hihat", midiNote: 46 },
-        { name: "HH Closed", category: "hihat", midiNote: 42 },
-        { name: "Snare", category: "backbeat", midiNote: 38 },
-        { name: "Kick", category: "foundation", midiNote: 36 },
+        { name: "Kick", category: "foundation", midiNote: 36, midiChannel: 1 },
+        { name: "Snare", category: "backbeat", midiNote: 38, midiChannel: 1 },
+        { name: "HH Closed", category: "hihat", midiNote: 42, midiChannel: 1 },
+        { name: "HH Open", category: "hihat", midiNote: 46, midiChannel: 1 },
+        { name: "Rimshot", category: "backbeat", midiNote: 37, midiChannel: 1 },
+        { name: "Metal Hit", category: "metallic", midiNote: 52, midiChannel: 1 },
+        { name: "Clap", category: "backbeat", midiNote: 39, midiChannel: 1 },
+        { name: "Stab", category: "synth", midiNote: 80, midiChannel: 1 },
       ]},
     ];
 
@@ -990,18 +1165,21 @@ window.DrumEngine = {
 
   // ─── SLIDER UPDATES ────────────────────────────────────────
 
-  ['intensity','syncopation','swing'].forEach(id => {
+  ['intensity','syncopation','swing','bpm'].forEach(id => {
     const el = document.getElementById(id);
     const val = document.getElementById(id + '-val');
-    el.addEventListener('input', () => val.textContent = (el.value / 100).toFixed(2));
+    if (el && val) el.addEventListener('input', () => val.textContent = id === 'bpm' ? el.value : (el.value / 100).toFixed(2));
   });
 
   // ─── GENERATE ──────────────────────────────────────────────
 
   function generate() {
+    pushUndo();
     const intensity = document.getElementById('intensity').value / 100;
     const syncopation = document.getElementById('syncopation').value / 100;
     const swing = document.getElementById('swing').value / 100;
+    const swingType = document.getElementById('swing-type').value;
+    const bpm = parseInt(document.getElementById('bpm').value);
     const poly = document.getElementById('polyrhythmic').checked;
     const seedVal = document.getElementById('seed').value;
     const seed = seedVal ? parseInt(seedVal) : null;
@@ -1009,16 +1187,18 @@ window.DrumEngine = {
     const bars = barsVal > 0 ? barsVal : null;
 
     currentPattern = DrumEngine.generatePattern({
-      intensity, syncopation, swingRatio: swing,
+      intensity, syncopation, swingRatio: swing, swingType,
       polyrhythmic: poly, characteristics: selectedChars,
       lanes: userLanes, seed, bars
     });
+    currentPattern._bpm = bpm; // store for MIDI export
     currentVariations = DrumEngine.generateVariations(currentPattern);
     activeTab = 'base';
+    currentBar = 0;
     renderAll();
   }
 
-  function renderAll() { renderTabs(); renderGrid(); renderInfo(); renderDownloads(); }
+  function renderAll() { renderTabs(); renderGrid(); renderInfo(); renderDownloads(); updateBarNav(); }
 
   function renderTabs() {
     const tabs = document.getElementById('tabs');
@@ -1037,30 +1217,30 @@ window.DrumEngine = {
     }
   }
 
+  // ─── HAPAX PAGE VIEW GRID ──────────────────────────────────
+
   function renderGrid() {
     const grid = document.getElementById('grid');
     const stepNums = document.getElementById('step-numbers');
-    const barInd = document.getElementById('bar-indicators');
-    grid.innerHTML = ''; stepNums.innerHTML = ''; barInd.innerHTML = '';
+    grid.innerHTML = '';
+    stepNums.innerHTML = '';
 
     const data = activeTab === 'base' ? currentPattern : currentVariations.find(v => v.type === activeTab);
     if (!data || !currentPattern) return;
-    const totalSteps = currentPattern.bars * currentPattern.stepsPerBar;
 
-    for (let i = 0; i < totalSteps; i++) {
+    const bars = currentPattern.bars;
+    currentBar = Math.min(currentBar, bars - 1);
+    const barOffset = currentBar * 16;
+
+    // Step numbers: always 1-16 (Hapax page view)
+    for (let i = 0; i < 16; i++) {
       const num = document.createElement('div');
       num.className = 'step-num' + (i % 4 === 0 ? ' beat' : '');
-      num.textContent = (i % 16) + 1;
+      num.textContent = i + 1;
       stepNums.appendChild(num);
     }
-    for (let bar = 0; bar < currentPattern.bars; bar++) {
-      const ind = document.createElement('div');
-      ind.className = 'bar-indicator';
-      ind.style.width = (currentPattern.stepsPerBar * 30) + 'px';
-      ind.textContent = `BAR ${bar + 1}`;
-      barInd.appendChild(ind);
-    }
 
+    // Grid rows — only current bar (16 steps)
     for (const lane of currentPattern.lanes) {
       const row = document.createElement('div');
       row.className = 'grid-row';
@@ -1073,13 +1253,14 @@ window.DrumEngine = {
       const steps = data.steps[lane.name] || [];
       const vels = data.velocity[lane.name] || [];
 
-      for (let i = 0; i < totalSteps; i++) {
+      for (let i = 0; i < 16; i++) {
+        const globalIdx = barOffset + i;
         const cell = document.createElement('div');
         cell.className = 'step-cell';
         if (i % 4 === 0) cell.classList.add('beat');
-        const isOn = steps[i] === 1;
+        const isOn = steps[globalIdx] === 1;
         if (isOn) {
-          const vel = vels[i] || 100;
+          const vel = vels[globalIdx] || 100;
           const pct = Math.round((vel / 127) * 100);
           const fill = document.createElement('div');
           fill.className = 'vel-fill';
@@ -1089,11 +1270,12 @@ window.DrumEngine = {
           cell.appendChild(fill);
           if (pct > 20) { const txt = document.createElement('div'); txt.className = 'vel-pct'; txt.textContent = pct; cell.appendChild(txt); }
         } else { cell.style.background = '#111'; }
-        cell.onclick = () => toggleStep(lane.name, i);
+        cell.onclick = () => { pushUndo(); toggleStep(lane.name, globalIdx); };
         row.appendChild(cell);
       }
       grid.appendChild(row);
     }
+    updateBarNav();
   }
 
   function toggleStep(laneName, stepIdx) {
@@ -1133,9 +1315,10 @@ window.DrumEngine = {
     const dl = document.getElementById('downloads');
     dl.innerHTML = '';
     if (!currentPattern) return;
+    const bpm = currentPattern._bpm || 135;
     const safeName = currentPattern.name.toLowerCase().replace(/\s+/g, '_');
-    dl.appendChild(createDLBtn('Base .mid', () => DrumEngine.exportMidi(currentPattern, null, `${safeName}_base.mid`)));
-    for (const v of currentVariations) dl.appendChild(createDLBtn(`${v.name} .mid`, () => DrumEngine.exportMidi(currentPattern, v, `${safeName}_${v.type}.mid`)));
+    dl.appendChild(createDLBtn('Base .mid', () => DrumEngine.exportMidi(currentPattern, null, `${safeName}_base.mid`, bpm)));
+    for (const v of currentVariations) dl.appendChild(createDLBtn(`${v.name} .mid`, () => DrumEngine.exportMidi(currentPattern, v, `${safeName}_${v.type}.mid`, bpm)));
   }
 
   function createDLBtn(label, fn) {
