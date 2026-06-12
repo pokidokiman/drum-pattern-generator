@@ -1989,13 +1989,13 @@ function exportMidi(patternData, variationData, name, bpm) {
   for (const lane of lanes) {
     const st = (data.steps[lane.name] || []);
     const vel = (data.velocity[lane.name] || []);
-    const mt = (data.microtiming[lane.name] || []);
     const ch = (lane.midiChannel || 1) - 1; // MIDI channel is 0-indexed in wire format
     for (let i = 0; i < st.length; i++) {
       if (!st[i]) continue;
       const v = vel[i] || 100;
       if (v === 0) continue;
-      const tick = Math.max(0, i * TICKS_PER_STEP + (mt[i] || 0));
+      // No microtiming in MIDI export — notes snap to grid for Hapax step sequencer display
+      const tick = Math.max(0, i * TICKS_PER_STEP);
       events.push({ tick, type: 'on', note: lane.midiNote, vel: v, ch });
       events.push({ tick: tick + GATE, type: 'off', note: lane.midiNote, vel: 0, ch });
     }
