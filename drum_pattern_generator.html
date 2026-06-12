@@ -2031,7 +2031,7 @@ function exportMidi(patternData, variationData, name, bpm) {
   track.push(...encodeVarLen(0));
   track.push(0xFF, 0x2F, 0x00);
 
-  const header = [0x4D,0x54,0x68,0x64, 0,0,0,6, 0,0, 0,0, (PPQ>>8)&0xFF, PPQ&0xFF]; // SMF 0, single track
+  const header = [0x4D,0x54,0x68,0x64, 0,0,0,6, 0,0, 0,1, (PPQ>>8)&0xFF, PPQ&0xFF]; // SMF 0, 1 track
   const trackHeader = [0x4D,0x54,0x72,0x6B, (track.length>>24)&0xFF, (track.length>>16)&0xFF, (track.length>>8)&0xFF, track.length&0xFF];
   const midi = new Uint8Array(header.length + trackHeader.length + track.length);
   midi.set(header, 0);
