@@ -2567,14 +2567,17 @@ window.DrumEngine = {
     const container = document.getElementById('lane-config');
     container.innerHTML = '';
 
-    // Two explicit column divs — left = foundation (Kick/Snare/HH Closed/HH Open), right = accent (Perc/Clap/Tom Hi/Tom Low)
+    // Two column divs — split lanes dynamically: first half left, second half right
     const leftCol = document.createElement('div');
     leftCol.className = 'lane-config-col';
     const rightCol = document.createElement('div');
     rightCol.className = 'lane-config-col';
 
-    const leftIndices = [3, 2, 1, 0];   // HH Open, HH Closed, Snare, Kick (bottom)
-    const rightIndices = [7, 6, 5, 4];  // Perc, Clap, Tom Hi, Tom Low (bottom)
+    const half = Math.ceil(userLanes.length / 2);
+    // Left column: first half, displayed bottom-to-top (last index at top)
+    const leftIndices = Array.from({length: half}, (_, i) => half - 1 - i);
+    // Right column: second half, displayed bottom-to-top
+    const rightIndices = Array.from({length: userLanes.length - half}, (_, i) => userLanes.length - 1 - i);
 
     for (const colData of [[leftCol, leftIndices], [rightCol, rightIndices]]) {
       const [colDiv, indices] = colData;
@@ -2587,10 +2590,14 @@ window.DrumEngine = {
         row.className = 'lane-row';
         row.style.display = 'inline-flex';
 
-        // Color dot — use laneConfigDots (indexed by lane array position, not grid position)
-        const laneConfigDots = ['c-kick','c-snare','c-chh','c-ohh','c-tom','c-tom','c-clap','c-perc'];
+        // Color dot — use category to determine color
+        const catColors = {
+          foundation: 'c-kick', backbeat: 'c-snare', hihat: 'c-chh',
+          accent: 'c-perc', metallic: 'c-chh', texture: 'c-perc',
+          pitched: 'c-tom', synth: 'c-clap'
+        };
         const dot = document.createElement('div');
-        dot.className = 'lane-color ' + (laneConfigDots[i] || 'c-perc');
+        dot.className = 'lane-color ' + (catColors[lane.category] || 'c-perc');
         row.appendChild(dot);
 
         // Name input
