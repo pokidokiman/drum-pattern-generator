@@ -1543,14 +1543,54 @@ window.DrumEngine = {
     for (const v of currentVariations) {
       const tab = document.createElement('div');
       tab.className = 'tab' + (activeTab === v.type ? ' active' : '');
-      tab.textContent = v.name;
-      tab.onclick = () => {
+      tab.style.display = 'flex';
+      tab.style.alignItems = 'center';
+      tab.style.gap = '6px';
+
+      const label = document.createElement('span');
+      label.textContent = v.name;
+      label.onclick = () => {
         activeTab = v.type;
         renderAll();
         if (isPlaying) playPattern(currentPattern, v);
       };
+      tab.appendChild(label);
+
+      // Dice roll button — re-generate only this variation
+      const dice = document.createElement('span');
+      dice.textContent = '🎲';
+      dice.style.cursor = 'pointer';
+      dice.style.fontSize = '10px';
+      dice.title = `Re-roll ${v.name}`;
+      dice.onclick = (e) => {
+        e.stopPropagation();
+        rerollVariation(v.type);
+      };
+      tab.appendChild(dice);
+
       tabs.appendChild(tab);
     }
+  }
+
+  function rerollVariation(type) {
+    if (!currentPattern) return;
+    pushUndo();
+
+    // Generate all variations fresh (uses new random seed internally)
+    const newVariations = DrumEngine.generateVariations(currentPattern);
+
+    // Replace only the one we want to re-roll, keep the rest
+    for (let i = 0; i < currentVariations.length; i++) {
+      if (currentVariations[i].type === type) {
+        const replacement = newVariations.find(v => v.type === type);
+        if (replacement) currentVariations[i] = replacement;
+      }
+    }
+
+    activeTab = type;
+    renderAll();
+    const v = currentVariations.find(v => v.type === type);
+    if (isPlaying && v) playPattern(currentPattern, v);
   }
 
   // ─── HAPAX PAGE VIEW GRID ──────────────────────────────────
