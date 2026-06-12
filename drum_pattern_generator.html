@@ -302,7 +302,7 @@ select:focus { border-color: var(--accent); }
 .tabs {
   display: flex;
   gap: 2px;
-  margin-bottom: 2px;
+  margin-bottom: 8px;
 }
 .tab {
   display: flex;
@@ -311,8 +311,8 @@ select:focus { border-color: var(--accent); }
   padding: 7px 14px;
   background: var(--bg-screen);
   border: 1px solid var(--border);
-  border-bottom: none;
-  border-radius: 4px 4px 0 0;
+  border-bottom: 1px solid var(--border);
+  border-radius: 4px;
   cursor: pointer;
   font-family: 'Inter', sans-serif;
   font-size: 10px;
@@ -327,14 +327,14 @@ select:focus { border-color: var(--accent); }
   color: var(--accent);
   background: var(--bg-deepest);
   border-color: var(--accent);
-  border-bottom-color: var(--bg-deepest);
+  border-bottom-color: var(--accent);
 }
 
 /* ── Grid Container ────────────────────────────────────── */
 .grid-container {
   background: var(--bg-deepest);
   border: 1px solid var(--border);
-  border-radius: 0 4px 4px 4px;
+  border-radius: 4px;
   padding: 12px 16px 16px;
   margin-bottom: 8px;
 }
@@ -584,12 +584,33 @@ select:focus { border-color: var(--accent); }
   font-weight: 600;
   letter-spacing: 0.5px;
 }
+
+/* ── Bottom Bar (Downloads + Playback) ─────────────────── */
+.bottom-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  background: var(--bg-screen);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  margin-bottom: 8px;
+}
+.bottom-bar .downloads {
+  margin-bottom: 0;
+}
+.bottom-bar .playback {
+  background: none;
+  border: none;
+  padding: 0;
+  border-radius: 0;
+}
 </style>
 </head>
 <body>
 <div class="container">
 
-  <!-- Header -->
+  <!-- 1. Header -->
   <div class="header">
     <h1>Drum Pattern Generator</h1>
     <div style="display:flex;align-items:center;gap:8px;">
@@ -599,7 +620,7 @@ select:focus { border-color: var(--accent); }
     </div>
   </div>
 
-  <!-- Controls -->
+  <!-- 2. Controls Bar -->
   <div class="controls">
     <div class="control-group"><label>Intensity</label><input type="range" id="intensity" min="0" max="100" value="40"><span class="value" id="intensity-val">0.40</span></div>
     <div class="control-group"><label>Syncopation</label><input type="range" id="syncopation" min="0" max="100" value="20"><span class="value" id="syncopation-val">0.20</span></div>
@@ -616,43 +637,47 @@ select:focus { border-color: var(--accent); }
     <button class="btn btn-sm" onclick="loadPattern()" title="Load from browser" style="background:var(--bg-panel);color:var(--text2);border:1px solid var(--border)">📂 Load</button>
   </div>
 
-  <!-- Lane Configuration -->
+  <!-- 3. Lane Configuration -->
   <div class="lane-config">
     <h3>Lane Configuration (8 Hapax Lanes)</h3>
     <div class="lane-config-grid" id="lane-config-grid"></div>
   </div>
 
-  <!-- Style Selector -->
+  <!-- 4. Style Selector -->
   <div class="chars-bar" id="chars-bar"></div>
 
-  <!-- Variation Tabs -->
+  <!-- 5. Variation Tabs -->
   <div class="tabs" id="tabs"></div>
 
-  <!-- Grid (Hapax Page View) -->
+  <!-- 6. Bar Navigation -->
+  <div class="bar-nav" id="bar-nav">
+    <button class="bar-nav-btn" onclick="prevBar()" id="bar-prev">◀</button>
+    <span class="bar-nav-label" id="bar-nav-label">BAR 1 / 1</span>
+    <button class="bar-nav-btn" onclick="nextBar()" id="bar-next">▶</button>
+  </div>
+
+  <!-- 7. Step Grid -->
   <div class="grid-container">
-    <div class="bar-nav" id="bar-nav">
-      <button class="bar-nav-btn" onclick="prevBar()" id="bar-prev">◀</button>
-      <span class="bar-nav-label" id="bar-nav-label">BAR 1 / 1</span>
-      <button class="bar-nav-btn" onclick="nextBar()" id="bar-next">▶</button>
-    </div>
     <div class="step-numbers" id="step-numbers"></div>
     <div id="grid"></div>
   </div>
 
-  <!-- Info -->
+  <!-- 8. Info Panel -->
   <div class="info">
     <div class="info-card"><h3>Pattern</h3><div class="stat"><span>Name</span><span class="val" id="info-name">—</span></div><div class="stat"><span>Bars</span><span class="val" id="info-bars">—</span></div><div class="stat"><span>Steps</span><span class="val" id="info-steps">—</span></div><div class="stat"><span>Swing</span><span class="val" id="info-swing">—</span></div></div>
     <div class="info-card"><h3>Metrics</h3><div class="stat"><span>Density</span><span class="val" id="info-density">—</span></div><div class="stat"><span>Syncopation</span><span class="val" id="info-syncopation">—</span></div><div class="stat"><span>Events</span><span class="val" id="info-count">—</span></div></div>
     <div class="info-card"><h3>Characteristics</h3><div class="char-tags" id="info-chars"></div></div>
   </div>
   <div class="var-desc" id="var-desc" style="display:none"></div>
-  <div class="downloads" id="downloads"></div>
 
-  <!-- Playback -->
-  <div class="playback">
-    <button class="play-btn play" id="play-btn" onclick="togglePlay()">▶ PLAY</button>
-    <button class="play-btn loop" id="loop-btn" onclick="toggleLoop()">🔁 LOOP</button>
-    <span class="playback-status" id="playback-status">Ready</span>
+  <!-- 9-10. Download + Playback -->
+  <div class="bottom-bar">
+    <div class="downloads" id="downloads"></div>
+    <div class="playback">
+      <button class="play-btn play" id="play-btn" onclick="togglePlay()">▶ PLAY</button>
+      <button class="play-btn loop" id="loop-btn" onclick="toggleLoop()">🔁 LOOP</button>
+      <span class="playback-status" id="playback-status">Ready</span>
+    </div>
   </div>
 
 </div>
