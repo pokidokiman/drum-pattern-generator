@@ -183,8 +183,8 @@ body {
 
 /* ── Lane Config ───────────────────────────────────────── */
 .lane-config {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 4px;
   margin-bottom: 8px;
 }
@@ -196,8 +196,6 @@ body {
   background: var(--bg-screen);
   border: 1px solid var(--border);
   border-radius: 3px;
-  width: calc(50% - 2px);
-  box-sizing: border-box;
 }
 .lane-color {
   width: 10px;
@@ -2138,9 +2136,9 @@ window.DrumEngine = {
     const container = document.getElementById('lane-config');
     container.innerHTML = '';
 
-    // Split into 2 columns: lanes 4-7 left (HH/Snare/Kick), lanes 0-3 right (Perc/Clap/Tom)
+    // Split into 2 columns: lanes 0-3 left, lanes 4-7 right
     for (let col = 0; col < 2; col++) {
-      const startIdx = col === 0 ? 4 : 0;
+      const startIdx = col * 4;
       for (let i = startIdx; i < startIdx + 4; i++) {
         const lane = userLanes[i];
         if (!lane) continue;
