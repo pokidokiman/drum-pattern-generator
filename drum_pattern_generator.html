@@ -247,6 +247,7 @@ body {
   margin-bottom: 8px;
   flex-wrap: nowrap;
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 .style-label {
   font-size: 10px;
@@ -260,12 +261,14 @@ body {
   color: var(--text);
   border: 1px solid var(--border);
   border-radius: 3px;
-  padding: 5px 14px;
+  padding: 5px 10px;
   font-family: 'Inter', sans-serif;
-  font-size: 10px;
+  font-size: 9px;
   letter-spacing: 1px;
   text-transform: uppercase;
   cursor: pointer;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 .style-btn.active {
   background: var(--accent);
