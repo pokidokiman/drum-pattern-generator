@@ -807,6 +807,10 @@ body {
         <label>Bars</label>
         <select id="bars-override"><option value="0">Auto</option><option value="1">1</option><option value="2">2</option><option value="4">4</option><option value="8">8</option><option value="16">16</option></select>
       </div>
+      <div class="select-group">
+        <label>Groove</label>
+        <select id="groove-template"></select>
+      </div>
       <button class="btn-generate" onclick="generate()">Generate</button>
     </div>
   </div>
@@ -1312,6 +1316,43 @@ function inferCharacteristics(pattern) {
   return chars.length ? chars : ["standard"];
 }
 
+// ─── GROOVE TEMPLATE MATCHING ────────────────────────────────
+
+function findGrooveTemplatePattern(lane, templatePatterns) {
+  if (!templatePatterns || Object.keys(templatePatterns).length === 0) return null;
+  // Exact name match
+  if (templatePatterns[lane.name]) return templatePatterns[lane.name];
+  const ln = lane.name.toLowerCase();
+  // Case-insensitive match
+  for (const [key, val] of Object.entries(templatePatterns)) {
+    if (key.toLowerCase() === ln) return val;
+  }
+  // Fuzzy substring match (e.g. lane "BD Kick" matches template key "Kick")
+  for (const [key, val] of Object.entries(templatePatterns)) {
+    const kk = key.toLowerCase();
+    if (ln.includes(kk) || kk.includes(ln)) return val;
+  }
+  // Category-based fallback for common instrument mappings
+  if (lane.category === 'foundation' && templatePatterns['Kick']) return templatePatterns['Kick'];
+  if (lane.category === 'hihat') {
+    if (ln.includes('open') && templatePatterns['HH Open']) return templatePatterns['HH Open'];
+    if (templatePatterns['HH Closed']) return templatePatterns['HH Closed'];
+  }
+  if (lane.category === 'backbeat') {
+    if (ln.includes('snare') && templatePatterns['Snare']) return templatePatterns['Snare'];
+    if (ln.includes('clap') && templatePatterns['Clap']) return templatePatterns['Clap'];
+    if (ln.includes('rim') && templatePatterns['Rimshot']) return templatePatterns['Rimshot'];
+    if (templatePatterns['Snare']) return templatePatterns['Snare'];
+  }
+  if (lane.category === 'accent') {
+    if (templatePatterns['Cowbell']) return templatePatterns['Cowbell'];
+  }
+  if (lane.category === 'pitched') {
+    if (templatePatterns['Conga']) return templatePatterns['Conga'];
+  }
+  return null;
+}
+
 // ─── ACTIVE LANE SELECTION (CATEGORY-BASED) ──────────────────
 
 function getActiveLanes(lanes, characteristics, rng) {
@@ -1472,6 +1513,7 @@ function generatePattern(params) {
     seed = null,
     bars: barsOverride = null,
     energyArc = 'flat',
+    grooveTemplate = 'none',
   } = params;
 
   const rng = new SeededRNG(seed);
@@ -1511,8 +1553,15 @@ function generatePattern(params) {
       continue;
     }
 
-    // Select pattern based on category + style
-    let base = selectPattern(lane, characteristics, intensity, rng);
+    // Select pattern based on category + style (or groove template if selected)
+    let base;
+    const tpl = (grooveTemplate && grooveTemplate !== 'none') ? GROOVE_TEMPLATES[grooveTemplate] : null;
+    if (tpl && tpl.patterns) {
+      base = findGrooveTemplatePattern(lane, tpl.patterns);
+    }
+    if (!base) {
+      base = selectPattern(lane, characteristics, intensity, rng);
+    }
     while (base.length < 16) base.push(0);
     base = base.slice(0, 16);
 
@@ -2270,7 +2319,7 @@ function updatePlayUI() {
 // ─── EXPORT ───────────────────────────────────────────────────
 
 window.DrumEngine = {
-  CATEGORIES, SOUND_PRESETS, DEFAULT_LANES, CHARACTERISTIC_PRESETS, PRIMITIVES, VELOCITY_CURVES, ENERGY_ARCS, POLYRHYTHMS,
+  CATEGORIES, SOUND_PRESETS, DEFAULT_LANES, CHARACTERISTIC_PRESETS, PRIMITIVES, VELOCITY_CURVES, ENERGY_ARCS, POLYRHYTHMS, GROOVE_TEMPLATES,
   generatePattern, generateVariations, exportMidi,
   calculateSyncopation, calculateEventDensity, inferCharacteristics,
   playPattern, stopPlayback,
@@ -2283,6 +2332,7 @@ window.DrumEngine = {
   let activeTab = 'base';
   let selectedChars = ['hypnotic'];
   let selectedEnergyArc = 'flat';
+  let selectedGrooveTemplate = 'none';
   let userLanes = JSON.parse(JSON.stringify(DrumEngine.DEFAULT_LANES));
   let currentBar = 0;
 
@@ -2638,6 +2688,21 @@ window.DrumEngine = {
     select.onchange = () => { selectedEnergyArc = select.value; };
   }
 
+  function initGrooveTemplate() {
+    const select = document.getElementById('groove-template');
+    if (!select) return;
+    select.innerHTML = '';
+    for (const [key, tpl] of Object.entries(DrumEngine.GROOVE_TEMPLATES)) {
+      const opt = document.createElement('option');
+      opt.value = key;
+      opt.textContent = tpl.label + (key !== 'none' ? '' : '');
+      opt.title = tpl.desc;
+      if (key === selectedGrooveTemplate) opt.selected = true;
+      select.appendChild(opt);
+    }
+    select.onchange = () => { selectedGrooveTemplate = select.value; };
+  }
+
   // ─── SLIDER UPDATES ──────────────────────────────────────
 
   ['intensity','syncopation','swing','bpm'].forEach(id => {
@@ -2669,6 +2734,7 @@ window.DrumEngine = {
       characteristics: selectedChars,
       lanes: userLanes, seed, bars,
       energyArc: selectedEnergyArc,
+      grooveTemplate: selectedGrooveTemplate,
     });
     currentPattern._bpm = bpm;
     currentVariations = DrumEngine.generateVariations(currentPattern);
@@ -2926,6 +2992,7 @@ window.DrumEngine = {
   updatePolyrhythmLanes();
   initPresets();
   initChars();
+  initGrooveTemplate();
   generate();
 </script>
 </body>
