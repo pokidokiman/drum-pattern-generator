@@ -1685,7 +1685,12 @@ function generatePattern(params) {
         else if (lane.category === "accent") v = rng.randInt(60, 90);
         else if (lane.category === "synth") v = rng.randInt(70, 100);
       }
-      vel[i] = Math.max(1, Math.min(127, Math.floor(v * arcVelMul)));
+      // Foundation (kick) is always velocity 100 — immune to energy arc scaling
+      if (lane.category === "foundation") {
+        vel[i] = 100;
+      } else {
+        vel[i] = Math.max(1, Math.min(127, Math.floor(v * arcVelMul)));
+      }
       // Convert ghost marker back to active
       if (pattern[i] === 2) pattern[i] = 1;
     }
