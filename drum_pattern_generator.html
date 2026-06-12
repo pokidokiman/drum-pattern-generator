@@ -963,16 +963,16 @@ const SOUND_PRESETS = [
 // ─── DEFAULT LANE CONFIG (8 Hapax lanes) ──────────────────────
 
 const DEFAULT_LANES = [
-  // Hapax screen: Lane 1 (Kick) at BOTTOM, Lane 8 (Perc) at TOP
-  // Array order = visual order top-to-bottom in the grid
+  // LEFT column (indices 0-3): Kick, Snare, HH Closed, HH Open
+  { name: "Kick",        category: "foundation", midiNote: 36, midiChannel: 1 },
+  { name: "Snare",       category: "backbeat",   midiNote: 38, midiChannel: 1 },
+  { name: "HH Closed",   category: "hihat",      midiNote: 42, midiChannel: 1 },
+  { name: "HH Open",     category: "hihat",      midiNote: 46, midiChannel: 1 },
+  // RIGHT column (indices 4-7): Perc, Clap, Tom Hi, Tom Low
   { name: "Perc",        category: "accent",     midiNote: 56, midiChannel: 1 },
   { name: "Clap",        category: "backbeat",   midiNote: 39, midiChannel: 1 },
   { name: "Tom Hi",      category: "pitched",    midiNote: 50, midiChannel: 1 },
   { name: "Tom Low",     category: "pitched",    midiNote: 41, midiChannel: 1 },
-  { name: "HH Open",     category: "hihat",      midiNote: 46, midiChannel: 1 },
-  { name: "HH Closed",   category: "hihat",      midiNote: 42, midiChannel: 1 },
-  { name: "Snare",       category: "backbeat",   midiNote: 38, midiChannel: 1 },
-  { name: "Kick",        category: "foundation", midiNote: 36, midiChannel: 1 },
 ];
 
 // ─── CHARACTERISTIC PRESETS ───────────────────────────────────
@@ -2411,10 +2411,11 @@ window.DrumEngine = {
       stepNums.appendChild(num);
     }
 
-    // Grid rows
-    for (let laneIdx = 0; laneIdx < currentPattern.lanes.length; laneIdx++) {
-      const lane = currentPattern.lanes[laneIdx];
-      const laneColorIdx = laneIdx; // 0-7 maps to lane-color-1 through lane-color-8
+    // Grid rows — REVERSE order so Kick (index 0) is at BOTTOM, Perc (index 7) at TOP
+    const lanes = currentPattern.lanes;
+    for (let revIdx = lanes.length - 1; revIdx >= 0; revIdx--) {
+      const lane = lanes[revIdx];
+      const laneColorIdx = (lanes.length - 1 - revIdx); // top=0(green), bottom=7(red)
       const colorClass = 'lane-color-' + (laneColorIdx + 1);
       const dotClass = dotClasses[laneColorIdx] || 'c-perc';
 
