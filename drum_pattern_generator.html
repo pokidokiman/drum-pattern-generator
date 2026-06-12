@@ -2984,7 +2984,7 @@ window.DrumEngine = {
           if (pct > 20) {
             const txt = document.createElement('div');
             txt.className = 'vel-pct';
-            txt.textContent = pct;
+            txt.textContent = vel;  // Show raw MIDI velocity (0-127), not percentage
             cell.appendChild(txt);
           }
         }
