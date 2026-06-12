@@ -1575,19 +1575,19 @@ function generatePattern(params) {
       let barPat = [...base];
       const { densityMultiplier, velocityMultiplier } = arc.fn(bar, bars, rng);
 
-      // Apply density changes based on arc (proportional to base density)
+      // Apply density changes based on arc (NOT foundation — kick stays 4-on-the-floor)
       const baseDensity = barPat.reduce((a, b) => a + b, 0) / barPat.length;
       const emptySlots = barPat.map((v, i) => v === 0 ? i : -1).filter(i => i >= 0);
 
-      if (emptySlots.length > 0 && bar > 0) {
+      if (emptySlots.length > 0 && bar > 0 && lane.category !== "foundation") {
         // Number of notes to add proportional to densityMultiplier
         const notesToAdd = Math.round(emptySlots.length * densityMultiplier * intensity * 0.4);
         const toAdd = rng.sample(emptySlots, Math.min(notesToAdd, emptySlots.length));
         for (const i of toAdd) barPat[i] = 1;
       }
 
-      // Density reduction: remove notes when densityMultiplier is low
-      if (bar > 0 && densityMultiplier < 0.3) {
+      // Density reduction: remove notes when densityMultiplier is low (NOT foundation)
+      if (bar > 0 && densityMultiplier < 0.3 && lane.category !== "foundation") {
         const activeSlots = barPat.map((v, i) => v === 1 ? i : -1).filter(i => i >= 0);
         if (activeSlots.length > 1) {
           const notesToRemove = Math.round((1 - densityMultiplier) * activeSlots.length * 0.2);
@@ -1596,8 +1596,8 @@ function generatePattern(params) {
         }
       }
 
-      // Keep last-bar variation for multi-bar patterns
-      if (bar === bars - 1 && bars >= 2 && rng.next() < 0.3) {
+      // Keep last-bar variation for multi-bar patterns (NOT for foundation — kick stays 4-on-the-floor)
+      if (bar === bars - 1 && bars >= 2 && lane.category !== "foundation" && rng.next() < 0.3) {
         const active = barPat.map((v, i) => v === 1 ? i : -1).filter(i => i >= 0);
         if (active.length > 1) barPat[rng.choice(active)] = 0;
       }
