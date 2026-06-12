@@ -822,6 +822,23 @@ body {
     <button class="btn-undo" onclick="loadPattern()" title="Load">📂 Load</button>
   </div>
 
+  <!-- 2c. Polyrhythm controls -->
+  <div class="extra-controls" id="polyrhythm-controls">
+    <div class="ctrl-group">
+      <label>Polyrhythm</label>
+      <select id="polyrhythm-type" onchange="onPolyrhythmChange()">
+        <option value="none">None</option>
+        <option value="3:4">3:4 Tresillo</option>
+        <option value="5:4">5:4 Quintuplet</option>
+      </select>
+    </div>
+    <div class="ctrl-group" id="polyrhythm-lane-group" style="display:none">
+      <label>Target Lane</label>
+      <select id="polyrhythm-lane"></select>
+    </div>
+    <span id="polyrhythm-desc" style="font-size:10px;color:var(--text-secondary);letter-spacing:0.5px"></span>
+  </div>
+
   <!-- 3. Lane Configuration (mockup 2-column layout) -->
   <div class="lane-config" id="lane-config"></div>
 
@@ -1100,6 +1117,116 @@ const ENERGY_ARCS = {
     },
   },
 };
+// ─── POLYRHYTHMS ──────────────────────────────────────────────
+
+const POLYRHYTHMS = {
+  none: {
+    label: 'None',
+    desc: 'Standard 4/4 — no polyrhythm',
+    subdivisions: null,
+  },
+  '3:4': {
+    label: '3:4 Tresillo',
+    desc: '3 hits evenly spaced across 4 beats — Cuban tresillo feel, hypnotic tension',
+    // Tresillo: 3 evenly spaced hits across 16 steps → positions at 0, 5.33, 10.67
+    // Mapped to 16-step grid: steps 0, 5, 11 (rounded)
+    subdivisions: 3,
+    pattern: [1,0,0,0, 0,1,0,0, 0,0,0,1, 0,0,0,0],
+  },
+  '5:4': {
+    label: '5:4 Quintuplet',
+    desc: '5 hits against 4 beats — shifting accent grid, restless quintuplet tension',
+    // Quintuplet: 5 evenly spaced hits across 16 steps → positions at 0, 3.2, 6.4, 9.6, 12.8
+    // Mapped to 16-step grid: steps 0, 3, 6, 10, 13 (rounded)
+    subdivisions: 5,
+    pattern: [1,0,0,1, 0,0,1,0, 0,0,1,0, 0,1,0,0],
+  },
+};
+
+// ─── GROOVE TEMPLATES (TR-909 / TR-808) ──────────────────────
+
+const GROOVE_TEMPLATES = {
+  none: {
+    label: "None (Random)",
+    desc: "Use random generation — current behavior",
+    patterns: {},
+  },
+  '909-house': {
+    label: "TR-909 House",
+    desc: "Classic four-on-the-floor house groove",
+    patterns: {
+      'Kick':      [1,0,0,0, 1,0,0,0, 1,0,0,0, 1,0,0,0],
+      'Snare':     [0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0],
+      'HH Closed': [1,0,1,0, 1,0,1,0, 1,0,1,0, 1,0,1,0],
+      'HH Open':   [0,0,0,0, 0,0,1,0, 0,0,0,0, 0,0,1,0],
+      'Clap':      [0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0],
+      'Rimshot':   [0,0,0,0, 0,0,0,0, 0,0,1,0, 0,0,0,0],
+    },
+  },
+  '909-techno': {
+    label: "TR-909 Techno",
+    desc: "Driving 909 techno — 16th hats, offbeat clap",
+    patterns: {
+      'Kick':      [1,0,0,0, 1,0,0,0, 1,0,0,0, 1,0,0,0],
+      'Snare':     [0,0,0,0, 0,0,0,0, 1,0,0,0, 0,0,0,0],
+      'HH Closed': [1,1,1,1, 1,1,1,1, 1,1,1,1, 1,1,1,1],
+      'HH Open':   [0,0,0,0, 0,0,0,1, 0,0,0,0, 0,0,0,1],
+      'Clap':      [0,0,0,0, 1,0,0,0, 0,0,0,0, 0,0,1,0],
+      'Rimshot':   [0,0,1,0, 0,0,1,0, 0,0,1,0, 0,0,1,0],
+    },
+  },
+  '909-acid': {
+    label: "TR-909 Acid",
+    desc: "Tight 909 acid house pattern with rimshot accents",
+    patterns: {
+      'Kick':      [1,0,0,0, 1,0,0,0, 1,0,0,0, 1,0,0,0],
+      'Snare':     [0,0,0,0, 1,0,0,0, 0,0,0,0, 0,0,0,0],
+      'HH Closed': [1,0,1,0, 1,0,1,0, 1,0,1,0, 1,0,1,0],
+      'HH Open':   [0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,1,0],
+      'Clap':      [0,0,0,0, 0,0,0,0, 0,0,0,0, 1,0,0,0],
+      'Rimshot':   [0,0,0,1, 0,0,0,1, 0,0,0,1, 0,0,0,1],
+    },
+  },
+  '808-hiphop': {
+    label: "TR-808 Hip-Hop",
+    desc: "Syncopated 808 boom-bap groove with cowbell & conga",
+    patterns: {
+      'Kick':      [1,0,0,0, 0,0,1,0, 1,0,0,0, 0,0,0,0],
+      'Snare':     [0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0],
+      'HH Closed': [1,0,1,0, 1,0,1,0, 1,0,1,0, 1,0,1,0],
+      'HH Open':   [0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,1,0],
+      'Clap':      [0,0,0,0, 1,0,0,0, 0,0,1,0, 1,0,0,0],
+      'Cowbell':   [1,0,0,1, 0,0,1,0, 1,0,0,1, 0,0,1,0],
+      'Conga':     [0,0,0,0, 0,0,1,0, 0,0,0,0, 0,0,0,1],
+    },
+  },
+  '808-bounce': {
+    label: "TR-808 Bounce",
+    desc: "Bouncy 808 pattern with cowbell ostinato",
+    patterns: {
+      'Kick':      [1,0,0,0, 0,0,0,0, 1,0,0,1, 0,0,0,0],
+      'Snare':     [0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0],
+      'HH Closed': [1,0,1,0, 1,0,1,0, 1,0,1,0, 1,0,1,0],
+      'HH Open':   [0,0,0,0, 0,0,0,1, 0,0,0,0, 0,0,0,1],
+      'Clap':      [0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0],
+      'Cowbell':   [1,0,1,0, 1,0,1,0, 1,0,1,0, 1,0,1,0],
+      'Conga':     [0,0,0,1, 0,0,1,0, 0,0,0,1, 0,0,1,0],
+    },
+  },
+  '808-afro': {
+    label: "TR-808 Afro",
+    desc: "808 Afro-Latin rhythmic pattern — tresillo kick, clave cowbell",
+    patterns: {
+      'Kick':      [1,0,0,0, 0,0,0,0, 1,0,1,0, 0,0,0,0],
+      'Snare':     [0,0,0,0, 1,0,0,1, 0,0,0,0, 1,0,0,0],
+      'HH Closed': [1,1,1,1, 1,1,1,1, 1,1,1,1, 1,1,1,1],
+      'HH Open':   [0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,1],
+      'Clap':      [0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0],
+      'Cowbell':   [1,0,0,1, 0,0,1,0, 0,0,0,1, 0,0,1,0],
+      'Conga':     [0,0,1,0, 0,0,0,0, 0,0,1,0, 0,1,0,0],
+    },
+  },
+};
 
 // ─── PRIMITIVES ───────────────────────────────────────────────
 
@@ -1338,6 +1465,8 @@ function generatePattern(params) {
     swingRatio = 0.5,
     swingType = 'shuffle',
     polyrhythmic = false,
+    polyrhythmType = 'none',
+    polyrhythmLane = null,
     characteristics = ["hypnotic"],
     lanes = DEFAULT_LANES,
     seed = null,
@@ -1488,6 +1617,24 @@ function generatePattern(params) {
       }
       if (lane.category === "foundation") {
         for (let i = 0; i < mt.length; i++) mt[i] = Math.floor(mt[i] * 0.3);
+      }
+    }
+
+    // ── Polyrhythm override ──
+    const poly = POLYRHYTHMS[polyrhythmType];
+    if (poly && poly.pattern && polyrhythmLane && lane.name === polyrhythmLane) {
+      // Override this lane with the polyrhythmic subdivision, repeated per bar
+      const polyBase = poly.pattern;
+      pattern = [];
+      for (let bar = 0; bar < bars; bar++) {
+        pattern.push(...polyBase);
+      }
+      // Velocity: accent downbeats of polyrhythm, softer on other hits
+      for (let i = 0; i < vel.length; i++) {
+        if (pattern[i]) {
+          const posInBar = i % 16;
+          vel[i] = (posInBar === 0) ? rng.randInt(90, 110) : rng.randInt(55, 80);
+        }
       }
     }
 
@@ -2123,7 +2270,7 @@ function updatePlayUI() {
 // ─── EXPORT ───────────────────────────────────────────────────
 
 window.DrumEngine = {
-  CATEGORIES, SOUND_PRESETS, DEFAULT_LANES, CHARACTERISTIC_PRESETS, PRIMITIVES, VELOCITY_CURVES, ENERGY_ARCS,
+  CATEGORIES, SOUND_PRESETS, DEFAULT_LANES, CHARACTERISTIC_PRESETS, PRIMITIVES, VELOCITY_CURVES, ENERGY_ARCS, POLYRHYTHMS,
   generatePattern, generateVariations, exportMidi,
   calculateSyncopation, calculateEventDensity, inferCharacteristics,
   playPattern, stopPlayback,
@@ -2508,6 +2655,9 @@ window.DrumEngine = {
     const swingType = document.getElementById('swing-type').value;
     const bpm = parseInt(document.getElementById('bpm').value);
     const poly = selectedChars.includes('polyrhythmic');
+    const polyrhythmType = document.getElementById('polyrhythm-type').value;
+    const polyrhythmLaneEl = document.getElementById('polyrhythm-lane');
+    const polyrhythmLane = (polyrhythmType !== 'none' && polyrhythmLaneEl) ? polyrhythmLaneEl.value : null;
     const seedVal = document.getElementById('seed').value;
     const seed = seedVal ? parseInt(seedVal) : null;
     const barsVal = parseInt(document.getElementById('bars-override').value);
@@ -2515,7 +2665,8 @@ window.DrumEngine = {
 
     currentPattern = DrumEngine.generatePattern({
       intensity, syncopation, swingRatio: swing, swingType,
-      polyrhythmic: poly, characteristics: selectedChars,
+      polyrhythmic: poly, polyrhythmType, polyrhythmLane,
+      characteristics: selectedChars,
       lanes: userLanes, seed, bars,
       energyArc: selectedEnergyArc,
     });
@@ -2735,9 +2886,44 @@ window.DrumEngine = {
     return btn;
   }
 
+  // ─── POLYRHYTHM UI ───────────────────────────────────────
+
+  function updatePolyrhythmLanes() {
+    const sel = document.getElementById('polyrhythm-lane');
+    if (!sel) return;
+    const prev = sel.value;
+    sel.innerHTML = '';
+    for (const lane of userLanes) {
+      const opt = document.createElement('option');
+      opt.value = lane.name;
+      opt.textContent = lane.name;
+      sel.appendChild(opt);
+    }
+    // Default to first hihat lane, or first lane
+    const hhLane = userLanes.find(l => l.category === 'hihat');
+    if (prev && userLanes.some(l => l.name === prev)) sel.value = prev;
+    else if (hhLane) sel.value = hhLane.name;
+  }
+
+  window.onPolyrhythmChange = function() {
+    const type = document.getElementById('polyrhythm-type').value;
+    const laneGroup = document.getElementById('polyrhythm-lane-group');
+    const desc = document.getElementById('polyrhythm-desc');
+    const poly = DrumEngine.POLYRHYTHMS[type];
+    if (type === 'none') {
+      laneGroup.style.display = 'none';
+      desc.textContent = '';
+    } else {
+      laneGroup.style.display = '';
+      updatePolyrhythmLanes();
+      desc.textContent = poly ? poly.desc : '';
+    }
+  };
+
   // ─── INIT ─────────────────────────────────────────────────
 
   initLaneConfig();
+  updatePolyrhythmLanes();
   initPresets();
   initChars();
   generate();
