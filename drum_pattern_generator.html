@@ -422,7 +422,8 @@ body {
   min-height: 32px;
 }
 .step-cell.active {
-  border-color: rgba(212,168,67,0.3);
+  border-color: rgba(212, 168, 67, 0.4);
+  cursor: ns-resize;
 }
 .step-cell.active .velocity-fill {
   position: absolute;
@@ -2991,7 +2992,8 @@ window.DrumEngine = {
           }
         }
 
-        cell.onclick = () => { pushUndo(); toggleStep(lane.name, globalIdx); };
+        // Velocity drag: mousedown → track movement → mouseup sets velocity or toggles
+        cell.onmousedown = (e) => { e.preventDefault(); startVelocityDrag(e, lane.name, globalIdx, cell); };
         grid.appendChild(cell);
       }
     }
@@ -3007,6 +3009,64 @@ window.DrumEngine = {
     if (data.velocity && data.velocity[laneName]) data.velocity[laneName][stepIdx] = steps[stepIdx] ? 100 : 0;
     renderGrid(); renderInfo();
   }
+  // ─── VELOCITY DRAG ────────────────────────────────────────
+
+  let dragState = null; // { laneName, stepIdx, startY, startVel, cell, moved, data }
+
+  function startVelocityDrag(e, laneName, stepIdx, cell) {
+    const data = activeTab === 'base' ? currentPattern : currentVariations.find(v => v.type === activeTab);
+    if (!data) return;
+    const steps = data.steps[laneName];
+    if (!steps || !steps[stepIdx]) return; // only drag on active steps
+
+    const vel = (data.velocity[laneName] || [])[stepIdx] || 100;
+    dragState = {
+      laneName, stepIdx, startY: e.clientY, startVel: vel,
+      cell, moved: false, data,
+      startPushed: false,
+    };
+  }
+
+  document.addEventListener('mousemove', (e) => {
+    if (!dragState) return;
+    const dy = dragState.startY - e.clientY; // positive = up = louder
+    if (Math.abs(dy) > 3) dragState.moved = true;
+    if (!dragState.moved) return;
+
+    if (!dragState.startPushed) { pushUndo(); dragState.startPushed = true; }
+
+    const factor = 0.8; // pixels → velocity
+    let newVel = Math.round(dragState.startVel + dy * factor);
+    newVel = Math.max(1, Math.min(127, newVel));
+
+    const data = dragState.data;
+    if (data.velocity[dragState.laneName]) {
+      data.velocity[dragState.laneName][dragState.stepIdx] = newVel;
+    }
+
+    // Update visual feedback
+    const pct = Math.round((newVel / 127) * 100);
+    const fill = dragState.cell.querySelector('.velocity-fill');
+    if (fill) fill.style.height = pct + '%';
+    const txt = dragState.cell.querySelector('.vel-pct');
+    if (txt) txt.textContent = newVel;
+    if (!txt && pct > 20) {
+      const t = document.createElement('div');
+      t.className = 'vel-pct';
+      t.textContent = newVel;
+      dragState.cell.appendChild(t);
+    }
+  });
+
+  document.addEventListener('mouseup', () => {
+    if (!dragState) return;
+    if (!dragState.moved) {
+      // No movement = click → toggle step
+      pushUndo();
+      toggleStep(dragState.laneName, dragState.stepIdx);
+    }
+    dragState = null;
+  });
 
   // ─── INFO PANEL ───────────────────────────────────────────
 
