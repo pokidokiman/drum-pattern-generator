@@ -2002,8 +2002,9 @@ function exportMidi(patternData, variationData, name, bpm) {
   events.sort((a, b) => a.tick - b.tick);
   const track = [];
 
-  // Track name meta-event
-  const trackName = (name || 'pattern').replace(/\.mid$/i, '');
+  // Track name meta-event — Hapax format: dot-separated lane names
+  // e.g. "KICK.SNARE.CLOSED HH.OPEN HH.LOW TOM.HI TOM.HAND CLAP.COWBELL"
+  const trackName = lanes.map(l => l.name.toUpperCase()).join('.');
   track.push(...encodeVarLen(0));
   track.push(0xFF, 0x03, trackName.length);
   for (let i = 0; i < trackName.length; i++) track.push(trackName.charCodeAt(i));
