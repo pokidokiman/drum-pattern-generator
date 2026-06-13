@@ -1,4 +1,4 @@
-# Drum Pattern Generator v7.0.0
+# Drum Pattern Generator v7.1.0
 
 Drum pattern generator for **Squarp Hapax** — standalone HTML, no server, no dependencies.
 
@@ -29,10 +29,10 @@ Drum pattern generator for **Squarp Hapax** — standalone HTML, no server, no d
 - **960 PPQ** — Hapax native resolution
 - **User-specified BPM** — slider 120-155 (not hardcoded)
 - **Per-lane MIDI channels** — CH 1-16 per lane, routes to different Hapax outputs
-- **Track name meta-event** — pattern name embedded in MIDI file
+- **Track name meta-event** — dot-separated uppercase lane names (Hapax popup preview format)
 - **Format 0** — single track, Hapax drum import ready
-- **Microtiming** — velocity and timing per step, respected in export
 - **Per-variation export** — download individual .mid files per variation tab
+- **Consecutive notes 36-43** — matches Hapax drum lane import mapping (lowest note → Lane 1)
 
 ### Audio Playback
 - **Web Audio drum synthesis** — preview before export, no samples needed
@@ -44,9 +44,10 @@ Drum pattern generator for **Squarp Hapax** — standalone HTML, no server, no d
 
 ### Workflow
 - **Undo / Redo** — 50 levels, Ctrl+Z / Ctrl+Y
-- **Save / Load** — localStorage, persists across sessions
+- **Save / Load** — localStorage, auto-loads on refresh, validated input
 - **Dice rolls** — regenerate individual variation tabs with new random patterns
 - **Keyboard shortcuts** — ← → for bar nav, Space for play/stop
+- **Velocity drag editing** — click + drag up/down on active cells to adjust velocity (1-127)
 
 ## Quick Start
 
@@ -73,17 +74,17 @@ Open `drum_pattern_generator.html` in any browser. No server needed.
 ### Grid (top to bottom)
 Perc → Clap → Tom Hi → Tom Low → HH Open → HH Closed → Snare → Kick
 
-### Default MIDI Mapping
-| Lane | Note | Default |
-|------|------|---------|
-| Kick | 36 | C1 |
-| Snare | 38 | D1 |
-| HH Closed | 42 | F#1 |
-| HH Open | 46 | A#1 |
-| Tom Low | 41 | F1 |
-| Tom Hi | 50 | D2 |
-| Clap | 39 | D#1 |
-| Perc | 56 | G#2 |
+### Default MIDI Mapping (36-43 consecutive)
+| Lane | Note | Hapax Lane |
+|------|------|------------|
+| Kick | 36 | Lane 1 |
+| Snare | 37 | Lane 2 |
+| HH Closed | 38 | Lane 3 |
+| HH Open | 39 | Lane 4 |
+| Tom Low | 40 | Lane 5 |
+| Tom Hi | 41 | Lane 6 |
+| Clap | 42 | Lane 7 |
+| Perc | 43 | Lane 8 |
 
 ## Lane Categories
 
@@ -123,10 +124,11 @@ Each variation is a standalone pattern — export individually as .mid files.
 ## Hapax Integration
 
 - 960 PPQ (Hapax native resolution)
-- MIDI notes: configurable per lane (see mapping table above)
+- MIDI notes: 36-43 consecutive (matches Hapax import: lowest note → Lane 1)
 - Per-lane MIDI channel (1-16) — route different lanes to different Hapax outputs
-- Import `.mid` into Hapax drum track → lowest note auto-maps to Lane 1
-- User configures OUTPUT NOTE + CHANNEL per lane on Hapax side
+- Track name: dot-separated uppercase lane names (Hapax popup preview on hover)
+- Import `.mid` into Hapax drum track → set MAP TO = 36 → all 8 lanes auto-assigned
+- Per-lane output routing on Hapax: MIDI A-D, CV 1-4, CV/Gate 1-4 (configured on hardware)
 - BPM in file matches the slider — but Hapax is always tempo master
 
 ## Keyboard Shortcuts
@@ -158,6 +160,16 @@ drum-pattern-generator/
 
 ## Changelog
 
+### v7.1.0
+- **Velocity drag editing** — click + drag up/down on active cells to adjust velocity (1-127), cursor changes to ↕
+- **MIDI notes 36-43** — consecutive mapping matching Hapax import (was GM drum map: 36,38,42,46,41,50,39,56)
+- **MIDI export uses lane.midiNote** — what you see in the NOTE column is what gets exported
+- **Track name format** — dot-separated uppercase lane names (e.g. KICK.SNARE.CLOSED HH.OPEN HH)
+- **Shorter pattern names** — 3-letter abbreviations for Hapax screen readability (e.g. hyp_drv, tri_rtl)
+- **Save/Load improvements** — save works without generated pattern, auto-loads on refresh
+- **Save validation** — localStorage data validated against whitelists (categories, styles, arcs, note 0-127, channel 1-16)
+- **Tom pitch matching** — name-based (hi/mid/low) instead of MIDI note number
+
 ### v7.0.0
 - Fixed drum primitives: sixteenth (all 1s, was duplicate of binary), tresillo (16 steps, was 15), clave 3-2 (16 steps, was 20), accent (beats 1+3, was all zeros)
 - Added per-lane velocity curves: flat, exponential, logarithmic, random walk, crescendo, decrescendo
@@ -172,9 +184,6 @@ drum-pattern-generator/
 - Fixed lane config column layout (explicit flex columns, Kick/Snare/HH left, Perc/Clap/Tom right)
 - Fixed lane config order (Kick at bottom, matching grid)
 - Fixed Perc color (teal #00D4AA) and Snare color (green #44DD44)
-
-### v6.1.0
-- Fixed grid lane order (Perc top, Kick bottom)
 
 ### v6.0.0
 - Complete rewrite: Hapax mockup CSS + layout 1:1
@@ -198,5 +207,3 @@ drum-pattern-generator/
 
 ### v4.0.0
 - BPM slider, per-lane channel, multi-channel MIDI
-- Paged grid, swing toggle, pattern save/load
-- Undo/redo, CC automation
