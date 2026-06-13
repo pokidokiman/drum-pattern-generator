@@ -3110,14 +3110,25 @@ window.DrumEngine = {
     if (!raw) return;
     try {
       const data = JSON.parse(raw);
-      if (data.userLanes && data.userLanes.length) {
-        userLanes = JSON.parse(JSON.stringify(data.userLanes));
+      // Validate lanes: only allow known fields with safe types
+      if (Array.isArray(data.userLanes) && data.userLanes.length <= 16) {
+        const validCategories = ['foundation','backbeat','hihat','accent','metallic','texture','pitched','synth'];
+        userLanes = data.userLanes.map(l => ({
+          name: String(l.name || 'Lane').slice(0, 20),
+          category: validCategories.includes(l.category) ? l.category : 'accent',
+          midiNote: Math.max(0, Math.min(127, parseInt(l.midiNote) || 36)),
+          midiChannel: Math.max(1, Math.min(16, parseInt(l.midiChannel) || 1)),
+          velocity_curve: String(l.velocity_curve || 'flat'),
+        }));
       }
       if (data.selectedChars && data.selectedChars.length) {
-        selectedChars = data.selectedChars;
+        const validChars = ['hypnotic','minimal','groove','polyrhythmic','sparse','dense','syncopated','textural','tribal','hardgroove','humanized','dynamic'];
+        selectedChars = data.selectedChars.filter(c => validChars.includes(c));
+        if (!selectedChars.length) selectedChars = ['hypnotic'];
       }
       if (data.selectedEnergyArc) {
-        selectedEnergyArc = data.selectedEnergyArc;
+        const validArcs = ['flat','build','peak','valley','cliff','wave'];
+        selectedEnergyArc = validArcs.includes(data.selectedEnergyArc) ? data.selectedEnergyArc : 'flat';
       }
     } catch (e) { /* ignore corrupt data */ }
   })();
