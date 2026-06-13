@@ -2474,9 +2474,8 @@ window.DrumEngine = {
   // ─── SAVE / LOAD ─────────────────────────────────────────
 
   function savePattern() {
-    if (!currentPattern) return;
     const data = {
-      pattern: currentPattern, variations: currentVariations, userLanes, selectedChars, selectedEnergyArc,
+      pattern: currentPattern || null, variations: currentVariations || [], userLanes, selectedChars, selectedEnergyArc,
       controls: {
         intensity: document.getElementById('intensity').value,
         syncopation: document.getElementById('syncopation').value,
@@ -2487,7 +2486,7 @@ window.DrumEngine = {
       }
     };
     localStorage.setItem('dpg_saved_pattern', JSON.stringify(data));
-    alert('Pattern saved!');
+    alert('Lanes & settings saved!');
   }
 
   function loadPattern() {
@@ -3104,6 +3103,24 @@ window.DrumEngine = {
   };
 
   // ─── INIT ─────────────────────────────────────────────────
+  // ─── INIT ─────────────────────────────────────────────────
+  // Auto-load saved lanes & settings on page refresh
+  (function autoLoad() {
+    const raw = localStorage.getItem('dpg_saved_pattern');
+    if (!raw) return;
+    try {
+      const data = JSON.parse(raw);
+      if (data.userLanes && data.userLanes.length) {
+        userLanes = JSON.parse(JSON.stringify(data.userLanes));
+      }
+      if (data.selectedChars && data.selectedChars.length) {
+        selectedChars = data.selectedChars;
+      }
+      if (data.selectedEnergyArc) {
+        selectedEnergyArc = data.selectedEnergyArc;
+      }
+    } catch (e) { /* ignore corrupt data */ }
+  })();
 
   initLaneConfig();
   updatePolyrhythmLanes();
