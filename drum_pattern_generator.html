@@ -1791,14 +1791,15 @@ function generatePattern(params) {
 }
 
 function generateName(intensity, syncopation, characteristics, rng) {
+  // Short names for Hapax screen (max ~16 chars visible)
   let prefix, suffix;
-  if (characteristics.includes("hypnotic")) { prefix = "Hypnotic"; suffix = intensity < 0.4 ? "Pulse" : intensity < 0.7 ? "Drive" : "Rush"; }
-  else if (characteristics.includes("minimal")) { prefix = "Minimal"; suffix = "Loop"; }
-  else if (characteristics.includes("groove")) { prefix = "Groove"; suffix = syncopation > 0.5 ? "Swing" : "Bounce"; }
-  else if (characteristics.includes("dense")) { prefix = "Dense"; suffix = "Energy"; }
-  else if (characteristics.includes("tribal")) { prefix = "Tribal"; suffix = "Ritual"; }
-  else if (characteristics.includes("hardgroove")) { prefix = "Hardgroove"; suffix = "Drive"; }
-  else { prefix = intensity < 0.3 ? "Sparse" : intensity < 0.6 ? "Driving" : "Dense"; suffix = syncopation < 0.3 ? "Pulse" : syncopation < 0.6 ? "Groove" : "Tension"; }
+  if (characteristics.includes("hypnotic")) { prefix = "Hyp"; suffix = intensity < 0.4 ? "Pls" : intensity < 0.7 ? "Drv" : "Rsh"; }
+  else if (characteristics.includes("minimal")) { prefix = "Min"; suffix = "Lp"; }
+  else if (characteristics.includes("groove")) { prefix = "Grv"; suffix = syncopation > 0.5 ? "Swg" : "Bnc"; }
+  else if (characteristics.includes("dense")) { prefix = "Den"; suffix = "Eng"; }
+  else if (characteristics.includes("tribal")) { prefix = "Tri"; suffix = "Rtl"; }
+  else if (characteristics.includes("hardgroove")) { prefix = "Hgrv"; suffix = "Drv"; }
+  else { prefix = intensity < 0.3 ? "Spr" : intensity < 0.6 ? "Drv" : "Den"; suffix = syncopation < 0.3 ? "Pls" : syncopation < 0.6 ? "Grv" : "Tns"; }
   return `${prefix} ${suffix}`;
 }
 
