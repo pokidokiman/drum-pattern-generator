@@ -843,7 +843,7 @@ body {
     </div>
     <div style="display:flex;align-items:center;gap:8px;">
       <span class="hapax-badge">Hapax</span>
-      <span class="version-badge">v7.3.1</span>
+      <span class="version-badge">v7.3.2</span>
     </div>
   </div>
 
@@ -2944,12 +2944,11 @@ window.DrumEngine = {
       return result;
     }
 
-    // Balanced column split: sort by grid order, split in half
-    // Foundation instruments (Kick, Snare, HH, etc.) naturally end up in LEFT
-    const sorted = sortLanesForGrid(userLanes);
+    // Sort by MIDI note so notes run 36→43 bottom-to-top in lane config
+    const sorted = [...userLanes].sort((a, b) => (a.midiNote || 36) - (b.midiNote || 36));
     const mid = Math.ceil(sorted.length / 2);
-    const leftLanes = sortByFixedOrder(sorted.slice(0, mid), LEFT_ORDER);
-    const rightLanes = sortByFixedOrder(sorted.slice(mid), RIGHT_ORDER);
+    const leftLanes = sorted.slice(0, mid);  // notes 36-39
+    const rightLanes = sorted.slice(mid);     // notes 40-43
 
     // Display bottom-to-top: last in array = appended last = bottom of column
     const leftDisplay = leftLanes.slice().reverse(); // HHo(top)→...→kick(bottom)
