@@ -843,7 +843,7 @@ body {
     </div>
     <div style="display:flex;align-items:center;gap:8px;">
       <span class="hapax-badge">Hapax</span>
-      <span class="version-badge">v7.3.0</span>
+      <span class="version-badge">v7.3.1</span>
     </div>
   </div>
 
@@ -2927,10 +2927,7 @@ window.DrumEngine = {
     const rightCol = document.createElement('div');
     rightCol.className = 'lane-config-col';
 
-    // Split lanes by FIXED name — NOT by category, NOT by array position
-    // LEFT: Kick, Snare, HH Closed, HH Open, Ride (always)
-    // RIGHT: everything else (Perc, Clap, Tom, Conga, Bell, Stab, Shaker, etc.)
-    const FOUNDATION_NAMES = new Set(['Kick', 'Snare', 'HH Closed', 'HH Open', 'Ride']);
+    // Split lanes: balanced 4+4, foundation instruments prioritized for LEFT
     // Vertical order within LEFT column (bottom→top)
     const LEFT_ORDER = ['Kick', 'Snare', 'HH Closed', 'Ride', 'HH Open'];
     // Vertical order within RIGHT column (bottom→top)
@@ -2943,17 +2940,16 @@ window.DrumEngine = {
         const idx = lanes.findIndex((l, i) => l.name === name && !used.has(i));
         if (idx !== -1) { result.push(lanes[idx]); used.add(idx); }
       }
-      // Append any remaining lanes not in orderArr
       lanes.forEach((l, i) => { if (!used.has(i)) result.push(l); });
-      return result; // bottom-to-top order
+      return result;
     }
 
-    const leftLanes = sortByFixedOrder(
-      userLanes.filter(l => FOUNDATION_NAMES.has(l.name)), LEFT_ORDER
-    );
-    const rightLanes = sortByFixedOrder(
-      userLanes.filter(l => !FOUNDATION_NAMES.has(l.name)), RIGHT_ORDER
-    );
+    // Balanced column split: sort by grid order, split in half
+    // Foundation instruments (Kick, Snare, HH, etc.) naturally end up in LEFT
+    const sorted = sortLanesForGrid(userLanes);
+    const mid = Math.ceil(sorted.length / 2);
+    const leftLanes = sortByFixedOrder(sorted.slice(0, mid), LEFT_ORDER);
+    const rightLanes = sortByFixedOrder(sorted.slice(mid), RIGHT_ORDER);
 
     // Display bottom-to-top: last in array = appended last = bottom of column
     const leftDisplay = leftLanes.slice().reverse(); // HHo(top)→...→kick(bottom)
@@ -3062,43 +3058,43 @@ window.DrumEngine = {
       { name: 'Default', lanes: sortLanesForGrid(DrumEngine.DEFAULT_LANES), recommendedKit: 'default' },
       { name: 'Hypnotic Raw', lanes: sortLanesForGrid([
         { name: "Kick", category: "foundation", midiNote: 36, midiChannel: 1 },
-        { name: "Snare", category: "backbeat", midiNote: 38, midiChannel: 1 },
-        { name: "HH Closed", category: "hihat", midiNote: 42, midiChannel: 1 },
-        { name: "HH Open", category: "hihat", midiNote: 46, midiChannel: 1 },
-        { name: "Ride", category: "hihat", midiNote: 51, midiChannel: 1 },
-        { name: "Clap", category: "backbeat", midiNote: 39, midiChannel: 1 },
-        { name: "Perc", category: "accent", midiNote: 56, midiChannel: 1 },
-        { name: "Stab", category: "synth", midiNote: 80, midiChannel: 1 },
+        { name: "Snare", category: "backbeat", midiNote: 37, midiChannel: 1 },
+        { name: "HH Closed", category: "hihat", midiNote: 38, midiChannel: 1 },
+        { name: "HH Open", category: "hihat", midiNote: 39, midiChannel: 1 },
+        { name: "Ride", category: "hihat", midiNote: 40, midiChannel: 1 },
+        { name: "Clap", category: "backbeat", midiNote: 41, midiChannel: 1 },
+        { name: "Perc", category: "accent", midiNote: 42, midiChannel: 1 },
+        { name: "Stab", category: "synth", midiNote: 43, midiChannel: 1 },
       ]), recommendedKit: 'minimal' },
       { name: 'Hardgroove', lanes: sortLanesForGrid([
         { name: "Kick", category: "foundation", midiNote: 36, midiChannel: 1 },
-        { name: "Snare", category: "backbeat", midiNote: 38, midiChannel: 1 },
-        { name: "HH Closed", category: "hihat", midiNote: 42, midiChannel: 1 },
-        { name: "Ride", category: "hihat", midiNote: 51, midiChannel: 1 },
-        { name: "Conga Hi", category: "pitched", midiNote: 63, midiChannel: 1 },
-        { name: "Clap", category: "backbeat", midiNote: 39, midiChannel: 1 },
-        { name: "Perc", category: "accent", midiNote: 56, midiChannel: 1 },
-        { name: "Shaker", category: "texture", midiNote: 70, midiChannel: 1 },
+        { name: "Snare", category: "backbeat", midiNote: 37, midiChannel: 1 },
+        { name: "HH Closed", category: "hihat", midiNote: 38, midiChannel: 1 },
+        { name: "Ride", category: "hihat", midiNote: 39, midiChannel: 1 },
+        { name: "Conga Hi", category: "pitched", midiNote: 40, midiChannel: 1 },
+        { name: "Clap", category: "backbeat", midiNote: 41, midiChannel: 1 },
+        { name: "Perc", category: "accent", midiNote: 42, midiChannel: 1 },
+        { name: "Shaker", category: "texture", midiNote: 43, midiChannel: 1 },
       ]), recommendedKit: '909' },
       { name: 'Tribal', lanes: sortLanesForGrid([
         { name: "Kick", category: "foundation", midiNote: 36, midiChannel: 1 },
-        { name: "HH Closed", category: "hihat", midiNote: 42, midiChannel: 1 },
-        { name: "Clap", category: "backbeat", midiNote: 39, midiChannel: 1 },
-        { name: "Tom Low", category: "pitched", midiNote: 41, midiChannel: 1 },
-        { name: "Conga Low", category: "pitched", midiNote: 64, midiChannel: 1 },
-        { name: "Conga Hi", category: "pitched", midiNote: 63, midiChannel: 1 },
-        { name: "Shaker", category: "texture", midiNote: 70, midiChannel: 1 },
-        { name: "Bell", category: "accent", midiNote: 56, midiChannel: 1 },
+        { name: "HH Closed", category: "hihat", midiNote: 37, midiChannel: 1 },
+        { name: "Clap", category: "backbeat", midiNote: 38, midiChannel: 1 },
+        { name: "Tom Low", category: "pitched", midiNote: 39, midiChannel: 1 },
+        { name: "Conga Low", category: "pitched", midiNote: 40, midiChannel: 1 },
+        { name: "Conga Hi", category: "pitched", midiNote: 41, midiChannel: 1 },
+        { name: "Shaker", category: "texture", midiNote: 42, midiChannel: 1 },
+        { name: "Bell", category: "accent", midiNote: 43, midiChannel: 1 },
       ]), recommendedKit: '808' },
       { name: 'Industrial', lanes: sortLanesForGrid([
         { name: "Kick", category: "foundation", midiNote: 36, midiChannel: 1 },
-        { name: "Snare", category: "backbeat", midiNote: 38, midiChannel: 1 },
-        { name: "HH Closed", category: "hihat", midiNote: 42, midiChannel: 1 },
-        { name: "HH Open", category: "hihat", midiNote: 46, midiChannel: 1 },
-        { name: "Rimshot", category: "backbeat", midiNote: 37, midiChannel: 1 },
-        { name: "Clap", category: "backbeat", midiNote: 39, midiChannel: 1 },
-        { name: "Metal Hit", category: "metallic", midiNote: 52, midiChannel: 1 },
-        { name: "Stab", category: "synth", midiNote: 80, midiChannel: 1 },
+        { name: "Snare", category: "backbeat", midiNote: 37, midiChannel: 1 },
+        { name: "HH Closed", category: "hihat", midiNote: 38, midiChannel: 1 },
+        { name: "HH Open", category: "hihat", midiNote: 39, midiChannel: 1 },
+        { name: "Rimshot", category: "backbeat", midiNote: 40, midiChannel: 1 },
+        { name: "Clap", category: "backbeat", midiNote: 41, midiChannel: 1 },
+        { name: "Metal Hit", category: "metallic", midiNote: 42, midiChannel: 1 },
+        { name: "Stab", category: "synth", midiNote: 43, midiChannel: 1 },
       ]), recommendedKit: '909' },
     ];
     for (const p of presets) {
