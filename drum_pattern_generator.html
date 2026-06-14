@@ -32,6 +32,8 @@
   --blue: #5C8AC4;
   --inactive: #1E1E1E;
   --beat-marker: #222;
+  --bg-card: #2C2C2C;
+  --text-primary: #F0F0F0;
 }
 
 body {
@@ -2970,8 +2972,12 @@ window.DrumEngine = {
           accent: 'c-perc', metallic: 'c-chh', texture: 'c-perc',
           pitched: 'c-tom', synth: 'c-clap'
         };
+        // Name-based override: Clap/Rimshot = c-clap (pink), not c-snare (green)
+        const laneNameLC = lane.name.toLowerCase();
+        let laneDotClass = catColors[lane.category] || 'c-perc';
+        if (laneNameLC.includes('clap') || laneNameLC.includes('rimshot')) laneDotClass = 'c-clap';
         const dot = document.createElement('div');
-        dot.className = 'lane-color ' + (catColors[lane.category] || 'c-perc');
+        dot.className = 'lane-color ' + laneDotClass;
         row.appendChild(dot);
 
         // Name input
@@ -3306,16 +3312,17 @@ window.DrumEngine = {
       const lane = lanes[revIdx];
       const laneColorIdx = (lanes.length - 1 - revIdx); // top=0, bottom=7
       const colorClass = 'lane-color-' + (laneColorIdx + 1);
-      // Dot color: use NAME-based mapping (consistent with lane config)
-      const nameLC = lane.name.toLowerCase();
+      // Dot color: use NAME-based mapping (same visual as lane config)
+      const n = lane.name.toLowerCase();
       let dotClass = 'c-perc'; // default
-      if (nameLC.includes('kick')) dotClass = 'c-kick';
-      else if (nameLC.includes('snare') || nameLC.includes('rimshot')) dotClass = 'c-snare';
-      else if (nameLC.includes('closed')) dotClass = 'c-chh';
-      else if (nameLC.includes('open') || nameLC.includes('crash')) dotClass = 'c-ohh';
-      else if (nameLC.includes('ride')) dotClass = 'c-chh';
-      else if (nameLC.includes('tom') || nameLC.includes('conga') || nameLC.includes('bongo')) dotClass = 'c-tom';
-      else if (nameLC.includes('clap')) dotClass = 'c-clap';
+      if (n.includes('kick')) dotClass = 'c-kick';
+      else if (n === 'snare') dotClass = 'c-snare';
+      else if (n.includes('closed')) dotClass = 'c-chh';
+      else if (n.includes('open') || n.includes('crash')) dotClass = 'c-ohh';
+      else if (n.includes('ride')) dotClass = 'c-chh';
+      else if (n.includes('tom') || n.includes('conga') || n.includes('bongo')) dotClass = 'c-tom';
+      else if (n.includes('clap') || n.includes('rimshot')) dotClass = 'c-clap';
+      else if (n.includes('stab') || n.includes('zap') || n.includes('glitch') || n.includes('laser')) dotClass = 'c-clap';
       else dotClass = 'c-perc';
 
       // Lane label
