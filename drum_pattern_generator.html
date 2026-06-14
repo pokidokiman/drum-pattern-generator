@@ -1729,31 +1729,16 @@ function generatePattern(params) {
     // ── Humanized: probability, velocity random walk, microtiming ──
     const isHumanized = characteristics.includes("humanized");
     if (isHumanized) {
-      // Probability: drop hits and add ghost notes
+      // Probability: drop hits (humanized feel, not machine-gun)
       // Foundation (kick) is NEVER dropped — it's the anchor
       for (let i = 0; i < pattern.length; i++) {
         if (!pattern[i]) continue;
-        // Foundation stays untouched
         if (lane.category === "foundation") continue;
         const roll = rng.next();
         if (lane.category === "hihat") {
-          // Hi-hat: more drops (humanized feel, not machine-gun)
-          if (roll < 0.15) pattern[i] = 0;        // 15% skip
-          else if (roll < 0.25) pattern[i] = 2;    // 10% ghost
+          if (roll < 0.15) pattern[i] = 0;  // 15% skip
         } else {
-          // Other lanes: moderate drops
-          if (roll < 0.10) pattern[i] = 0;          // 10% skip
-          else if (roll < 0.18) pattern[i] = 2;     // 8% ghost
-        }
-      }
-      // Add ghost notes near existing hits (human anticipation/lag)
-      for (let i = 0; i < pattern.length; i++) {
-        if (pattern[i] !== 0) continue;
-        if (lane.category === "foundation") continue; // no ghost kicks
-        const prev = i > 0 ? pattern[i-1] : 0;
-        const next = i < pattern.length - 1 ? pattern[i+1] : 0;
-        if ((prev === 1 || prev === 2 || next === 1 || next === 2) && rng.next() < 0.12) {
-          pattern[i] = 2; // ghost note
+          if (roll < 0.10) pattern[i] = 0;  // 10% skip
         }
       }
     }
@@ -1769,18 +1754,13 @@ function generatePattern(params) {
       const barOfStep = Math.floor(i / 16);
       let arcVelMul = ENERGY_ARCS[energyArc] ? ENERGY_ARCS[energyArc].fn(barOfStep, bars, rng).velocityMultiplier : 1.0;
       let v;
-      if (isHumanized && pattern[i] === 2) {
-        // Ghost note: very soft
-        v = rng.randInt(20, 45);
-      } else if (isHumanized && lane.category === "foundation") {
+      if (isHumanized && lane.category === "foundation") {
         // Kick: always 100, no variation — it's the anchor
         v = 100;
       } else if (isHumanized) {
         // Random walk: delta from previous velocity, not blend toward base
-        // This creates actual variation that wanders up AND down
         const delta = rng.randInt(-12, 12);
         v = prevVel + delta;
-        // Clamp to reasonable range per category
         if (lane.category === "hihat") v = Math.max(50, Math.min(110, v));
         else if (lane.category === "backbeat") v = Math.max(60, Math.min(120, v));
         else v = Math.max(45, Math.min(127, v));
@@ -1790,8 +1770,6 @@ function generatePattern(params) {
         v = curveValues[pos];
       }
       vel[i] = Math.max(1, Math.min(127, v));
-      // Convert ghost marker back to active
-      if (pattern[i] === 2) pattern[i] = 1;
     }
 
     // Ghost notes (textural characteristic — NOT for foundation)
