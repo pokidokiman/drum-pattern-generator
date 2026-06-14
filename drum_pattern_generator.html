@@ -3484,6 +3484,11 @@ window.DrumEngine = {
         const validArcs = ['flat','build','peak','valley','cliff','wave'];
         selectedEnergyArc = validArcs.includes(data.selectedEnergyArc) ? data.selectedEnergyArc : 'flat';
       }
+      if (data.selectedKit && PREVIEW_KITS[data.selectedKit]) {
+        selectedKit = data.selectedKit;
+        const kitEl = document.getElementById('kit-selector');
+        if (kitEl) kitEl.value = selectedKit;
+      }
     } catch (e) { /* ignore corrupt data */ }
   })();
 
