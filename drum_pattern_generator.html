@@ -2788,6 +2788,10 @@ window.DrumEngine = {
       userLanes = data.userLanes || JSON.parse(JSON.stringify(DrumEngine.DEFAULT_LANES));
       selectedChars = data.selectedChars || ['hypnotic'];
       selectedEnergyArc = data.selectedEnergyArc || 'flat';
+      if (data.selectedKit && PREVIEW_KITS[data.selectedKit]) {
+        selectedKit = data.selectedKit;
+        document.getElementById('kit-selector').value = selectedKit;
+      }
       if (data.controls) {
         document.getElementById('intensity').value = data.controls.intensity || 40;
         document.getElementById('syncopation').value = data.controls.syncopation || 20;
