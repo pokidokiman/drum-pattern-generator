@@ -843,7 +843,7 @@ body {
     </div>
     <div style="display:flex;align-items:center;gap:8px;">
       <span class="hapax-badge">Hapax</span>
-      <span class="version-badge">v7.2.0</span>
+      <span class="version-badge">v7.3.0</span>
     </div>
   </div>
 
@@ -1043,6 +1043,22 @@ const CATEGORIES = {
   pitched:     { label: "Pitched",     desc: "Tonal percussion (tom/conga)",   activation: "probabilistic" },
   synth:       { label: "Synth",       desc: "Synthetic accents (stab/zap)",   activation: "accent" },
 };
+
+// ─── GRID VISUAL ORDER (bottom → top) ──────────────────────────
+// Kick ALWAYS at bottom, regardless of array position.
+// Used by sortLanesForGrid() to ensure consistent grid rendering.
+const GRID_ORDER = ['Kick','Snare','HH Closed','HH Open','Ride','Tom Low','Tom Mid','Tom Hi','Conga Low','Conga Hi','Clap','Rimshot','Shaker','Perc','Bell','Stab','Metal Hit','Crash','Tambourine','Bongo Hi','Bongo Low','Zap','Glitch','Laser','Ride Bell','China','Splash','Tribal Hit','Clave','Sub Kick'];
+
+function sortLanesForGrid(lanes) {
+  const orderLower = GRID_ORDER.map(n => n.toLowerCase());
+  return [...lanes].sort((a, b) => {
+    const ai = orderLower.indexOf(a.name.toLowerCase());
+    const bi = orderLower.indexOf(b.name.toLowerCase());
+    const aIdx = ai === -1 ? 999 : ai;
+    const bIdx = bi === -1 ? 999 : bi;
+    return aIdx - bIdx; // ascending = Kick first = bottom of grid
+  });
+}
 
 // ─── SOUND PRESETS ────────────────────────────────────────────
 
@@ -2423,6 +2439,49 @@ function synthRide(ctx, time, vel) {
   noise.stop(time + dur);
 }
 
+function synthShaker(ctx, time, vel) {
+  // Shaker: short noise burst with high-pass filter, lighter than hihat
+  const dur = 0.06;
+  const noiseLen = ctx.sampleRate * dur;
+  const noiseBuf = ctx.createBuffer(1, noiseLen, ctx.sampleRate);
+  const data = noiseBuf.getChannelData(0);
+  for (let i = 0; i < noiseLen; i++) data[i] = Math.random() * 2 - 1;
+  const noise = ctx.createBufferSource();
+  noise.buffer = noiseBuf;
+  const gain = ctx.createGain();
+  gain.gain.setValueAtTime(vel * 0.25, time);
+  gain.gain.exponentialRampToValueAtTime(0.001, time + dur);
+  const hp = ctx.createBiquadFilter();
+  hp.type = 'highpass';
+  hp.frequency.value = 8000;
+  noise.connect(hp);
+  hp.connect(gain);
+  gain.connect(ctx.destination);
+  noise.start(time);
+  noise.stop(time + dur);
+}
+
+function synthMetalHit(ctx, time, vel) {
+  // Metal Hit: metallic clang with fast decay
+  const dur = 0.15;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  gain.gain.setValueAtTime(vel * 0.35, time);
+  gain.gain.exponentialRampToValueAtTime(0.001, time + dur);
+  osc.type = 'square';
+  osc.frequency.setValueAtTime(800, time);
+  osc.frequency.exponentialRampToValueAtTime(200, time + dur * 0.5);
+  const bp = ctx.createBiquadFilter();
+  bp.type = 'bandpass';
+  bp.frequency.value = 2000;
+  bp.Q.value = 5;
+  osc.connect(bp);
+  bp.connect(gain);
+  gain.connect(ctx.destination);
+  osc.start(time);
+  osc.stop(time + dur);
+}
+
 function synthStab(ctx, time, vel) {
   const k = getKit().stab;
   const gain = ctx.createGain();
@@ -2451,9 +2510,11 @@ function getSynthForNote(note, name) {
   if (n.includes('tom')) return (c, t, v) => synthTom(c, t, v, n.includes('hi') ? 200 : n.includes('mid') ? 160 : 100);
   if (n.includes('conga') || n.includes('bongo')) return (c, t, v) => synthTom(c, t, v, 250);
   if (n.includes('stab')) return synthStab;
+  if (n.includes('shaker') || n.includes('tambourine')) return synthShaker;
+  if (n.includes('metal') || n.includes('china') || n.includes('splash')) return synthMetalHit;
   if (n.includes('perc') || n.includes('cowbell') || n.includes('bell')) return synthPerc;
-  if (n.includes('shaker') || n.includes('tambourine')) return (c, t, v) => synthHiHat(c, t, v, false);
   if (n.includes('ride bell')) return synthPerc;
+  if (n.includes('zap') || n.includes('glitch') || n.includes('laser')) return synthStab;
   // Default: perc-like
   return synthPerc;
 }
@@ -2998,47 +3059,47 @@ window.DrumEngine = {
     const row = document.getElementById('preset-row');
     row.innerHTML = '';
     const presets = [
-      { name: 'Default', lanes: DrumEngine.DEFAULT_LANES },
-      { name: 'Hypnotic Raw', lanes: [
-        { name: "Stab", category: "synth", midiNote: 36, midiChannel: 1 },
-        { name: "Clap", category: "backbeat", midiNote: 37, midiChannel: 1 },
-        { name: "Perc", category: "accent", midiNote: 38, midiChannel: 1 },
-        { name: "Ride", category: "hihat", midiNote: 39, midiChannel: 1 },
-        { name: "HH Open", category: "hihat", midiNote: 40, midiChannel: 1 },
-        { name: "HH Closed", category: "hihat", midiNote: 41, midiChannel: 1 },
-        { name: "Snare", category: "backbeat", midiNote: 42, midiChannel: 1 },
-        { name: "Kick", category: "foundation", midiNote: 43, midiChannel: 1 },
-      ]},
-      { name: 'Hardgroove', lanes: [
-        { name: "Clap", category: "backbeat", midiNote: 36, midiChannel: 1 },
-        { name: "Perc", category: "accent", midiNote: 37, midiChannel: 1 },
-        { name: "Shaker", category: "accent", midiNote: 38, midiChannel: 1 },
-        { name: "Conga Hi", category: "pitched", midiNote: 39, midiChannel: 1 },
-        { name: "Ride", category: "hihat", midiNote: 40, midiChannel: 1 },
-        { name: "HH Closed", category: "hihat", midiNote: 41, midiChannel: 1 },
-        { name: "Snare", category: "backbeat", midiNote: 42, midiChannel: 1 },
-        { name: "Kick", category: "foundation", midiNote: 43, midiChannel: 1 },
-      ]},
-      { name: 'Tribal', lanes: [
-        { name: "Bell", category: "accent", midiNote: 36, midiChannel: 1 },
-        { name: "Conga Low", category: "pitched", midiNote: 37, midiChannel: 1 },
-        { name: "Conga Hi", category: "pitched", midiNote: 38, midiChannel: 1 },
-        { name: "Tom Low", category: "pitched", midiNote: 39, midiChannel: 1 },
-        { name: "Shaker", category: "texture", midiNote: 40, midiChannel: 1 },
-        { name: "HH Closed", category: "hihat", midiNote: 41, midiChannel: 1 },
-        { name: "Clap", category: "backbeat", midiNote: 42, midiChannel: 1 },
-        { name: "Kick", category: "foundation", midiNote: 43, midiChannel: 1 },
-      ]},
-      { name: 'Industrial', lanes: [
-        { name: "Clap", category: "backbeat", midiNote: 36, midiChannel: 1 },
-        { name: "Stab", category: "synth", midiNote: 37, midiChannel: 1 },
-        { name: "Metal Hit", category: "metallic", midiNote: 38, midiChannel: 1 },
-        { name: "Rimshot", category: "backbeat", midiNote: 39, midiChannel: 1 },
-        { name: "HH Open", category: "hihat", midiNote: 40, midiChannel: 1 },
-        { name: "HH Closed", category: "hihat", midiNote: 41, midiChannel: 1 },
-        { name: "Snare", category: "backbeat", midiNote: 42, midiChannel: 1 },
-        { name: "Kick", category: "foundation", midiNote: 43, midiChannel: 1 },
-      ]},
+      { name: 'Default', lanes: sortLanesForGrid(DrumEngine.DEFAULT_LANES), recommendedKit: 'default' },
+      { name: 'Hypnotic Raw', lanes: sortLanesForGrid([
+        { name: "Kick", category: "foundation", midiNote: 36, midiChannel: 1 },
+        { name: "Snare", category: "backbeat", midiNote: 38, midiChannel: 1 },
+        { name: "HH Closed", category: "hihat", midiNote: 42, midiChannel: 1 },
+        { name: "HH Open", category: "hihat", midiNote: 46, midiChannel: 1 },
+        { name: "Ride", category: "hihat", midiNote: 51, midiChannel: 1 },
+        { name: "Clap", category: "backbeat", midiNote: 39, midiChannel: 1 },
+        { name: "Perc", category: "accent", midiNote: 56, midiChannel: 1 },
+        { name: "Stab", category: "synth", midiNote: 80, midiChannel: 1 },
+      ]), recommendedKit: 'minimal' },
+      { name: 'Hardgroove', lanes: sortLanesForGrid([
+        { name: "Kick", category: "foundation", midiNote: 36, midiChannel: 1 },
+        { name: "Snare", category: "backbeat", midiNote: 38, midiChannel: 1 },
+        { name: "HH Closed", category: "hihat", midiNote: 42, midiChannel: 1 },
+        { name: "Ride", category: "hihat", midiNote: 51, midiChannel: 1 },
+        { name: "Conga Hi", category: "pitched", midiNote: 63, midiChannel: 1 },
+        { name: "Clap", category: "backbeat", midiNote: 39, midiChannel: 1 },
+        { name: "Perc", category: "accent", midiNote: 56, midiChannel: 1 },
+        { name: "Shaker", category: "texture", midiNote: 70, midiChannel: 1 },
+      ]), recommendedKit: '909' },
+      { name: 'Tribal', lanes: sortLanesForGrid([
+        { name: "Kick", category: "foundation", midiNote: 36, midiChannel: 1 },
+        { name: "HH Closed", category: "hihat", midiNote: 42, midiChannel: 1 },
+        { name: "Clap", category: "backbeat", midiNote: 39, midiChannel: 1 },
+        { name: "Tom Low", category: "pitched", midiNote: 41, midiChannel: 1 },
+        { name: "Conga Low", category: "pitched", midiNote: 64, midiChannel: 1 },
+        { name: "Conga Hi", category: "pitched", midiNote: 63, midiChannel: 1 },
+        { name: "Shaker", category: "texture", midiNote: 70, midiChannel: 1 },
+        { name: "Bell", category: "accent", midiNote: 56, midiChannel: 1 },
+      ]), recommendedKit: '808' },
+      { name: 'Industrial', lanes: sortLanesForGrid([
+        { name: "Kick", category: "foundation", midiNote: 36, midiChannel: 1 },
+        { name: "Snare", category: "backbeat", midiNote: 38, midiChannel: 1 },
+        { name: "HH Closed", category: "hihat", midiNote: 42, midiChannel: 1 },
+        { name: "HH Open", category: "hihat", midiNote: 46, midiChannel: 1 },
+        { name: "Rimshot", category: "backbeat", midiNote: 37, midiChannel: 1 },
+        { name: "Clap", category: "backbeat", midiNote: 39, midiChannel: 1 },
+        { name: "Metal Hit", category: "metallic", midiNote: 52, midiChannel: 1 },
+        { name: "Stab", category: "synth", midiNote: 80, midiChannel: 1 },
+      ]), recommendedKit: '909' },
     ];
     for (const p of presets) {
       const btn = document.createElement('button');
@@ -3047,6 +3108,12 @@ window.DrumEngine = {
       btn.onclick = () => {
         userLanes = JSON.parse(JSON.stringify(p.lanes));
         initLaneConfig();
+        // Apply recommended kit
+        if (p.recommendedKit) {
+          selectedKit = p.recommendedKit;
+          const kitSel = document.getElementById('kit-selector');
+          if (kitSel) kitSel.value = selectedKit;
+        }
         document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
       };
@@ -3238,13 +3305,23 @@ window.DrumEngine = {
       stepNums.appendChild(num);
     }
 
-    // Grid rows — REVERSE order so Kick (index 0) is at BOTTOM, Perc (index 7) at TOP
-    const lanes = currentPattern.lanes;
+    // Grid rows — sorted by GRID_ORDER so Kick is always at BOTTOM
+    const lanes = sortLanesForGrid(currentPattern.lanes);
     for (let revIdx = lanes.length - 1; revIdx >= 0; revIdx--) {
       const lane = lanes[revIdx];
-      const laneColorIdx = (lanes.length - 1 - revIdx); // top=0(green), bottom=7(red)
+      const laneColorIdx = (lanes.length - 1 - revIdx); // top=0, bottom=7
       const colorClass = 'lane-color-' + (laneColorIdx + 1);
-      const dotClass = dotClasses[laneColorIdx] || 'c-perc';
+      // Dot color: use NAME-based mapping (consistent with lane config)
+      const nameLC = lane.name.toLowerCase();
+      let dotClass = 'c-perc'; // default
+      if (nameLC.includes('kick')) dotClass = 'c-kick';
+      else if (nameLC.includes('snare') || nameLC.includes('rimshot')) dotClass = 'c-snare';
+      else if (nameLC.includes('closed')) dotClass = 'c-chh';
+      else if (nameLC.includes('open') || nameLC.includes('crash')) dotClass = 'c-ohh';
+      else if (nameLC.includes('ride')) dotClass = 'c-chh';
+      else if (nameLC.includes('tom') || nameLC.includes('conga') || nameLC.includes('bongo')) dotClass = 'c-tom';
+      else if (nameLC.includes('clap')) dotClass = 'c-clap';
+      else dotClass = 'c-perc';
 
       // Lane label
       const label = document.createElement('div');
@@ -3493,6 +3570,7 @@ window.DrumEngine = {
   })();
 
   initLaneConfig();
+  userLanes = sortLanesForGrid(userLanes); // Ensure consistent grid order after load
   updatePolyrhythmLanes();
   initPresets();
   initChars();

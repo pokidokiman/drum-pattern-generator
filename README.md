@@ -1,4 +1,4 @@
-# Drum Pattern Generator v7.2.0
+# Drum Pattern Generator v7.3.0
 
 Drum pattern generator for **Squarp Hapax** — standalone HTML, no server, no dependencies.
 
@@ -160,18 +160,15 @@ drum-pattern-generator/
 
 ## Changelog
 
-### v7.2.0
+### v7.3.0
+- **Grid order fixed** — Kick always at bottom, regardless of preset lane order (GRID_ORDER constant + sortLanesForGrid)
+- **Preset MIDI notes fixed** — all presets use correct GM drum map values (Kick=36, Snare=38, etc.) instead of sequential 36-43
+- **Recommended kits per preset** — Hypnotic Raw→Minimal, Hardgroove→909, Tribal→808, Industrial→909 (auto-switches on preset select)
+- **Shaker synth** — dedicated high-pass noise burst (was using hihat synth)
+- **Metal Hit synth** — metallic clang with bandpass filter
+- **Grid dot colors** — name-based mapping (consistent with lane config, no more color mismatch on presets)
+- **Tribal preset balanced** — 4 foundation + 4 accent lanes (was 2+6)
 - **Trig toggle** — click empty cell to add trig (velocity 100), click filled cell to remove it
-- **Variation history** — last 10 generated patterns stored, ← → navigation, export any from history
-- **Preview kits** — dropdown with Default, 909, 808, Minimal kits; each has distinct synth character
-- **Velocity drag editing** — click + drag up/down on active cells to adjust velocity (1-127), cursor changes to ↕
-- **MIDI notes 36-43** — consecutive mapping matching Hapax import (was GM drum map: 36,38,42,46,41,50,39,56)
-- **MIDI export uses lane.midiNote** — what you see in the NOTE column is what gets exported
-- **Track name format** — dot-separated uppercase lane names (e.g. KICK.SNARE.CLOSED HH.OPEN HH)
-- **Shorter pattern names** — 3-letter abbreviations for Hapax screen readability (e.g. hyp_drv, tri_rtl)
-- **Save/Load improvements** — save works without generated pattern, auto-loads on refresh
-- **Save validation** — localStorage data validated against whitelists (categories, styles, arcs, note 0-127, channel 1-16)
-- **Tom pitch matching** — name-based (hi/mid/low) instead of MIDI note number
 
 ### v7.0.0
 - Fixed drum primitives: sixteenth (all 1s, was duplicate of binary), tresillo (16 steps, was 15), clave 3-2 (16 steps, was 20), accent (beats 1+3, was all zeros)
