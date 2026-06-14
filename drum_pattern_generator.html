@@ -1774,14 +1774,36 @@ function generatePattern(params) {
 
     // Ghost notes (textural characteristic — NOT for foundation)
     if (characteristics.includes("textural") && intensity >= 0.3 && lane.category !== "foundation") {
-      for (let i = 0; i < pattern.length; i++) {
-        if (pattern[i] === 0 && rng.next() < 0.08 * intensity) {
-          const neighbors = [];
-          if (i > 0) neighbors.push(pattern[i - 1]);
-          if (i < pattern.length - 1) neighbors.push(pattern[i + 1]);
-          if (neighbors.some(n => n === 1)) {
-            vel[i] = rng.randInt(25, 45);
-            pattern[i] = 1;
+      const chance = 0.20 * Math.max(intensity, 0.5);
+      for (let bar = 0; bar < bars; bar++) {
+        const barStart = bar * 16;
+        let ghostsThisBar = 0;
+        // Add ghost notes probabilistically
+        for (let i = barStart; i < barStart + 16 && i < pattern.length; i++) {
+          if (pattern[i] === 0 && rng.next() < chance) {
+            const neighbors = [];
+            if (i > 0) neighbors.push(pattern[i - 1]);
+            if (i < pattern.length - 1) neighbors.push(pattern[i + 1]);
+            if (neighbors.some(n => n === 1)) {
+              vel[i] = rng.randInt(25, 45);
+              pattern[i] = 1;
+              ghostsThisBar++;
+            }
+          }
+        }
+        // Guarantee at least 1 ghost note per bar
+        if (ghostsThisBar === 0) {
+          const empties = [];
+          for (let i = barStart; i < barStart + 16 && i < pattern.length; i++) {
+            if (pattern[i] === 0) {
+              const hasNeighbor = (i > 0 && pattern[i-1] === 1) || (i < pattern.length - 1 && pattern[i+1] === 1);
+              if (hasNeighbor) empties.push(i);
+            }
+          }
+          if (empties.length > 0) {
+            const pick = empties[Math.floor(rng.next() * empties.length)];
+            vel[pick] = rng.randInt(25, 45);
+            pattern[pick] = 1;
           }
         }
       }
