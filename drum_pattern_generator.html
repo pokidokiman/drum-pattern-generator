@@ -364,6 +364,56 @@ body {
   font-family: 'JetBrains Mono', monospace;
 }
 
+/* ── History Bar ────────────────────────────────────────── */
+.history-bar {
+  display: none; /* hidden until history exists */
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 6px 16px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  margin-bottom: 8px;
+}
+.history-nav-btn {
+  background: var(--bg-screen);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  width: 28px;
+  height: 28px;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.history-nav-btn:hover:not(:disabled) {
+  background: var(--accent);
+  color: #000;
+}
+.history-nav-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+.history-label {
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.history-label .accent {
+  color: var(--accent);
+  font-family: 'JetBrains Mono', monospace;
+}
+.history-entry-info {
+  font-size: 10px;
+  color: var(--text-secondary);
+  letter-spacing: 0.5px;
+  font-family: 'JetBrains Mono', monospace;
+}
+
 /* ── Step Grid ─────────────────────────────────────────── */
 .grid-wrapper {
   background: var(--bg-screen);
@@ -543,6 +593,26 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+.kit-selector {
+  background: var(--bg-card);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+  outline: none;
+}
+.kit-selector:focus {
+  border-color: var(--accent);
+}
+.kit-selector option {
+  background: var(--bg-card);
+  color: var(--text-primary);
 }
 .btn-play {
   background: var(--green);
@@ -866,6 +936,15 @@ body {
     <span class="var-label">Variation</span>
   </div>
 
+  <!-- History Bar -->
+  <div class="history-bar" id="history-bar">
+    <button class="history-nav-btn" onclick="historyPrev()" id="history-prev" title="Previous pattern">◀</button>
+    <span class="history-label">History <span class="accent" id="history-index">0/0</span></span>
+    <span class="history-entry-info" id="history-entry-info"></span>
+    <button class="btn-small" onclick="exportSelectedHistory()" id="history-export" style="font-size:10px;padding:4px 10px;">Export selected .mid</button>
+    <button class="history-nav-btn" onclick="historyNext()" id="history-next" title="Next pattern">▶</button>
+  </div>
+
   <!-- 6. Bar Navigation -->
   <div class="bar-nav" id="bar-nav">
     <button class="bar-nav-btn" onclick="prevBar()" id="bar-prev">◀</button>
@@ -906,6 +985,12 @@ body {
   <!-- 9. Bottom Bar: Playback left, Downloads right -->
   <div class="bottom-bar">
     <div class="playback-group">
+      <select class="kit-selector" id="kit-selector" onchange="selectedKit=this.value" title="Preview kit">
+        <option value="default">Default Kit</option>
+        <option value="909">909 Kit</option>
+        <option value="808">808 Kit</option>
+        <option value="minimal">Minimal Kit</option>
+      </select>
       <button class="btn-play" id="play-btn" onclick="togglePlay()">▶ Play</button>
       <button class="btn-stop" id="stop-btn" style="display:none" onclick="stopPlayback();isLooping=false;const lb=document.getElementById('loop-btn');lb.classList.remove('active');lb.style.cssText='';updatePlayUI();">■ Stop</button>
       <button class="btn-loop" id="loop-btn" onclick="toggleLoop()">↻ Loop</button>
@@ -1785,6 +1870,7 @@ function generatePattern(params) {
     intensity, syncopation, swingRatio,
     swingType,
     characteristics,
+    seed: seed,  // Store seed for history reference
   };
   pattern.characteristics = inferCharacteristics(pattern);
 
@@ -2068,60 +2154,121 @@ let scheduledNodes = [];
 let lookAheadInterval = null;
 let loopIteration = 0;
 let nextLoopTime = 0;
+let selectedKit = 'default';
+
+// ─── PREVIEW KITS ────────────────────────────────────────────
+// Each kit defines synth parameters per instrument category.
+// Parameters: osc type, freq sweep, decay, filter, noise amount.
+const PREVIEW_KITS = {
+  default: {
+    label: 'Default',
+    desc: 'Original synth (basic)',
+    kick:  { oscType:'sine',   freqStart:150, freqEnd:40,  decay:0.4,  gainMul:0.8 },
+    snare: { oscFreq:200, oscDecay:0.15, noiseDecay:0.15, hpFreq:2000, gainMul:0.4, noiseGainMul:0.5 },
+    hihat: { hpFreq:6000, bpFreq:10000, gainMul:0.3 },
+    tom:   { freqStart:160, freqEnd:60, decay:0.3, gainMul:0.6 },
+    clap:  { bpFreq:2500, bpQ:3, decay:0.08, gainMul:0.4 },
+    perc:  { type:'dual-osc', freq1:800, freq2:540, decay:0.12, gainMul:0.3 },
+    ride:  { bpFreq:12000, bpQ:2, decay:0.4, gainMul:0.2 },
+    stab:  { freq:440, decay:0.08, gainMul:0.3 },
+  },
+  '909': {
+    label: '909',
+    desc: 'Classic techno: punchy kick, crisp hats, metallic perc',
+    kick:  { oscType:'sine',   freqStart:180, freqEnd:35,  decay:0.35, gainMul:1.0 },
+    snare: { oscFreq:250, oscDecay:0.1, noiseDecay:0.18, hpFreq:3000, gainMul:0.5, noiseGainMul:0.6 },
+    hihat: { hpFreq:8000, bpFreq:11000, gainMul:0.35 },
+    tom:   { freqStart:180, freqEnd:50, decay:0.25, gainMul:0.7 },
+    clap:  { bpFreq:3000, bpQ:2, decay:0.1, gainMul:0.5 },
+    perc:  { type:'noise-burst', bpFreq:6000, bpQ:4, decay:0.06, gainMul:0.35 },
+    ride:  { bpFreq:13000, bpQ:1.5, decay:0.5, gainMul:0.25 },
+    stab:  { freq:520, decay:0.06, gainMul:0.35 },
+  },
+  '808': {
+    label: '808',
+    desc: 'Deep/boomy: long decay kick, cowbell perc, ticky hats',
+    kick:  { oscType:'sine',   freqStart:120, freqEnd:28,  decay:0.6,  gainMul:1.0 },
+    snare: { oscFreq:180, oscDecay:0.12, noiseDecay:0.2, hpFreq:1500, gainMul:0.45, noiseGainMul:0.55 },
+    hihat: { hpFreq:5000, bpFreq:8000, gainMul:0.25 },
+    tom:   { freqStart:140, freqEnd:45, decay:0.35, gainMul:0.65 },
+    clap:  { bpFreq:2000, bpQ:4, decay:0.12, gainMul:0.45 },
+    perc:  { type:'cowbell', freq1:800, freq2:540, decay:0.08, gainMul:0.4 },
+    ride:  { bpFreq:10000, bpQ:3, decay:0.35, gainMul:0.2 },
+    stab:  { freq:380, decay:0.1, gainMul:0.3 },
+  },
+  minimal: {
+    label: 'Minimal',
+    desc: 'Clean, short: rim-like snare, soft hats, woodblock perc',
+    kick:  { oscType:'triangle', freqStart:130, freqEnd:45,  decay:0.25, gainMul:0.7 },
+    snare: { oscFreq:300, oscDecay:0.08, noiseDecay:0.1, hpFreq:2500, gainMul:0.35, noiseGainMul:0.4 },
+    hihat: { hpFreq:7000, bpFreq:9000, gainMul:0.2 },
+    tom:   { freqStart:200, freqEnd:80, decay:0.2, gainMul:0.5 },
+    clap:  { bpFreq:2800, bpQ:2.5, decay:0.06, gainMul:0.35 },
+    perc:  { type:'woodblock', freq:1200, decay:0.04, gainMul:0.35 },
+    ride:  { bpFreq:11000, bpQ:2, decay:0.3, gainMul:0.15 },
+    stab:  { freq:500, decay:0.06, gainMul:0.25 },
+  },
+};
 
 function getAudioCtx() {
   if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   return audioCtx;
 }
 
-// Drum synthesis — each function creates a single hit
+// Drum synthesis — each function creates a single hit (kit-aware)
+function getKit() { return PREVIEW_KITS[selectedKit] || PREVIEW_KITS.default; }
+
 function synthKick(ctx, time, vel) {
+  const k = getKit().kick;
   const gain = ctx.createGain();
   gain.connect(ctx.destination);
-  gain.gain.setValueAtTime(vel * 0.8, time);
-  gain.gain.exponentialRampToValueAtTime(0.001, time + 0.4);
+  gain.gain.setValueAtTime(vel * k.gainMul, time);
+  gain.gain.exponentialRampToValueAtTime(0.001, time + k.decay);
 
   const osc = ctx.createOscillator();
+  osc.type = k.oscType || 'sine';
   osc.connect(gain);
-  osc.frequency.setValueAtTime(150, time);
-  osc.frequency.exponentialRampToValueAtTime(40, time + 0.12);
+  osc.frequency.setValueAtTime(k.freqStart, time);
+  osc.frequency.exponentialRampToValueAtTime(k.freqEnd, time + k.decay * 0.3);
   osc.start(time);
-  osc.stop(time + 0.4);
+  osc.stop(time + k.decay);
 }
 
 function synthSnare(ctx, time, vel) {
+  const k = getKit().snare;
   // Tone component
   const oscGain = ctx.createGain();
   oscGain.connect(ctx.destination);
-  oscGain.gain.setValueAtTime(vel * 0.4, time);
-  oscGain.gain.exponentialRampToValueAtTime(0.001, time + 0.15);
+  oscGain.gain.setValueAtTime(vel * k.gainMul, time);
+  oscGain.gain.exponentialRampToValueAtTime(0.001, time + k.oscDecay);
   const osc = ctx.createOscillator();
   osc.connect(oscGain);
-  osc.frequency.setValueAtTime(200, time);
+  osc.frequency.setValueAtTime(k.oscFreq, time);
   osc.start(time);
-  osc.stop(time + 0.15);
+  osc.stop(time + k.oscDecay);
 
   // Noise component
-  const noiseLen = ctx.sampleRate * 0.15;
+  const noiseLen = ctx.sampleRate * k.noiseDecay;
   const noiseBuf = ctx.createBuffer(1, noiseLen, ctx.sampleRate);
   const data = noiseBuf.getChannelData(0);
   for (let i = 0; i < noiseLen; i++) data[i] = Math.random() * 2 - 1;
   const noise = ctx.createBufferSource();
   noise.buffer = noiseBuf;
   const noiseGain = ctx.createGain();
-  noiseGain.gain.setValueAtTime(vel * 0.5, time);
-  noiseGain.gain.exponentialRampToValueAtTime(0.001, time + 0.12);
+  noiseGain.gain.setValueAtTime(vel * k.noiseGainMul, time);
+  noiseGain.gain.exponentialRampToValueAtTime(0.001, time + k.noiseDecay);
   const filt = ctx.createBiquadFilter();
   filt.type = 'highpass';
-  filt.frequency.value = 2000;
+  filt.frequency.value = k.hpFreq;
   noise.connect(filt);
   filt.connect(noiseGain);
   noiseGain.connect(ctx.destination);
   noise.start(time);
-  noise.stop(time + 0.15);
+  noise.stop(time + k.noiseDecay);
 }
 
 function synthHiHat(ctx, time, vel, open) {
+  const k = getKit().hihat;
   const dur = open ? 0.25 : 0.06;
   const noiseLen = ctx.sampleRate * dur;
   const noiseBuf = ctx.createBuffer(1, noiseLen, ctx.sampleRate);
@@ -2130,14 +2277,14 @@ function synthHiHat(ctx, time, vel, open) {
   const noise = ctx.createBufferSource();
   noise.buffer = noiseBuf;
   const gain = ctx.createGain();
-  gain.gain.setValueAtTime(vel * 0.3, time);
+  gain.gain.setValueAtTime(vel * k.gainMul, time);
   gain.gain.exponentialRampToValueAtTime(0.001, time + dur);
   const hp = ctx.createBiquadFilter();
   hp.type = 'highpass';
-  hp.frequency.value = 6000;
+  hp.frequency.value = k.hpFreq;
   const bp = ctx.createBiquadFilter();
   bp.type = 'bandpass';
-  bp.frequency.value = 10000;
+  bp.frequency.value = k.bpFreq;
   noise.connect(hp);
   hp.connect(bp);
   bp.connect(gain);
@@ -2147,58 +2294,115 @@ function synthHiHat(ctx, time, vel, open) {
 }
 
 function synthTom(ctx, time, vel, freq) {
+  const k = getKit().tom;
   const gain = ctx.createGain();
   gain.connect(ctx.destination);
-  gain.gain.setValueAtTime(vel * 0.6, time);
-  gain.gain.exponentialRampToValueAtTime(0.001, time + 0.3);
+  gain.gain.setValueAtTime(vel * k.gainMul, time);
+  gain.gain.exponentialRampToValueAtTime(0.001, time + k.decay);
   const osc = ctx.createOscillator();
   osc.connect(gain);
-  osc.frequency.setValueAtTime(freq || 160, time);
-  osc.frequency.exponentialRampToValueAtTime(60, time + 0.2);
+  const startFreq = freq || k.freqStart;
+  osc.frequency.setValueAtTime(startFreq, time);
+  osc.frequency.exponentialRampToValueAtTime(k.freqEnd, time + k.decay * 0.65);
   osc.start(time);
-  osc.stop(time + 0.3);
+  osc.stop(time + k.decay);
 }
 
 function synthClap(ctx, time, vel) {
-  const noiseLen = ctx.sampleRate * 0.08;
+  const k = getKit().clap;
+  const noiseLen = ctx.sampleRate * k.decay;
   const noiseBuf = ctx.createBuffer(1, noiseLen, ctx.sampleRate);
   const data = noiseBuf.getChannelData(0);
   for (let i = 0; i < noiseLen; i++) data[i] = Math.random() * 2 - 1;
   const noise = ctx.createBufferSource();
   noise.buffer = noiseBuf;
   const gain = ctx.createGain();
-  gain.gain.setValueAtTime(vel * 0.4, time);
-  gain.gain.exponentialRampToValueAtTime(0.001, time + 0.08);
+  gain.gain.setValueAtTime(vel * k.gainMul, time);
+  gain.gain.exponentialRampToValueAtTime(0.001, time + k.decay);
   const bp = ctx.createBiquadFilter();
   bp.type = 'bandpass';
-  bp.frequency.value = 2500;
-  bp.Q.value = 3;
+  bp.frequency.value = k.bpFreq;
+  bp.Q.value = k.bpQ;
   noise.connect(bp);
   bp.connect(gain);
   gain.connect(ctx.destination);
   noise.start(time);
-  noise.stop(time + 0.08);
+  noise.stop(time + k.decay);
 }
 
 function synthPerc(ctx, time, vel) {
-  const osc1 = ctx.createOscillator();
-  const osc2 = ctx.createOscillator();
-  const gain = ctx.createGain();
-  gain.gain.setValueAtTime(vel * 0.3, time);
-  gain.gain.exponentialRampToValueAtTime(0.001, time + 0.12);
-  osc1.frequency.value = 800;
-  osc2.frequency.value = 540;
-  osc1.connect(gain);
-  osc2.connect(gain);
-  gain.connect(ctx.destination);
-  osc1.start(time);
-  osc2.start(time);
-  osc1.stop(time + 0.12);
-  osc2.stop(time + 0.12);
+  const k = getKit().perc;
+  if (k.type === 'noise-burst') {
+    // 909 maraca-achtig: korte noise burst + bandpass filter
+    const noiseLen = ctx.sampleRate * k.decay;
+    const noiseBuf = ctx.createBuffer(1, noiseLen, ctx.sampleRate);
+    const data = noiseBuf.getChannelData(0);
+    for (let i = 0; i < noiseLen; i++) data[i] = Math.random() * 2 - 1;
+    const noise = ctx.createBufferSource();
+    noise.buffer = noiseBuf;
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(vel * k.gainMul, time);
+    gain.gain.exponentialRampToValueAtTime(0.001, time + k.decay);
+    const bp = ctx.createBiquadFilter();
+    bp.type = 'bandpass';
+    bp.frequency.value = k.bpFreq;
+    bp.Q.value = k.bpQ;
+    noise.connect(bp);
+    bp.connect(gain);
+    gain.connect(ctx.destination);
+    noise.start(time);
+    noise.stop(time + k.decay);
+  } else if (k.type === 'cowbell') {
+    // 808 cowbell: 2 oscillators, hoge freq, korte decay
+    const osc1 = ctx.createOscillator();
+    const osc2 = ctx.createOscillator();
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(vel * k.gainMul, time);
+    gain.gain.exponentialRampToValueAtTime(0.001, time + k.decay);
+    osc1.frequency.value = k.freq1;
+    osc2.frequency.value = k.freq2;
+    osc1.connect(gain);
+    osc2.connect(gain);
+    gain.connect(ctx.destination);
+    osc1.start(time);
+    osc2.start(time);
+    osc1.stop(time + k.decay);
+    osc2.stop(time + k.decay);
+  } else if (k.type === 'woodblock') {
+    // Minimal woodblock: sine, hoog, heel kort
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(vel * k.gainMul, time);
+    gain.gain.exponentialRampToValueAtTime(0.001, time + k.decay);
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(k.freq, time);
+    osc.frequency.exponentialRampToValueAtTime(k.freq * 0.7, time + k.decay);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(time);
+    osc.stop(time + k.decay);
+  } else {
+    // Default: dual oscillator (original)
+    const osc1 = ctx.createOscillator();
+    const osc2 = ctx.createOscillator();
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(vel * k.gainMul, time);
+    gain.gain.exponentialRampToValueAtTime(0.001, time + k.decay);
+    osc1.frequency.value = k.freq1;
+    osc2.frequency.value = k.freq2;
+    osc1.connect(gain);
+    osc2.connect(gain);
+    gain.connect(ctx.destination);
+    osc1.start(time);
+    osc2.start(time);
+    osc1.stop(time + k.decay);
+    osc2.stop(time + k.decay);
+  }
 }
 
 function synthRide(ctx, time, vel) {
-  const dur = 0.4;
+  const k = getKit().ride;
+  const dur = k.decay;
   const noiseLen = ctx.sampleRate * dur;
   const noiseBuf = ctx.createBuffer(1, noiseLen, ctx.sampleRate);
   const data = noiseBuf.getChannelData(0);
@@ -2206,12 +2410,12 @@ function synthRide(ctx, time, vel) {
   const noise = ctx.createBufferSource();
   noise.buffer = noiseBuf;
   const gain = ctx.createGain();
-  gain.gain.setValueAtTime(vel * 0.2, time);
+  gain.gain.setValueAtTime(vel * k.gainMul, time);
   gain.gain.exponentialRampToValueAtTime(0.001, time + dur);
   const bp = ctx.createBiquadFilter();
   bp.type = 'bandpass';
-  bp.frequency.value = 12000;
-  bp.Q.value = 2;
+  bp.frequency.value = k.bpFreq;
+  bp.Q.value = k.bpQ;
   noise.connect(bp);
   bp.connect(gain);
   gain.connect(ctx.destination);
@@ -2220,16 +2424,17 @@ function synthRide(ctx, time, vel) {
 }
 
 function synthStab(ctx, time, vel) {
+  const k = getKit().stab;
   const gain = ctx.createGain();
   gain.connect(ctx.destination);
-  gain.gain.setValueAtTime(vel * 0.3, time);
-  gain.gain.exponentialRampToValueAtTime(0.001, time + 0.08);
+  gain.gain.setValueAtTime(vel * k.gainMul, time);
+  gain.gain.exponentialRampToValueAtTime(0.001, time + k.decay);
   const osc = ctx.createOscillator();
   osc.type = 'sawtooth';
   osc.connect(gain);
-  osc.frequency.value = 440;
+  osc.frequency.value = k.freq;
   osc.start(time);
-  osc.stop(time + 0.08);
+  osc.stop(time + k.decay);
 }
 
 // Map MIDI note ranges to synth functions
@@ -2420,6 +2625,11 @@ window.DrumEngine = {
   let redoStack = [];
   const MAX_UNDO = 50;
 
+  // ─── VARIATION HISTORY BUFFER ─────────────────────────────
+  const MAX_HISTORY = 10;
+  let patternHistory = []; // Ring buffer: [{seed, name, pattern, variations, timestamp}]
+  let historyIndex = -1;   // -1 = no history yet
+
   // Per-lane colors (match mockup CSS variables)
   const laneColors = [
     // Reversed: array index = visual position top-to-bottom (Perc=0 top, Kick=7 bottom)
@@ -2474,9 +2684,86 @@ window.DrumEngine = {
 
   // ─── SAVE / LOAD ─────────────────────────────────────────
 
+  // ─── HISTORY BUFFER ──────────────────────────────────────
+
+  function addToHistory(pattern, variations) {
+    const entry = {
+      seed: pattern.seed || null,
+      name: pattern.name || 'Untitled',
+      pattern: JSON.parse(JSON.stringify(pattern)),
+      variations: JSON.parse(JSON.stringify(variations)),
+      timestamp: Date.now(),
+    };
+    patternHistory.push(entry);
+    if (patternHistory.length > MAX_HISTORY) patternHistory.shift();
+    historyIndex = patternHistory.length - 1; // Point to latest
+    updateHistoryUI();
+  }
+
+  function historyPrev() {
+    if (historyIndex > 0) {
+      historyIndex--;
+      restoreHistoryEntry(historyIndex);
+    }
+  }
+
+  function historyNext() {
+    if (historyIndex < patternHistory.length - 1) {
+      historyIndex++;
+      restoreHistoryEntry(historyIndex);
+    }
+  }
+
+  function exportSelectedHistory() {
+    if (historyIndex < 0 || historyIndex >= patternHistory.length) return;
+    const entry = patternHistory[historyIndex];
+    const bpm = entry.pattern._bpm || 135;
+    const safeName = (entry.name || 'pattern').toLowerCase().replace(/\s+/g, '_');
+    // Export base pattern from selected history entry
+    DrumEngine.exportMidi(entry.pattern, null, `${safeName}_base.mid`, bpm);
+  }
+
+  function restoreHistoryEntry(idx) {
+    const entry = patternHistory[idx];
+    if (!entry) return;
+    pushUndo();
+    currentPattern = JSON.parse(JSON.stringify(entry.pattern));
+    currentVariations = JSON.parse(JSON.stringify(entry.variations));
+    activeTab = 'base';
+    currentBar = 0;
+    renderAll();
+    updateHistoryUI();
+    // Auto-play the restored pattern
+    if (isPlaying) playPattern(currentPattern, null);
+  }
+
+  function updateHistoryUI() {
+    const bar = document.getElementById('history-bar');
+    if (!bar) return;
+    const count = patternHistory.length;
+    if (count === 0) {
+      bar.style.display = 'none';
+      return;
+    }
+    bar.style.display = 'flex';
+    const idx = historyIndex + 1; // 1-based for display
+    document.getElementById('history-index').textContent = `${idx}/${count}`;
+    document.getElementById('history-prev').disabled = historyIndex <= 0;
+    document.getElementById('history-next').disabled = historyIndex >= count - 1;
+
+    const entry = patternHistory[historyIndex];
+    if (entry) {
+      const time = new Date(entry.timestamp);
+      const timeStr = time.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit', second: '2-digit'});
+      const seedStr = entry.seed !== null ? entry.seed : '—';
+      document.getElementById('history-entry-info').textContent = `seed: ${seedStr} · ${entry.name} · ${timeStr}`;
+    }
+  }
+
   function savePattern() {
     const data = {
       pattern: currentPattern || null, variations: currentVariations || [], userLanes, selectedChars, selectedEnergyArc,
+      selectedKit: selectedKit,
       controls: {
         intensity: document.getElementById('intensity').value,
         syncopation: document.getElementById('syncopation').value,
@@ -2855,13 +3142,14 @@ window.DrumEngine = {
     });
     currentPattern._bpm = bpm;
     currentVariations = DrumEngine.generateVariations(currentPattern);
+    addToHistory(currentPattern, currentVariations);
     activeTab = 'base';
     currentBar = 0;
     renderAll();
     playPattern(currentPattern, null);
   }
 
-  function renderAll() { renderTabs(); renderGrid(); renderInfo(); renderDownloads(); updateBarNav(); }
+  function renderAll() { renderTabs(); renderGrid(); renderInfo(); renderDownloads(); updateBarNav(); updateHistoryUI(); }
 
   // ─── VARIATION TABS (mockup layout) ──────────────────────
 
@@ -3017,18 +3305,20 @@ window.DrumEngine = {
     const data = activeTab === 'base' ? currentPattern : currentVariations.find(v => v.type === activeTab);
     if (!data) return;
     const steps = data.steps[laneName];
-    if (!steps || !steps[stepIdx]) return; // only drag on active steps
+    if (!steps) return;
 
-    const vel = (data.velocity[laneName] || [])[stepIdx] || 100;
+    const isActive = steps[stepIdx] ? true : false;
+    const vel = isActive ? ((data.velocity[laneName] || [])[stepIdx] || 100) : 100;
     dragState = {
       laneName, stepIdx, startY: e.clientY, startVel: vel,
       cell, moved: false, data,
       startPushed: false,
+      allowDrag: isActive, // only allow drag on active steps
     };
   }
 
   document.addEventListener('mousemove', (e) => {
-    if (!dragState) return;
+    if (!dragState || !dragState.allowDrag) return; // only drag on active steps
     const dy = dragState.startY - e.clientY; // positive = up = louder
     if (Math.abs(dy) > 3) dragState.moved = true;
     if (!dragState.moved) return;
