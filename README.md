@@ -1,4 +1,4 @@
-# Drum Pattern Generator v7.1.0
+# Drum Pattern Generator v7.2.0
 
 Drum pattern generator for **Squarp Hapax** — standalone HTML, no server, no dependencies.
 
@@ -160,7 +160,10 @@ drum-pattern-generator/
 
 ## Changelog
 
-### v7.1.0
+### v7.2.0
+- **Trig toggle** — click empty cell to add trig (velocity 100), click filled cell to remove it
+- **Variation history** — last 10 generated patterns stored, ← → navigation, export any from history
+- **Preview kits** — dropdown with Default, 909, 808, Minimal kits; each has distinct synth character
 - **Velocity drag editing** — click + drag up/down on active cells to adjust velocity (1-127), cursor changes to ↕
 - **MIDI notes 36-43** — consecutive mapping matching Hapax import (was GM drum map: 36,38,42,46,41,50,39,56)
 - **MIDI export uses lane.midiNote** — what you see in the NOTE column is what gets exported
