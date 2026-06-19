@@ -940,8 +940,7 @@ body {
     <div class="ctrl-group" id="every-n-detail-group" style="display:none">
       <label>Grid <select id="every-n-grid"><option value="1/16">1/16</option><option value="1/8">1/8</option><option value="1/4">1/4</option><option value="1/2">1/2</option><option value="1/1">1/1</option></select></label>
       <label>N <input type="range" id="every-n-n" min="1" max="16" value="2" style="width:80px;accent-color:var(--accent)"></label>
-      <label>Accent <input type="range" id="every-n-accent-min" min="60" max="127" value="100" style="width:60px;accent-color:var(--accent)">-<input type="range" id="every-n-accent-max" min="60" max="127" value="115" style="width:60px;accent-color:var(--accent)"></label>
-      <label>Ghost <input type="range" id="every-n-ghost-min" min="1" max="80" value="40" style="width:60px;accent-color:var(--accent)">-<input type="range" id="every-n-ghost-max" min="1" max="80" value="70" style="width:60px;accent-color:var(--accent)"></label>
+      <label>Boost <input type="range" id="every-n-accent-mul" min="100" max="180" value="135" style="width:100px;accent-color:var(--accent)"> <span id="every-n-mul-label" style="font-size:11px;min-width:30px">1.35x</span></label>
     </div>
   </div>
 
@@ -1282,71 +1281,81 @@ const POLYRHYTHMS = {
 };
 
 // ─── EVERY N PRESETS ───────────────────────────────────────────
+//
+// 808/909-style Total Accent: een accent-grid die over ALLE lanes
+// (incl. kick) een velocity boost geeft op de N-de grid-stap.
+// Geen ghost reduction — alleen accent erbovenop.
+// De originele per-lane velocities blijven intact, alleen harder op accent steps.
 
 const EVERY_N_PRESETS = {
   disabled: { label: 'Off' },
-  'n2-16th': { label: 'N=2 16th', grid: '1/16', N: 2, accentVmin: 100, accentVmax: 115, ghostVmin: 40, ghostVmax: 70 },
-  'n3-16th': { label: 'N=3 16th', grid: '1/16', N: 3, accentVmin: 95, accentVmax: 115, ghostVmin: 35, ghostVmax: 65 },
-  'n4-16th': { label: 'N=4 16th', grid: '1/16', N: 4, accentVmin: 100, accentVmax: 120, ghostVmin: 30, ghostVmax: 60 },
-  'n2-8th': { label: 'N=2 8th', grid: '1/8', N: 2, accentVmin: 100, accentVmax: 115, ghostVmin: 40, ghostVmax: 70 },
-  'n3-8th': { label: 'N=3 8th', grid: '1/8', N: 3, accentVmin: 95, accentVmax: 115, ghostVmin: 35, ghostVmax: 65 },
-  'n4-8th': { label: 'N=4 8th', grid: '1/8', N: 4, accentVmin: 100, accentVmax: 120, ghostVmin: 30, ghostVmax: 60 },
-  'n2-quarter': { label: 'N=2 1/4', grid: '1/4', N: 2, accentVmin: 100, accentVmax: 120, ghostVmin: 30, ghostVmax: 55 },
-  'n3-quarter': { label: 'N=3 1/4', grid: '1/4', N: 3, accentVmin: 95, accentVmax: 115, ghostVmin: 25, ghostVmax: 50 },
+  'n2-16th': { label: 'N=2 16th', grid: '1/16', N: 2, accentMul: 1.35 },
+  'n3-16th': { label: 'N=3 16th', grid: '1/16', N: 3, accentMul: 1.40 },
+  'n4-16th': { label: 'N=4 16th', grid: '1/16', N: 4, accentMul: 1.45 },
+  'n2-8th': { label: 'N=2 8th', grid: '1/8', N: 2, accentMul: 1.35 },
+  'n3-8th': { label: 'N=3 8th', grid: '1/8', N: 3, accentMul: 1.40 },
+  'n4-8th': { label: 'N=4 8th', grid: '1/8', N: 4, accentMul: 1.45 },
+  'n2-quarter': { label: 'N=2 1/4', grid: '1/4', N: 2, accentMul: 1.40 },
+  'n3-quarter': { label: 'N=3 1/4', grid: '1/4', N: 3, accentMul: 1.50 },
+  'n4-quarter': { label: 'N=4 1/4', grid: '1/4', N: 4, accentMul: 1.50 },
 };
 
 /**
- * Apply Every N accent/ghost pattern to velocities
+ * Apply Total Accent (808/909-style) over ALL lanes
  * Called as post-processing after generatePattern
+ *
+ * Elke N-de grid-groep krijgt een accent multiplier op ALLE lanes.
+ * Niet-accent stappen blijven onaangeroerd.
+ * Geen ghost reduction — dit is geen ghost-algoritme.
  */
-function applyEveryN(patternData, everyNPreset, everyNGrid, everyNN, everyNAccentMin, everyNAccentMax, everyNGhostMin, everyNGhostMax) {
+function applyEveryN(patternData, everyNPreset, everyNGrid, everyNN, everyNAccentMul) {
   if (!everyNPreset || everyNPreset === 'disabled') return patternData;
 
-  const { lanes, steps, velocity, bars, stepsPerBar } = patternData;
+  const { lanes, steps, velocity } = patternData;
 
-  // Resolve grid resolution: steps per accent evaluation
-  // e.g. 1/16 = 1, 1/8 = 2, 1/4 = 4
+  // Resolve grid resolution: steps per accent group
   let gridSteps;
   if (everyNGrid === '1/16') gridSteps = 1;
   else if (everyNGrid === '1/8') gridSteps = 2;
   else if (everyNGrid === '1/4') gridSteps = 4;
   else if (everyNGrid === '1/2') gridSteps = 8;
   else if (everyNGrid === '1/1') gridSteps = 16;
-  else gridSteps = 1; // fallback
+  else gridSteps = 1;
 
   const N = everyNN;
+  const accentMul = everyNAccentMul;
 
+  // Build accent mask: 1 accent step per grid group, cycled by N
+  // Eerst bepalen we de totale lengte van het langste pattern
+  let totalSteps = 0;
+  for (const lane of lanes) {
+    const s = steps[lane.name];
+    if (s && s.length > totalSteps) totalSteps = s.length;
+  }
+
+  // accentMask[i] = true als deze step accent krijgt
+  const accentMask = new Array(totalSteps).fill(false);
+  for (let i = 0; i < totalSteps; i++) {
+    const groupIndex = Math.floor(i / gridSteps);
+    if (groupIndex % N === 0) {
+      accentMask[i] = true;
+    }
+  }
+
+  // Pas accent boost toe op ALLE lanes (foundation ook!)
   for (const lane of lanes) {
     const name = lane.name;
     const laneSteps = steps[name];
     const laneVel = velocity[name];
     if (!laneSteps || !laneVel) continue;
-    if (lane.category === "foundation") continue; // kick immune
 
-    const totalSteps = laneSteps.length;
+    for (let i = 0; i < laneSteps.length && i < totalSteps; i++) {
+      if (!laneSteps[i]) continue;       // alleen actieve stappen
+      if (!accentMask[i]) continue;      // alleen accent stappen
 
-    for (let i = 0; i < totalSteps; i++) {
-      if (!laneSteps[i]) continue; // only modify active steps
-
-      // Determine accent position: step within the grid-synced group
-      // Group steps by grid resolution, then within each group, every N-th step gets accent
-      const groupIndex = Math.floor(i / gridSteps);
-      if (N <= 0) continue;
-
-      // Within each resolution group, step i is at position `i % gridSteps` inside the group
-      // We accent steps where: (i % gridSteps) === 0 for the 1st step of each group,
-      // and within groups we cycle N: the first N groups = accent, rest = ghost
-      const isAccent = (groupIndex % N === 0);
-
-      if (isAccent) {
-        // Accent: set velocity to accent range, clamped to existing velocity as minimum
-        const accentVel = Math.floor(everyNAccentMin + Math.random() * (everyNAccentMax - everyNAccentMin));
-        laneVel[i] = Math.max(laneVel[i], Math.min(127, accentVel));
-      } else {
-        // Ghost: set velocity to ghost range, but don't raise it (ghost is always quieter)
-        const ghostVel = Math.floor(everyNGhostMin + Math.random() * (everyNGhostMax - everyNGhostMin));
-        laneVel[i] = Math.min(laneVel[i], Math.min(127, Math.max(1, ghostVel)));
-      }
+      // 808/909 Total Accent: multiply bestaande velocity met multiplier
+      const boosted = Math.round(laneVel[i] * accentMul);
+      laneVel[i] = Math.min(127, boosted);
     }
   }
 
@@ -3309,10 +3318,7 @@ window.DrumEngine = {
     const everyNPreset = document.getElementById('every-n-preset')?.value || 'disabled';
     const everyNGrid = document.getElementById('every-n-grid')?.value || '1/16';
     const everyNN = parseInt(document.getElementById('every-n-n')?.value || '2');
-    const everyNAccentMin = parseInt(document.getElementById('every-n-accent-min')?.value || '100');
-    const everyNAccentMax = parseInt(document.getElementById('every-n-accent-max')?.value || '115');
-    const everyNGhostMin = parseInt(document.getElementById('every-n-ghost-min')?.value || '40');
-    const everyNGhostMax = parseInt(document.getElementById('every-n-ghost-max')?.value || '70');
+    const everyNAccentMul = parseFloat(document.getElementById('every-n-accent-mul')?.value || '1.35');
 
     currentPattern = DrumEngine.generatePattern({
       intensity, syncopation, swingRatio: swing, swingType,
@@ -3324,12 +3330,10 @@ window.DrumEngine = {
     });
     currentPattern._bpm = bpm;
 
-    // Apply Every N post-processing
+    // Apply Every N Total Accent (808/909-style)
     if (everyNEnabled) {
       currentPattern = DrumEngine.applyEveryN(currentPattern,
-        everyNPreset, everyNGrid, everyNN,
-        everyNAccentMin, everyNAccentMax,
-        everyNGhostMin, everyNGhostMax);
+        everyNPreset, everyNGrid, everyNN, everyNAccentMul);
     }
 
     currentVariations = DrumEngine.generateVariations(currentPattern);
@@ -3666,11 +3670,17 @@ window.DrumEngine = {
     if (!preset || !preset.grid) return;
     document.getElementById('every-n-grid').value = preset.grid;
     document.getElementById('every-n-n').value = preset.N;
-    document.getElementById('every-n-accent-min').value = preset.accentVmin;
-    document.getElementById('every-n-accent-max').value = preset.accentVmax;
-    document.getElementById('every-n-ghost-min').value = preset.ghostVmin;
-    document.getElementById('every-n-ghost-max').value = preset.ghostVmax;
+    document.getElementById('every-n-accent-mul').value = Math.round(preset.accentMul * 100);
+    document.getElementById('every-n-mul-label').textContent = preset.accentMul.toFixed(2) + 'x';
   };
+
+  // Live update multiplier label
+  document.addEventListener('input', function(e) {
+    if (e.target.id === 'every-n-accent-mul') {
+      const val = (parseInt(e.target.value) / 100).toFixed(2);
+      document.getElementById('every-n-mul-label').textContent = val + 'x';
+    }
+  });
 
   // ─── INIT ─────────────────────────────────────────────────
   // ─── INIT ─────────────────────────────────────────────────
