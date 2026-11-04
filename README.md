@@ -140,11 +140,24 @@ Each variation is a standalone pattern — export individually as .mid files.
 | Ctrl+Z | Undo |
 | Ctrl+Y | Redo |
 
+## TR-1000 Pattern Writer
+
+`tr1000_pattern_writer.html` is a separate standalone page for the **Roland TR-1000**. It generates hypnotic techno loops inside what the sequencer can hold: 10 tracks, 16 steps, per-track LAST, probability, cycle and sub-steps.
+
+- **Styles** — Tunnel, Rolling, Stripped, Ritual, with Density, Syncopation, Drift and Master Shuffle
+- **Lock and Roll** — keep the tracks you like and re-generate the rest, or roll one track at a time
+- **Variations** — A–D plus Fill 1, with a song sketch in Song mode LOOP counts
+- **Sheet for TR-REC** — every setting to key in by hand, per track and per step
+- **MIDI** — saves a Format 0 `.mid` on channel 10 with the default TR-1000 note map; in Chrome or Edge, Connect TR-1000 triggers the unit directly
+
+The TR-1000 is not shown to import MIDI files into a pattern, so use the sheet, or play the `.mid` from a DAW. Web MIDI output and the timing on real hardware are untested.
+
 ## Project Structure
 
 ```
 drum-pattern-generator/
 ├── drum_pattern_generator.html   ← standalone, browser-ready (no deps)
+├── tr1000_pattern_writer.html    ← standalone TR-1000 pattern writer
 ├── references/
 │   └── hapax_mockup.html         ← Hapax UI reference mockup
 └── README.md
